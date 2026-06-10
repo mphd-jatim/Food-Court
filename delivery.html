@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FoodCourt Driver</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        shopee: '#ee4d2d',
+                        shopeeHover: '#d73211',
+                        bgMain: '#f5f5f5'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        /* Toggle Switch CSS */
+        .toggle-checkbox:checked { right: 0; border-color: #68D391; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #68D391; }
+        .toggle-checkbox:checked + .toggle-label:after { transform: translateX(100%); border-color: white; }
+    </style>
+</head>
+<body class="bg-bgMain font-sans text-gray-800 h-screen flex flex-col md:max-w-md md:mx-auto md:border-x md:shadow-lg relative overflow-hidden">
+
+    <!-- ================= AUTHENTICATION VIEWS ================= -->
+    <div id="auth-container" class="absolute inset-0 bg-white z-[100] flex flex-col w-full h-full overflow-y-auto">
+        
+        <!-- LOGIN VIEW -->
+        <div id="view-login" class="flex flex-col h-full px-8 justify-center pb-10">
+            <div class="text-center mb-8 mt-10">
+                <i class="fas fa-motorcycle text-shopee text-5xl mb-3"></i>
+                <h1 class="text-2xl font-bold text-gray-800">FoodCourt Driver</h1>
+                <p class="text-sm text-gray-500">Aplikasi Mitra Pengemudi</p>
+            </div>
+            
+            <form onsubmit="handleLogin(event)" class="flex flex-col gap-4">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Nomor HP</label>
+                    <input type="tel" id="loginPhone" required placeholder="0812..." class="w-full px-4 py-3 border rounded-lg outline-none focus:border-shopee bg-gray-50">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Password</label>
+                    <input type="password" id="loginPass" required placeholder="Masukkan password" class="w-full px-4 py-3 border rounded-lg outline-none focus:border-shopee bg-gray-50">
+                </div>
+                
+                <div class="text-right">
+                    <button type="button" onclick="switchAuthView('forgot')" class="text-sm text-shopee font-bold hover:underline">Lupa Password?</button>
+                </div>
+                
+                <button type="submit" id="btnLogin" class="w-full bg-shopee text-white py-3 rounded-lg font-bold text-lg hover:bg-shopeeHover shadow-md transition mt-2">
+                    Masuk
+                </button>
+            </form>
+
+            <div class="mt-8 pt-6 border-t border-gray-200 text-center">
+                <p class="text-sm text-gray-600 mb-3">Belum menjadi mitra?</p>
+                <button type="button" onclick="switchAuthView('register')" class="w-full border-2 border-shopee text-shopee py-3 rounded-lg font-bold text-lg hover:bg-orange-50 transition">
+                    Daftar Mitra Pengemudi
+                </button>
+            </div>
+        </div>
+
+        <!-- REGISTER VIEW -->
+        <div id="view-register" class="hidden flex-col min-h-full px-6 py-8">
+            <button type="button" onclick="switchAuthView('login')" class="text-gray-500 mb-6 flex items-center gap-2 hover:text-shopee w-fit">
+                <i class="fas fa-arrow-left"></i> Kembali
+            </button>
+            
+            <h1 class="text-2xl font-bold text-gray-800 mb-2">Registrasi Mitra</h1>
+            <p class="text-sm text-gray-500 mb-6">Lengkapi data diri & kendaraan Anda di bawah ini.</p>
+            
+            <form onsubmit="handleRegister(event)" class="flex flex-col gap-4 pb-10">
+                <!-- Data Diri -->
+                <h2 class="font-bold text-shopee border-b pb-1 mt-2">Data Diri</h2>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Nama Lengkap Sesuai KTP</label>
+                    <input type="text" id="regName" required placeholder="Contoh: Budi Santoso" class="w-full px-4 py-2 border rounded-lg outline-none focus:border-shopee bg-gray-50">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">NIK (Nomor KTP)</label>
+                    <input type="number" id="regNik" required placeholder="16 Digit NIK" class="w-full px-4 py-2 border rounded-lg outline-none focus:border-shopee bg-gray-50">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Nomor HP Aktif</label>
+                    <input type="tel" id="regPhone" required placeholder="0812..." class="w-full px-4 py-2 border rounded-lg outline-none focus:border-shopee bg-gray-50">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Email Aktif</label>
+                    <input type="email" id="regEmail" required placeholder="email@contoh.com" class="w-full px-4 py-2 border rounded-lg outline-none focus:border-shopee bg-gray-50">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Buat Password</label>
+                    <input type="password" id="regPass" required placeholder="Minimal 6 karakter" class="w-full px-4 py-2 border rounded-lg outline-none focus:border-shopee bg-gray-50">
+                </div>
+
+                <!-- Data Kendaraan -->
+                <h2 class="font-bold text-shopee border-b pb-1 mt-4">Data Kendaraan</h2>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Jenis Kendaraan</label>
+                    <select id="regVehicle" required class="w-full px-4 py-2 border rounded-lg outline-none focus:border-shopee bg-gray-50">
+                        <option value="Motor">Motor</option>
+                        <option value="Mobil">Mobil (Gocar/Food)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Plat Nomor Kendaraan</label>
+                    <input type="text" id="regPlate" required placeholder="Contoh: B 1234 ABC" class="w-full px-4 py-2 border rounded-lg outline-none focus:border-shopee bg-gray-50 uppercase">
+                </div>
+
+                <!-- Dokumen Foto -->
+                <h2 class="font-bold text-shopee border-b pb-1 mt-4">Unggah Dokumen</h2>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Foto KTP Asli</label>
+                    <input type="file" id="regKtpImg" accept="image/*" required class="w-full px-3 py-2 border rounded-lg outline-none focus:border-shopee bg-white text-sm">
+                    <p class="text-[10px] text-gray-500 mt-1"><i class="fas fa-info-circle"></i> Pastikan foto terang, tulisan KTP terbaca jelas, dan tidak terpotong.</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Foto Wajah (Selfie/Profil)</label>
+                    <input type="file" id="regFaceImg" accept="image/*" required class="w-full px-3 py-2 border rounded-lg outline-none focus:border-shopee bg-white text-sm">
+                    <p class="text-[10px] text-gray-500 mt-1"><i class="fas fa-info-circle"></i> Gunakan pakaian rapi, wajah terlihat jelas, tanpa kacamata hitam atau masker.</p>
+                </div>
+
+                <div class="mt-6">
+                    <button type="submit" id="btnRegister" class="w-full bg-shopee text-white py-3 rounded-lg font-bold text-lg hover:bg-shopeeHover shadow-md transition">
+                        Kirim Pendaftaran
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- FORGOT PASSWORD VIEW -->
+        <div id="view-forgot" class="hidden flex-col h-full px-8 justify-center pb-20">
+            <button type="button" onclick="switchAuthView('login')" class="text-gray-500 mb-6 flex items-center gap-2 hover:text-shopee w-fit">
+                <i class="fas fa-arrow-left"></i> Kembali ke Login
+            </button>
+            
+            <i class="fas fa-unlock-alt text-shopee text-5xl mb-4 text-center"></i>
+            <h1 class="text-2xl font-bold text-gray-800 text-center mb-2">Lupa Password?</h1>
+            <p class="text-sm text-gray-500 text-center mb-8">Masukkan email yang terdaftar pada akun Anda. Kami akan mengirimkan password baru ke email tersebut.</p>
+            
+            <form onsubmit="handleForgot(event)" class="flex flex-col gap-4">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Email</label>
+                    <input type="email" id="forgotEmail" required placeholder="email@contoh.com" class="w-full px-4 py-3 border rounded-lg outline-none focus:border-shopee bg-gray-50">
+                </div>
+                
+                <button type="submit" id="btnForgot" class="w-full bg-shopee text-white py-3 rounded-lg font-bold text-lg hover:bg-shopeeHover shadow-md transition mt-4">
+                    Kirim Password Baru
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= MAIN APP VIEW ================= -->
+    <div id="app-container" class="hidden flex-col h-full w-full relative pb-16">
+
+    <!-- HEADER DRIVER -->
+    <header class="bg-white shadow-sm z-50 sticky top-0">
+        <div class="flex justify-between items-center px-4 py-3 border-b">
+            <div class="flex items-center gap-3">
+                <img src="https://placehold.co/100x100/333/white?text=Driver" alt="Profile" class="w-10 h-10 rounded-full object-cover border-2 border-shopee" id="userProfileImage">
+                <div>
+                    <div class="font-bold text-sm" id="userProfileName">Mitra Kurir</div>
+                    <div class="text-xs text-gray-500 flex items-center gap-1">
+                        <i class="fas fa-star text-yellow-400"></i> Baru (0 Antaran)
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Toggle Online/Offline -->
+            <div class="flex flex-col items-end">
+                <div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+                    <input type="checkbox" name="toggle" id="onlineToggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer z-10 transition-transform duration-200 ease-in-out" checked/>
+                    <label for="onlineToggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-green-400 cursor-pointer transition-colors duration-200 ease-in-out"></label>
+                </div>
+                <span id="statusText" class="text-[10px] font-bold text-green-600 mt-1 mr-2 uppercase">Online</span>
+            </div>
+        </div>
+
+        <!-- Earning Dashboard -->
+        <div class="bg-shopee text-white p-4 flex justify-between items-center">
+            <div>
+                <div class="text-xs opacity-80 mb-1">Pendapatan Hari Ini</div>
+                <div class="text-xl font-bold">Rp 0</div>
+            </div>
+            <div class="text-right">
+                <div class="text-xs opacity-80 mb-1">Total Antaran</div>
+                <div class="text-xl font-bold">0</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="flex-1 overflow-y-auto scroll-smooth">
+        
+        <!-- SECTION: TUGAS BARU (New Orders) -->
+        <section id="section-new" class="p-4 block">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="font-bold text-gray-700">Tugas Masuk</h2>
+                <button class="text-shopee text-xs font-bold" onclick="refreshOrders()"><i class="fas fa-sync-alt mr-1"></i> Perbarui</button>
+            </div>
+
+            <!-- Kontainer Dinamis untuk Pesanan Asli -->
+            <div id="new-orders-container">
+                <div class="text-center py-10 text-gray-400 text-sm">
+                    <i class="fas fa-motorcycle text-4xl mb-3 opacity-50"></i>
+                    <p>Mencari tugas baru... Tekan 'Perbarui'.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: AKTIF (Active Delivery) -->
+        <section id="section-active" class="hidden h-full flex flex-col bg-white">
+            
+            <!-- Map Live Terkoneksi Database -->
+            <div class="w-full h-48 bg-gray-300 relative border-b">
+                <iframe id="live-map-iframe" width="100%" height="100%" frameborder="0" style="border:0;" src="" allowfullscreen></iframe>
+                <div onclick="openGoogleMaps()" class="absolute top-2 right-2 bg-white px-3 py-1.5 rounded-full shadow text-xs font-bold flex items-center gap-2 cursor-pointer hover:bg-gray-50 z-10">
+                    <i class="fas fa-location-arrow text-blue-500"></i> Buka Maps
+                </div>
+            </div>
+
+            <!-- Active Order Details -->
+            <div class="p-4 flex-1 overflow-y-auto">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="font-bold text-lg">Detail Antaran</h2>
+                    <span class="bg-orange-100 text-shopee px-2 py-1 text-xs font-bold rounded" id="order-status-badge">Menuju Outlet</span>
+                </div>
+
+                <!-- Info Resto -->
+                <div class="border rounded-lg p-3 mb-3 bg-gray-50">
+                    <div class="flex justify-between items-center mb-2">
+                        <div class="font-bold text-sm flex items-center gap-2">
+                            <i class="fas fa-store text-shopee"></i> <span id="active-outlet-name">Memuat...</span>
+                        </div>
+                        <a href="#" id="btn-call-seller" class="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center"><i class="fas fa-phone-alt"></i></a>
+                    </div>
+                    <div class="text-xs text-gray-600 mb-2" id="active-outlet-address">Menunggu lokasi outlet...</div>
+                    <div class="text-xs font-bold text-gray-800 border-t pt-2" id="active-product-details">Pesanan: -</div>
+                </div>
+
+                <!-- Info Customer -->
+                <div class="border rounded-lg p-3 mb-6 bg-gray-50">
+                    <div class="flex justify-between items-center mb-2">
+                        <div class="font-bold text-sm flex items-center gap-2">
+                            <i class="fas fa-user text-blue-500"></i> <span id="active-customer-name">Memuat...</span>
+                        </div>
+                        <div class="flex gap-2">
+                            <a href="#" id="btn-chat-buyer" class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center"><i class="fas fa-comment-alt"></i></a>
+                            <a href="#" id="btn-call-buyer" class="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center"><i class="fas fa-phone-alt"></i></a>
+                        </div>
+                    </div>
+                    <div class="text-xs text-gray-600 mb-1" id="active-customer-address">Menunggu alamat tujuan...</div>
+                    <div class="text-xs text-gray-800 font-bold mt-2 pt-2 border-t" id="active-total-price">Total Tagihan: Rp 0</div>
+                </div>
+
+                <!-- Action Button -->
+                <div id="action-container" class="mt-auto">
+                    <button id="btnAction" onclick="updateOrderStatus()" class="w-full bg-shopee text-white py-3.5 rounded-lg font-bold text-lg hover:bg-shopeeHover shadow-md transition active:scale-95">
+                        Saya Sudah di Outlet
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: RIWAYAT (History) -->
+        <section id="section-history" class="hidden p-4">
+            <h2 class="font-bold text-gray-700 mb-4">Riwayat Antaran</h2>
+            <div id="history-container">
+                <!-- Riwayat dinamis akan muncul di sini -->
+            </div>
+        </section>
+
+        <!-- SECTION: PROFIL (Profile) -->
+        <section id="section-profile" class="hidden p-4">
+            <h2 class="font-bold text-gray-700 mb-4">Profil Mitra Kurir</h2>
+            
+            <div class="bg-white rounded-lg shadow-sm border p-4 mb-6">
+                <div class="flex items-center gap-4 mb-4 border-b pb-4">
+                    <img src="https://placehold.co/100x100/333/white?text=Profil" id="profDetailImage" class="w-16 h-16 rounded-full object-cover border-2 border-gray-200">
+                    <div>
+                        <div id="profDetailName" class="font-bold text-lg text-gray-800">Nama Kurir</div>
+                        <div id="profDetailPhone" class="text-gray-500 text-sm">08xxxxxx</div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-y-4 gap-x-2 text-sm">
+                    <div>
+                        <span class="text-gray-500 block text-xs">ID Mitra</span>
+                        <span id="profDetailId" class="font-semibold text-gray-800">-</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-500 block text-xs">Email</span>
+                        <span id="profDetailEmail" class="font-semibold text-gray-800 line-clamp-1">-</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-500 block text-xs">Jenis Kendaraan</span>
+                        <span id="profDetailVehicle" class="font-semibold text-gray-800">-</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-500 block text-xs">Plat Nomor</span>
+                        <span id="profDetailPlate" class="font-semibold text-gray-800 uppercase">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="handleLogout()" class="w-full bg-red-100 text-red-600 py-3 rounded-lg font-bold text-base hover:bg-red-200 transition flex justify-center items-center gap-2">
+                <i class="fas fa-sign-out-alt"></i> Keluar / Log Out
+            </button>
+        </section>
+
+    </main>
+
+    <!-- BOTTOM NAVIGATION -->
+    <nav class="fixed bottom-0 w-full md:max-w-md bg-white border-t flex justify-around text-[10px] text-gray-500 pb-3 pt-2 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-50">
+        <div onclick="switchTab('new')" class="flex flex-col items-center cursor-pointer py-1 mobile-nav-item text-shopee w-1/4" data-target="new">
+            <i class="fas fa-motorcycle text-xl mb-1"></i>
+            <span>Tugas Baru</span>
+        </div>
+        <div onclick="switchTab('active')" class="flex flex-col items-center cursor-pointer py-1 mobile-nav-item hover:text-shopee w-1/4 relative" data-target="active">
+            <i class="fas fa-map-marked-alt text-xl mb-1"></i>
+            <span id="activeBadge" class="hidden absolute top-0 right-3 bg-shopee text-white text-[8px] px-1.5 rounded-full border border-white">1</span>
+            <span>Aktif</span>
+        </div>
+        <div onclick="switchTab('history')" class="flex flex-col items-center cursor-pointer py-1 mobile-nav-item hover:text-shopee w-1/4" data-target="history">
+            <i class="fas fa-clipboard-check text-xl mb-1"></i>
+            <span>Riwayat</span>
+        </div>
+        <div onclick="switchTab('profile')" class="flex flex-col items-center cursor-pointer py-1 mobile-nav-item hover:text-shopee w-1/4" data-target="profile">
+            <i class="fas fa-user-circle text-xl mb-1"></i>
+            <span>Profil</span>
+        </div>
+    </nav>
+
+    </div> <!-- END APP CONTAINER -->
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // --- VARIABEL GLOBAL ---
+        let DRIVER_DATA = null; // Menyimpan data profil Kurir
+        let availableOrders = []; // Menyimpan list pesanan yang masuk
+        let activeOrderData = null; // Menyimpan detail pesanan yang sedang diantar
+
+        // --- KONFIGURASI BACKEND ---
+        // Ganti dengan URL web app GAS yang sama dengan index.html dan seller.html
+        const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxepD3BGU993WBCuZjH2Wo4sDyUkwyp4SGE4_mZ6EbrzD_qCDGzkRIOnPqmcXVnKNM/exec"; 
+
+        // --- FUNGSI KOMPRESI GAMBAR (CANVAS) ---
+        // Fungsi ini sangat penting agar foto KTP dan Wajah menjadi kecil (< 150KB) sebelum masuk ke Google Drive
+        function compressImage(file, maxWidth, maxHeight, quality) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = event => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        let width = img.width;
+                        let height = img.height;
+                        if (width > height) {
+                            if (width > maxWidth) { height = Math.round(height * (maxWidth / width)); width = maxWidth; }
+                        } else {
+                            if (height > maxHeight) { width = Math.round(width * (maxHeight / height)); height = maxHeight; }
+                        }
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width; canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        resolve(canvas.toDataURL('image/jpeg', quality)); 
+                    };
+                    img.onerror = error => reject(error);
+                };
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        // --- FUNGSI UPLOAD GAMBAR KE GAS ---
+        async function uploadImageToDrive(base64Data, filename) {
+            const uploadPayload = {
+                action: 'uploadImage',
+                base64: base64Data,
+                mimeType: 'image/jpeg',
+                filename: filename
+            };
+            const uploadResponse = await fetch(GAS_WEB_APP_URL, {
+                method: 'POST',
+                body: JSON.stringify(uploadPayload)
+            });
+            const result = await uploadResponse.json();
+            if(result.status !== 'success') throw new Error(result.message);
+            return result.url; // mengembalikan URL "lh3.googleusercontent.com"
+        }
+
+
+        // --- AUTHENTICATION LOGIC ---
+        function switchAuthView(viewId) {
+            document.getElementById('view-login').classList.add('hidden');
+            document.getElementById('view-login').classList.remove('flex');
+            document.getElementById('view-register').classList.add('hidden');
+            document.getElementById('view-register').classList.remove('flex');
+            document.getElementById('view-forgot').classList.add('hidden');
+            document.getElementById('view-forgot').classList.remove('flex');
+            
+            const activeView = document.getElementById('view-' + viewId);
+            activeView.classList.remove('hidden');
+            activeView.classList.add('flex');
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const phone = document.getElementById('loginPhone').value;
+            const pass = document.getElementById('loginPass').value;
+            const btn = document.getElementById('btnLogin');
+            
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'login', type: 'users_drivers', loginId: phone, password: pass })
+                });
+                const res = await response.json();
+                
+                if(res.status === 'success') {
+                    // Simpan data kurir ke variabel global
+                    DRIVER_DATA = res.user;
+
+                    // Update profil dari database ke header aplikasi kurir
+                    document.getElementById('userProfileName').innerText = DRIVER_DATA.full_name;
+                    if(DRIVER_DATA.face_img) document.getElementById('userProfileImage').src = DRIVER_DATA.face_img;
+
+                    document.getElementById('auth-container').classList.add('hidden');
+                    document.getElementById('app-container').classList.remove('hidden');
+                    document.getElementById('app-container').classList.add('flex');
+                    e.target.reset();
+
+                    // Panggil data awal (Tugas Baru)
+                    refreshOrders();
+                } else {
+                    alert(res.message);
+                }
+            } catch (error) {
+                alert("Koneksi gagal.");
+            } finally {
+                btn.innerHTML = 'Masuk';
+                btn.disabled = false;
+            }
+        }
+
+        // --- FUNGSI KELUAR / LOGOUT ---
+        function handleLogout() {
+            if(currentStep !== 0) {
+                alert("Harap selesaikan pesanan aktif Anda terlebih dahulu sebelum logout!");
+                return;
+            }
+            // Hapus data sesi lokal
+            DRIVER_DATA = null;
+            availableOrders = [];
+            activeOrderData = null;
+            
+            // Kembalikan ke layar login
+            document.getElementById('app-container').classList.add('hidden');
+            document.getElementById('app-container').classList.remove('flex');
+            document.getElementById('auth-container').classList.remove('hidden');
+            
+            // Pindahkan navigasi ke Tugas Baru
+            switchTab('new');
+        }
+
+        async function handleRegister(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnRegister');
+            
+            // Ambil Nilai dari Input yang sudah diberi ID
+            const name = document.getElementById('regName').value;
+            const nik = document.getElementById('regNik').value;
+            const phone = document.getElementById('regPhone').value;
+            const email = document.getElementById('regEmail').value;
+            const pass = document.getElementById('regPass').value;
+            const vehicle = document.getElementById('regVehicle').value;
+            const plate = document.getElementById('regPlate').value;
+            
+            const ktpFile = document.getElementById('regKtpImg').files[0];
+            const faceFile = document.getElementById('regFaceImg').files[0];
+
+            if(!ktpFile || !faceFile) {
+                alert("Pendaftaran gagal: Silakan unggah foto KTP dan Wajah terlebih dahulu.");
+                return;
+            }
+            
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyiapkan Foto...';
+            btn.disabled = true;
+
+            try {
+                // 1. Kompresi kedua gambar secara lokal di perangkat kurir
+                const ktpBase64 = await compressImage(ktpFile, 800, 800, 0.7);
+                const faceBase64 = await compressImage(faceFile, 800, 800, 0.7);
+
+                // 2. Upload foto KTP ke Google Drive
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengunggah KTP...';
+                const urlKtp = await uploadImageToDrive(ktpBase64, `KTP_${nik}.jpg`);
+
+                // 3. Upload foto Wajah ke Google Drive
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengunggah Foto Wajah...';
+                const urlFace = await uploadImageToDrive(faceBase64, `FACE_${nik}.jpg`);
+
+                // 4. Proses Pendaftaran Data ke Spreadsheet (beserta URL foto tadi)
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan Data...';
+                const newId = "DRV-" + Math.floor(Math.random() * 100000);
+                
+                // Header Database Kurir: ['driver_id', 'full_name', 'nik', 'phone', 'email', 'password', 'vehicle_type', 'plate_number', 'ktp_img', 'face_img']
+                const rowData = [
+                    newId, name, nik, phone, email, pass, vehicle, plate, urlKtp, urlFace
+                ];
+                
+                const response = await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'register', type: 'users_drivers', rowData: rowData })
+                });
+                const res = await response.json();
+                
+                if(res.status === 'success') {
+                    alert("Registrasi Berhasil! Data KTP & Foto Profil Anda telah tersimpan. Akun sedang direview, silakan login nanti.");
+                    switchAuthView('login');
+                    e.target.reset();
+                } else {
+                    alert("Pendaftaran ditolak: " + res.message);
+                }
+            } catch (error) {
+                console.error(error);
+                alert("Gagal koneksi atau unggah data. Pastikan internet stabil.");
+            } finally {
+                btn.innerHTML = 'Kirim Pendaftaran';
+                btn.disabled = false;
+            }
+        }
+
+        async function handleForgot(e) {
+            e.preventDefault();
+            const email = document.getElementById('forgotEmail').value;
+            const btn = document.getElementById('btnForgot');
+            
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengirim...';
+            btn.disabled = true;
+            
+            try {
+                const response = await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'forgotPassword', type: 'users_drivers', email: email })
+                });
+                const res = await response.json();
+                alert(res.message);
+                if(res.status === 'success') switchAuthView('login');
+            } catch (error) {
+                alert("Gagal koneksi.");
+            } finally {
+                btn.innerHTML = 'Kirim Password Baru';
+                btn.disabled = false;
+            }
+        }
+
+
+        // --- STATE MACHINE SEDERHANA UNTUK PESANAN AKTIF ---
+        let currentStep = 0; 
+        let activeOrderId = null; // Menyimpan ID pesanan dari Database
+        // 0: Belum ada order, 1: Menuju Outlet, 2: Pesanan Diambil, 3: Menuju Customer
+
+        function switchTab(tabId) {
+            document.getElementById('section-new').classList.add('hidden');
+            document.getElementById('section-active').classList.add('hidden');
+            document.getElementById('section-history').classList.add('hidden');
+            document.getElementById('section-profile').classList.add('hidden');
+            
+            document.getElementById('section-' + tabId).classList.remove('hidden');
+
+            document.querySelectorAll('.mobile-nav-item').forEach(el => {
+                el.classList.remove('text-shopee');
+                if(el.dataset.target === tabId) el.classList.add('text-shopee');
+            });
+
+            // Trigger fetch data berdasarkan tab
+            if(tabId === 'history') loadHistory();
+            if(tabId === 'profile') loadProfile();
+            if(tabId === 'new') refreshOrders();
+        }
+
+        document.getElementById('onlineToggle').addEventListener('change', function() {
+            const statusText = document.getElementById('statusText');
+            if(this.checked) {
+                statusText.innerText = "ONLINE";
+                statusText.className = "text-[10px] font-bold text-green-600 mt-1 mr-2 uppercase";
+            } else {
+                statusText.innerText = "OFFLINE";
+                statusText.className = "text-[10px] font-bold text-gray-500 mt-1 mr-2 uppercase";
+            }
+        });
+
+        // 1. TARIK DATA PESANAN BARU DARI DATABASE
+        async function refreshOrders() {
+            if(currentStep !== 0) return; // Jangan tarik order kalau lagi ada antaran aktif
+
+            const container = document.getElementById('new-orders-container');
+            container.innerHTML = '<div class="text-center py-10 text-gray-500"><i class="fas fa-spinner fa-spin text-3xl mb-2"></i><br>Mencari pesanan...</div>';
+            
+            try {
+                const response = await fetch(`${GAS_WEB_APP_URL}?action=getData&type=orders`);
+                const res = await response.json();
+                
+                if (res.status === 'success' && res.data) {
+                    // Saring hanya pesanan yang sedang butuh kurir
+                    availableOrders = res.data.filter(order => order.status === 'Menunggu Kurir');
+                    
+                    if(availableOrders.length === 0) {
+                        container.innerHTML = `
+                            <div class="text-center py-10 text-gray-400 text-sm">
+                                <i class="fas fa-motorcycle text-4xl mb-3 opacity-50"></i>
+                                <p>Belum ada tugas baru di sekitar Anda.</p>
+                            </div>`;
+                        return;
+                    }
+
+                    container.innerHTML = '';
+                    availableOrders.forEach(order => {
+                        const card = `
+                        <div class="bg-white rounded-lg shadow-sm border p-4 mb-4" id="order-card-${order.order_id}">
+                            <div class="flex justify-between items-start border-b pb-3 mb-3">
+                                <div class="bg-orange-100 text-shopee text-xs font-bold px-2 py-1 rounded">Delivery</div>
+                                <div class="text-right">
+                                    <div class="text-lg font-bold text-gray-800">Rp ${Number(order.total_price).toLocaleString('id-ID')}</div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex gap-3 mb-4 relative">
+                                <div class="absolute left-[9px] top-[14px] bottom-[14px] w-[2px] bg-gray-200"></div>
+                                <div class="flex flex-col gap-4 w-full">
+                                    <div class="flex gap-3 items-start z-10">
+                                        <div class="w-5 h-5 rounded-full bg-shopee text-white flex items-center justify-center flex-shrink-0 mt-0.5"><i class="fas fa-store text-[10px]"></i></div>
+                                        <div>
+                                            <div class="font-bold text-sm">${order.outlet}</div>
+                                            <div class="text-xs text-gray-500">Barang: ${order.qty}x ${order.product_name}</div>
+                                        </div>
+                                    </div>
+                                    <div class="flex gap-3 items-start z-10">
+                                        <div class="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center flex-shrink-0 mt-0.5"><i class="fas fa-map-marker-alt text-[10px]"></i></div>
+                                        <div>
+                                            <div class="font-bold text-sm">Pembeli ID: ${order.user_id}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button onclick="acceptOrder('${order.order_id}')" class="w-full bg-shopee text-white py-2.5 rounded font-bold hover:bg-shopeeHover transition active:scale-95">Terima Pesanan</button>
+                        </div>`;
+                        container.insertAdjacentHTML('beforeend', card);
+                    });
+                } else {
+                    container.innerHTML = '<div class="text-center py-5 text-red-500">Belum ada data pesanan.</div>';
+                }
+            } catch (error) {
+                container.innerHTML = '<div class="text-center py-5 text-red-500">Koneksi terputus.</div>';
+            }
+        }
+
+        // 2. POST UPDATE STATUS KE DATABASE SAAT PESANAN DITERIMA
+        async function acceptOrder(orderId) {
+            const card = document.getElementById('order-card-' + orderId);
+            if(card) {
+                const btn = card.querySelector('button');
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengkonfirmasi...';
+                btn.disabled = true;
+
+                try {
+                    // Simpan detail pesanan yang dipilih dari array availableOrders
+                    activeOrderData = availableOrders.find(o => o.order_id === orderId);
+
+                    const response = await fetch(GAS_WEB_APP_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            action: 'updateOrderStatus',
+                            type: 'orders',
+                            orderId: orderId,
+                            newStatus: 'Kurir Menuju Outlet'
+                        })
+                    });
+                    const res = await response.json();
+                    
+                    if (res.status === 'success') {
+                        card.style.display = 'none';
+                        currentStep = 1; 
+                        activeOrderId = orderId; 
+                        
+                        // Render data aktif ke Tab "Aktif"
+                        renderActiveOrder();
+                        
+                        // Reset Tombol State
+                        const actionBtn = document.getElementById('btnAction');
+                        const badge = document.getElementById('order-status-badge');
+                        badge.innerText = "Menuju Outlet";
+                        badge.className = "bg-orange-100 text-shopee px-2 py-1 text-xs font-bold rounded";
+                        actionBtn.innerText = "Saya Sudah di Outlet";
+                        actionBtn.className = "w-full bg-shopee text-white py-3.5 rounded-lg font-bold text-lg hover:bg-shopeeHover shadow-md transition active:scale-95";
+                        
+                        document.getElementById('activeBadge').classList.remove('hidden');
+                        switchTab('active');
+                    } else {
+                        alert(res.message);
+                        btn.innerHTML = 'Terima Pesanan';
+                        btn.disabled = false;
+                    }
+                } catch (error) {
+                    alert("Gagal koneksi ke server.");
+                    btn.innerHTML = 'Terima Pesanan';
+                    btn.disabled = false;
+                }
+            }
+        }
+
+        // FUNGSI RENDER DETAIL PESANAN AKTIF
+        async function renderActiveOrder() {
+            if(!activeOrderData) return;
+            
+            // Render Data Sementara (Fallback)
+            document.getElementById('active-outlet-name').innerText = activeOrderData.outlet;
+            document.getElementById('active-outlet-address').innerText = `Mencari alamat toko...`; 
+            document.getElementById('active-product-details').innerText = `Pesanan: ${activeOrderData.qty}x ${activeOrderData.product_name}`;
+            document.getElementById('active-customer-name').innerText = `Mencari nama pelanggan...`;
+            document.getElementById('active-customer-address').innerText = `Mencari alamat tujuan...`; 
+            document.getElementById('active-total-price').innerText = `Total Tagihan: Rp ${Number(activeOrderData.total_price).toLocaleString('id-ID')}`;
+
+            // Render Peta Sementara (Menuju Outlet)
+            updateMapLocation(activeOrderData.outlet);
+
+            // --- TARIK DATA ASLI PEMBELI DAN PENJUAL DARI DATABASE ---
+            try {
+                // Fetch Data Pembeli (users_buyers)
+                const resBuyer = await fetch(`${GAS_WEB_APP_URL}?action=getData&type=users_buyers`);
+                const jsonBuyer = await resBuyer.json();
+                if(jsonBuyer.status === 'success' && jsonBuyer.data) {
+                    const buyer = jsonBuyer.data.find(b => b.user_id === activeOrderData.user_id);
+                    if(buyer) {
+                        document.getElementById('active-customer-name').innerText = buyer.username;
+                        document.getElementById('active-customer-address').innerText = buyer.address || "Alamat detail belum diatur pembeli";
+                        document.getElementById('btn-call-buyer').href = `tel:${buyer.phone}`;
+                        document.getElementById('btn-chat-buyer').href = `sms:${buyer.phone}`;
+                    } else {
+                        document.getElementById('active-customer-name').innerText = `Pembeli ID: ${activeOrderData.user_id}`;
+                        document.getElementById('active-customer-address').innerText = `Alamat tidak ditemukan`;
+                    }
+                }
+
+                // Fetch Data Outlet/Penjual (users_sellers)
+                const resSeller = await fetch(`${GAS_WEB_APP_URL}?action=getData&type=users_sellers`);
+                const jsonSeller = await resSeller.json();
+                if(jsonSeller.status === 'success' && jsonSeller.data) {
+                    const seller = jsonSeller.data.find(s => s.store_name === activeOrderData.outlet);
+                    if(seller) {
+                        document.getElementById('active-outlet-address').innerText = seller.store_address || "Alamat detail tidak tersedia";
+                        document.getElementById('btn-call-seller').href = `tel:${seller.phone}`;
+                        
+                        // Update lokasi peta ke alamat yang lebih akurat
+                        updateMapLocation(seller.store_address + " " + seller.store_name);
+                    } else {
+                        document.getElementById('active-outlet-address').innerText = `Lokasi Penjemputan: ${activeOrderData.outlet}`;
+                    }
+                }
+            } catch (error) {
+                console.error("Gagal menarik detail data pembeli/penjual", error);
+            }
+        }
+
+        // FUNGSI UPDATE LOKASI PETA DINAMIS (GOOGLE MAPS EMBED)
+        function updateMapLocation(searchQuery) {
+            const iframe = document.getElementById('live-map-iframe');
+            if (iframe) {
+                const urlSafeQuery = encodeURIComponent(searchQuery);
+                iframe.src = `https://maps.google.com/maps?q=${urlSafeQuery}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+            }
+        }
+
+        // FUNGSI MEMBUKA APLIKASI GOOGLE MAPS EXTERNAL DI HP
+        function openGoogleMaps() {
+            if (!activeOrderData) return;
+            let targetLocation = "";
+
+            if (currentStep === 1) {
+                // Menuju Outlet
+                targetLocation = document.getElementById('active-outlet-address').innerText + " " + activeOrderData.outlet;
+            } else if (currentStep === 2) {
+                // Menuju Pelanggan
+                targetLocation = document.getElementById('active-customer-address').innerText; 
+            }
+
+            const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(targetLocation)}`;
+            window.open(mapsUrl, '_blank');
+        }
+
+        // 3. POST UPDATE STATUS PERJALANAN (ACTIVE DELIVERY)
+        async function updateOrderStatus() {
+            if (!activeOrderId) return;
+            const btn = document.getElementById('btnAction');
+            const badge = document.getElementById('order-status-badge');
+            let nextStatus = '';
+
+            if (currentStep === 1) nextStatus = 'Pesanan Diambil (Menuju Tujuan)';
+            else if (currentStep === 2) nextStatus = `Selesai (Diantar oleh ${DRIVER_DATA.full_name})`; // Tandai selesai & nama driver
+            else if (currentStep === 3) return;
+
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'updateOrderStatus', type: 'orders', orderId: activeOrderId, newStatus: nextStatus })
+                });
+                const res = await response.json();
+
+                if (res.status === 'success') {
+                    if (currentStep === 1) {
+                        currentStep = 2;
+                        badge.innerText = "Di Outlet";
+                        badge.className = "bg-yellow-100 text-yellow-700 px-2 py-1 text-xs font-bold rounded";
+                        btn.innerText = "Pesanan Sudah Diambil";
+                        btn.className = "w-full bg-blue-500 text-white py-3.5 rounded-lg font-bold text-lg hover:bg-blue-600 shadow-md transition active:scale-95";
+                        
+                        // Peta otomatis berganti titik ke arah alamat asli Pembeli
+                        let buyerAddress = document.getElementById('active-customer-address').innerText;
+                        updateMapLocation(buyerAddress);
+
+                    } else if (currentStep === 2) {
+                        currentStep = 3;
+                        badge.innerText = "Menuju Tujuan";
+                        badge.className = "bg-blue-100 text-blue-600 px-2 py-1 text-xs font-bold rounded";
+                        btn.innerText = "Selesaikan Antaran";
+                        btn.className = "w-full bg-green-500 text-white py-3.5 rounded-lg font-bold text-lg hover:bg-green-600 shadow-md transition active:scale-95";
+                    } else if (currentStep === 3) {
+                        alert("Antaran Selesai! Pesanan berhasil diserahkan ke pembeli.");
+                        currentStep = 0;
+                        activeOrderId = null;
+                        activeOrderData = null;
+                        document.getElementById('activeBadge').classList.add('hidden');
+                        
+                        // Kosongkan map iframe
+                        const iframe = document.getElementById('live-map-iframe');
+                        if (iframe) iframe.src = "";
+
+                        switchTab('new');
+                    }
+                } else {
+                    alert(res.message);
+                }
+            } catch (error) {
+                alert("Koneksi gagal.");
+            } finally {
+                btn.disabled = false;
+                if (currentStep !== 0) {
+                   if (currentStep === 1) btn.innerText = "Saya Sudah di Outlet";
+                   else if (currentStep === 2) btn.innerText = "Pesanan Sudah Diambil";
+                   else if (currentStep === 3) btn.innerText = "Selesaikan Antaran";
+                }
+            }
+        }
+
+        // 4. FUNGSI TARIK DATA RIWAYAT (HISTORY)
+        async function loadHistory() {
+            const container = document.getElementById('history-container');
+            container.innerHTML = '<div class="text-center py-6 text-gray-500"><i class="fas fa-spinner fa-spin text-xl mb-2"></i><br>Memuat riwayat...</div>';
+
+            try {
+                const response = await fetch(`${GAS_WEB_APP_URL}?action=getData&type=orders`);
+                const res = await response.json();
+                
+                if (res.status === 'success' && res.data) {
+                    // Cari pesanan yang statusnya "Selesai" dan diantar oleh nama kurir yang login ini
+                    const myHistory = res.data.filter(order => order.status.includes('Selesai') && order.status.includes(DRIVER_DATA.full_name));
+                    
+                    container.innerHTML = '';
+                    if(myHistory.length === 0) {
+                        container.innerHTML = '<div class="text-center py-6 text-gray-400">Belum ada riwayat antaran yang diselesaikan.</div>';
+                        return;
+                    }
+
+                    myHistory.forEach(order => {
+                        container.insertAdjacentHTML('beforeend', `
+                            <div class="bg-white rounded p-3 mb-2 border shadow-sm flex justify-between items-center opacity-90">
+                                <div class="flex items-center gap-3 w-3/4">
+                                    <div class="w-10 h-10 rounded bg-green-100 text-green-600 flex items-center justify-center flex-shrink-0"><i class="fas fa-check"></i></div>
+                                    <div class="truncate w-full">
+                                        <div class="font-bold text-sm truncate">${order.outlet}</div>
+                                        <div class="text-xs text-gray-500 truncate">ID: ${order.order_id}</div>
+                                    </div>
+                                </div>
+                                <div class="font-bold text-shopee text-sm">+ Rp 12.000</div>
+                            </div>
+                        `);
+                    });
+                } else {
+                    container.innerHTML = '<div class="text-center py-6 text-gray-400">Gagal memuat riwayat.</div>';
+                }
+            } catch (error) {
+                container.innerHTML = '<div class="text-center py-6 text-red-500">Koneksi terputus.</div>';
+            }
+        }
+
+        // 5. FUNGSI RENDER DATA PROFIL
+        function loadProfile() {
+            if(!DRIVER_DATA) return;
+            document.getElementById('profDetailName').innerText = DRIVER_DATA.full_name || '-';
+            document.getElementById('profDetailPhone').innerText = DRIVER_DATA.phone || '-';
+            document.getElementById('profDetailId').innerText = DRIVER_DATA.driver_id || '-';
+            document.getElementById('profDetailEmail').innerText = DRIVER_DATA.email || '-';
+            document.getElementById('profDetailVehicle').innerText = DRIVER_DATA.vehicle_type || '-';
+            document.getElementById('profDetailPlate').innerText = DRIVER_DATA.plate_number || '-';
+            if(DRIVER_DATA.face_img) document.getElementById('profDetailImage').src = DRIVER_DATA.face_img;
+        }
+
+    </script>
+</body>
+</html>

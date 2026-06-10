@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FoodCourt</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        shopee: '#ee4d2d',
+                        shopeeHover: '#d73211',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Sembunyikan scrollbar tapi tetap bisa di-scroll */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body class="bg-[#f5f5f5] font-sans pb-20 md:pb-0">
+
+    <!-- ================= AUTHENTICATION OVERLAY ================= -->
+    <div id="auth-overlay" class="hidden fixed inset-0 z-[100] bg-shopee overflow-y-auto flex-col h-full w-full">
+        <!-- Header Auth -->
+        <div class="bg-white px-4 md:px-8 py-4 shadow-sm flex items-center justify-between flex-shrink-0">
+            <div class="flex items-center gap-3 text-shopee text-2xl font-bold cursor-pointer" onclick="hideAuth()">
+                <i class="fas fa-utensils"></i> <span class="text-xl" id="auth-title">Log In</span>
+            </div>
+            <button onclick="hideAuth()" class="text-gray-500 hover:text-shopee text-sm font-bold flex items-center gap-1"><i class="fas fa-times"></i> Tutup</button>
+        </div>
+
+        <!-- Body Auth -->
+        <div class="flex-1 flex justify-center items-center p-4">
+            <div class="bg-white rounded shadow-lg w-full max-w-[400px] p-6 md:p-8">
+                
+                <!-- VIEW: LOGIN -->
+                <div id="view-login" class="flex flex-col">
+                    <div class="text-xl font-bold mb-6 text-gray-800">Log In</div>
+                    <form onsubmit="handleBuyerLogin(event)" class="flex flex-col gap-4">
+                        <div>
+                            <input type="text" required placeholder="No. Handphone/Username/Email" class="w-full px-3 py-2.5 border border-gray-300 rounded outline-none focus:border-shopee text-sm transition">
+                        </div>
+                        <div>
+                            <input type="password" required placeholder="Password" class="w-full px-3 py-2.5 border border-gray-300 rounded outline-none focus:border-shopee text-sm transition">
+                        </div>
+                        <button type="submit" id="btnBuyerLogin" class="w-full bg-shopee text-white py-2.5 rounded font-bold text-sm hover:bg-shopeeHover transition mt-2 shadow-sm">LOG IN</button>
+                        
+                        <div class="flex justify-between items-center text-xs mt-2 mb-2">
+                            <a href="#" onclick="showAuth('forgot')" class="text-blue-600 hover:text-blue-800">Lupa Password</a>
+                            <a href="#" class="text-blue-600 hover:text-blue-800">Log in dengan no. handphone</a>
+                        </div>
+
+                        <div class="text-center text-sm mt-6">
+                            <span class="text-gray-500">Baru di FoodCourt?</span> <a href="#" onclick="showAuth('register')" class="text-shopee font-bold">Daftar</a>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- VIEW: REGISTER -->
+                <div id="view-register" class="hidden flex-col">
+                    <div class="text-xl font-bold mb-6 text-gray-800">Daftar</div>
+                    <form onsubmit="handleBuyerRegister(event)" class="flex flex-col gap-4">
+                        <div>
+                            <input type="text" required placeholder="Nama Lengkap" class="w-full px-3 py-2.5 border border-gray-300 rounded outline-none focus:border-shopee text-sm transition">
+                        </div>
+                        <div>
+                            <input type="tel" required placeholder="No. Handphone" class="w-full px-3 py-2.5 border border-gray-300 rounded outline-none focus:border-shopee text-sm transition">
+                        </div>
+                        <div>
+                            <input type="email" required placeholder="Email" class="w-full px-3 py-2.5 border border-gray-300 rounded outline-none focus:border-shopee text-sm transition">
+                        </div>
+                        <div>
+                            <input type="password" required placeholder="Password" class="w-full px-3 py-2.5 border border-gray-300 rounded outline-none focus:border-shopee text-sm transition">
+                        </div>
+                        <button type="submit" id="btnBuyerRegister" class="w-full bg-shopee text-white py-2.5 rounded font-bold text-sm hover:bg-shopeeHover transition mt-2 shadow-sm">DAFTAR</button>
+                        
+                        <p class="text-[10px] text-gray-500 text-center mt-2 px-2">Dengan mendaftar, Anda setuju dengan Syarat, Ketentuan dan Kebijakan Privasi FoodCourt.</p>
+
+                        <div class="text-center text-sm mt-4">
+                            <span class="text-gray-500">Punya akun?</span> <a href="#" onclick="showAuth('login')" class="text-shopee font-bold">Log in</a>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- VIEW: FORGOT PASSWORD -->
+                <div id="view-forgot" class="hidden flex-col">
+                    <button type="button" onclick="showAuth('login')" class="text-gray-500 mb-4 flex items-center gap-2 hover:text-shopee w-fit text-sm">
+                        <i class="fas fa-arrow-left"></i> Kembali ke Log In
+                    </button>
+                    <div class="text-xl font-bold mb-2 text-gray-800">Lupa Password?</div>
+                    <p class="text-sm text-gray-500 mb-6">Masukkan email Anda. Kami akan mengirimkan password baru ke email tersebut.</p>
+                    <form onsubmit="handleBuyerForgot(event)" class="flex flex-col gap-4">
+                        <div>
+                            <input type="email" id="forgotEmailBuyer" required placeholder="Email terdaftar" class="w-full px-3 py-2.5 border border-gray-300 rounded outline-none focus:border-shopee text-sm transition">
+                        </div>
+                        <button type="submit" id="btnBuyerForgot" class="w-full bg-shopee text-white py-2.5 rounded font-bold text-sm hover:bg-shopeeHover transition mt-2 shadow-sm">KIRIM PASSWORD BARU</button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- HEADER DEKSTOP & MOBILE -->
+    <header class="bg-shopee sticky top-0 z-50 shadow-sm">
+        <!-- Top Nav (Desktop only) -->
+        <div class="hidden md:flex justify-between items-center max-w-6xl mx-auto text-white text-sm py-1 px-4">
+            <div class="flex gap-4">
+                <a href="javascript:void(0)" onclick="handleSellerCentreClick()" class="font-bold hover:text-gray-200"><i class="fas fa-store mr-1"></i> Seller Centre</a>
+                <div class="flex gap-2 items-center">
+                    <span>Ikuti kami di</span>
+                    <i class="fab fa-facebook"></i>
+                    <i class="fab fa-instagram"></i>
+                </div>
+            </div>
+            <div class="flex gap-4 items-center">
+                <a href="#" class="hover:text-gray-200"><i class="far fa-bell mr-1"></i> Notifikasi</a>
+                <a href="#" class="hover:text-gray-200"><i class="far fa-question-circle mr-1"></i> Bantuan</a>
+                <a href="#" class="hover:text-gray-200"><i class="fas fa-globe mr-1"></i> Bahasa Indonesia</a>
+                <div id="auth-links" class="flex items-center gap-4">
+                    <a href="#" onclick="showAuth('register')" class="font-bold hover:text-gray-200">Daftar</a>
+                    <span class="border-l border-white/40 h-4"></span>
+                    <a href="#" onclick="showAuth('login')" class="font-bold hover:text-gray-200">Log In</a>
+                </div>
+                <div id="user-links" class="hidden items-center gap-4">
+                    <span id="header-username" class="font-bold text-white"></span>
+                    <span class="border-l border-white/40 h-4"></span>
+                    <a href="#" onclick="handleLogout()" class="font-bold hover:text-gray-200">Log Out</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Header / Search bar -->
+        <div class="flex items-center max-w-6xl mx-auto py-2 md:py-4 px-2 md:px-4 gap-2 md:gap-8">
+            <!-- Logo (Hidden on mobile) -->
+            <div class="hidden md:flex text-white text-3xl font-bold items-center gap-2 w-48">
+                <i class="fas fa-utensils"></i> FoodCourt
+            </div>
+
+            <!-- Search Box -->
+            <div class="flex-1">
+                <div class="bg-white rounded flex items-center p-1 shadow-sm">
+                    <input type="text" placeholder="Cari makanan, minuman, atau outlet" class="w-full px-3 py-1.5 outline-none text-sm text-gray-700">
+                    <button class="bg-shopee text-white px-5 py-1.5 rounded hover:bg-shopeeHover transition">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+                <div class="hidden md:flex gap-3 text-white text-xs mt-1">
+                    <a href="#" class="hover:underline">Ayam Geprek</a>
+                    <a href="#" class="hover:underline">Es Teh</a>
+                    <a href="#" class="hover:underline">Seblak</a>
+                    <a href="#" class="hover:underline">Boba</a>
+                    <a href="#" class="hover:underline">Nasi Goreng</a>
+                </div>
+            </div>
+
+            <!-- Cart Icon -->
+            <div class="text-white text-2xl px-4 relative cursor-pointer">
+                <i class="fas fa-shopping-cart"></i>
+                <span class="absolute top-0 right-1 bg-white text-shopee text-[10px] font-bold px-1.5 rounded-full border border-shopee">3</span>
+            </div>
+            
+            <!-- Mobile Chat Icon -->
+            <div class="md:hidden text-white text-2xl pr-2">
+                <i class="far fa-comments"></i>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="max-w-6xl mx-auto md:mt-6 px-0 md:px-4">
+        
+        <!-- Banner Carousel -->
+        <div class="flex gap-2 mb-2 md:mb-4 bg-white md:bg-transparent p-2 md:p-0">
+            <div class="w-full md:w-2/3">
+                <img src="https://placehold.co/800x300/ee4d2d/white?text=PROMO+FOODCOURT" alt="Banner Main" class="w-full h-32 sm:h-48 md:h-64 object-cover rounded md:shadow-sm bg-gray-200">
+            </div>
+            <div class="hidden md:flex w-1/3 flex-col gap-2">
+                <img src="https://placehold.co/400x145/ffb3a7/white?text=Gratis+Ongkir+Outlet" alt="Banner Sub 1" class="w-full h-[124px] object-cover rounded shadow-sm">
+                <img src="https://placehold.co/400x145/ffb3a7/white?text=Diskon+Makan+Siang" alt="Banner Sub 2" class="w-full h-[124px] object-cover rounded shadow-sm">
+            </div>
+        </div>
+
+        <!-- Quick Menus (Kategori Bulat) -->
+        <div class="bg-white rounded-none md:rounded md:shadow-sm p-4 mb-2 md:mb-4 overflow-x-auto hide-scrollbar">
+            <div class="grid grid-cols-5 md:grid-cols-10 gap-y-4 gap-x-2 md:gap-x-4 text-center min-w-[320px]">
+                <!-- Items will be injected by JS -->
+                <div class="flex flex-col items-center gap-1 md:gap-2 cursor-pointer hover:-translate-y-1 transition">
+                    <div class="w-10 h-10 md:w-12 md:h-12 border md:border-2 rounded-xl flex items-center justify-center text-shopee bg-orange-50"><i class="fas fa-shipping-fast text-lg md:text-xl"></i></div>
+                    <span class="text-[9px] md:text-xs leading-tight">Gratis Ongkir</span>
+                </div>
+                <div class="flex flex-col items-center gap-1 md:gap-2 cursor-pointer hover:-translate-y-1 transition">
+                    <div class="w-10 h-10 md:w-12 md:h-12 border md:border-2 rounded-xl flex items-center justify-center text-shopee bg-orange-50"><i class="fas fa-drumstick-bite text-lg md:text-xl"></i></div>
+                    <span class="text-[9px] md:text-xs leading-tight">Makanan Berat</span>
+                </div>
+                <div class="flex flex-col items-center gap-1 md:gap-2 cursor-pointer hover:-translate-y-1 transition">
+                    <div class="w-10 h-10 md:w-12 md:h-12 border md:border-2 rounded-xl flex items-center justify-center text-shopee bg-orange-50"><i class="fas fa-coffee text-lg md:text-xl"></i></div>
+                    <span class="text-[9px] md:text-xs leading-tight">Minuman</span>
+                </div>
+                <div class="flex flex-col items-center gap-1 md:gap-2 cursor-pointer hover:-translate-y-1 transition">
+                    <div class="w-10 h-10 md:w-12 md:h-12 border md:border-2 rounded-xl flex items-center justify-center text-shopee bg-orange-50"><i class="fas fa-hotdog text-lg md:text-xl"></i></div>
+                    <span class="text-[9px] md:text-xs leading-tight">Jajanan</span>
+                </div>
+                <div class="flex flex-col items-center gap-1 md:gap-2 cursor-pointer hover:-translate-y-1 transition">
+                    <div class="w-10 h-10 md:w-12 md:h-12 border md:border-2 rounded-xl flex items-center justify-center text-shopee bg-orange-50"><i class="fas fa-ice-cream text-lg md:text-xl"></i></div>
+                    <span class="text-[9px] md:text-xs leading-tight">Dessert</span>
+                </div>
+                <div class="flex flex-col items-center gap-1 md:gap-2 cursor-pointer hover:-translate-y-1 transition">
+                    <div class="w-10 h-10 md:w-12 md:h-12 border md:border-2 rounded-xl flex items-center justify-center text-shopee bg-orange-50"><i class="fas fa-bolt text-lg md:text-xl"></i></div>
+                    <span class="text-[9px] md:text-xs leading-tight">Flash Promo</span>
+                </div>
+                <div class="flex flex-col items-center gap-1 md:gap-2 cursor-pointer hover:-translate-y-1 transition">
+                    <div class="w-10 h-10 md:w-12 md:h-12 border md:border-2 rounded-xl flex items-center justify-center text-shopee bg-orange-50"><i class="fas fa-store text-lg md:text-xl"></i></div>
+                    <span class="text-[9px] md:text-xs leading-tight">Outlet Resmi</span>
+                </div>
+                <div class="flex flex-col items-center gap-1 md:gap-2 cursor-pointer hover:-translate-y-1 transition">
+                    <div class="w-10 h-10 md:w-12 md:h-12 border md:border-2 rounded-xl flex items-center justify-center text-shopee bg-orange-50"><i class="fas fa-leaf text-lg md:text-xl"></i></div>
+                    <span class="text-[9px] md:text-xs leading-tight">Vegan / Sehat</span>
+                </div>
+                <div class="flex flex-col items-center gap-1 md:gap-2 cursor-pointer hover:-translate-y-1 transition">
+                    <div class="w-10 h-10 md:w-12 md:h-12 border md:border-2 rounded-xl flex items-center justify-center text-shopee bg-orange-50"><i class="fas fa-pepper-hot text-lg md:text-xl"></i></div>
+                    <span class="text-[9px] md:text-xs leading-tight">Menu Pedas</span>
+                </div>
+                <div class="flex flex-col items-center gap-1 md:gap-2 cursor-pointer hover:-translate-y-1 transition">
+                    <div class="w-10 h-10 md:w-12 md:h-12 border md:border-2 rounded-xl flex items-center justify-center text-shopee bg-orange-50"><i class="fas fa-ellipsis-h text-lg md:text-xl"></i></div>
+                    <span class="text-[9px] md:text-xs leading-tight">Menu Lainnya</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Flash Sale Section -->
+        <div class="bg-white rounded-none md:rounded md:shadow-sm mb-2 md:mb-4">
+            <div class="flex justify-between items-center p-4 border-b">
+                <div class="flex items-center gap-2">
+                    <h2 class="text-xl font-bold text-shopee italic"><i class="fas fa-bolt"></i> FLASH PROMO</h2>
+                    <div class="flex gap-1 text-white text-xs font-bold">
+                        <span class="bg-black px-1.5 py-0.5 rounded">02</span><span class="text-black">:</span>
+                        <span class="bg-black px-1.5 py-0.5 rounded">45</span><span class="text-black">:</span>
+                        <span class="bg-black px-1.5 py-0.5 rounded">10</span>
+                    </div>
+                </div>
+                <a href="#" class="text-sm text-shopee hover:underline">Lihat Semua ></a>
+            </div>
+            <div class="flex overflow-x-auto hide-scrollbar p-4 gap-4" id="flash-sale-container">
+                <!-- Data promo akan dirender dari GAS -->
+                <div class="text-center w-full py-4 text-gray-500"><i class="fas fa-spinner fa-spin"></i> Memuat Promo...</div>
+            </div>
+        </div>
+
+        <!-- Rekomendasi (Product Grid) -->
+        <div class="bg-white sticky top-[52px] md:top-28 z-40 border-b-4 border-shopee mb-2">
+            <h2 class="text-center text-shopee font-bold py-3 text-sm md:text-base uppercase">Rekomendasi Untukmu</h2>
+        </div>
+        
+        <div id="product-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-1 md:gap-4 pb-4 px-1 md:px-0">
+            <!-- Loading State Placeholder -->
+            <div class="text-center col-span-full py-10 text-gray-500">
+                <i class="fas fa-spinner fa-spin text-3xl mb-2"></i><br>
+                Memuat Produk...
+            </div>
+        </div>
+
+        <div class="text-center mt-4 mb-8">
+            <button class="bg-white border border-gray-300 text-gray-600 px-10 py-2 rounded hover:bg-gray-50">Muat Lebih Banyak</button>
+        </div>
+
+    </main>
+
+    <!-- MOBILE BOTTOM NAVIGATION -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 w-full bg-white border-t flex justify-around text-[10px] text-gray-500 pb-3 pt-2 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-50">
+        <div class="flex flex-col items-center text-shopee cursor-pointer py-1">
+            <i class="fas fa-home text-xl mb-1"></i>
+            <span>Beranda</span>
+        </div>
+        <div class="flex flex-col items-center hover:text-shopee cursor-pointer">
+            <i class="fas fa-store text-xl mb-1"></i>
+            <span>Outlet</span>
+        </div>
+        <div class="flex flex-col items-center hover:text-shopee cursor-pointer">
+            <i class="fas fa-receipt text-xl mb-1"></i>
+            <span>Pesanan</span>
+        </div>
+        <div class="flex flex-col items-center hover:text-shopee cursor-pointer relative py-1">
+            <i class="far fa-bell text-xl mb-1"></i>
+            <span class="absolute top-1 right-2 bg-shopee text-white text-[8px] px-1 rounded-full">9+</span>
+            <span>Notifikasi</span>
+        </div>
+        <div class="flex flex-col items-center hover:text-shopee cursor-pointer py-1" onclick="handleMobileProfileClick()" id="mobile-profile-btn">
+            <i class="far fa-user text-xl mb-1"></i>
+            <span id="mobile-profile-text">Log In</span>
+        </div>
+    </nav>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // Data Mockup untuk Produk (Akan diganti dengan fetch dari GAS nantinya)
+        const mockProducts = []; // Kita hapus mock karena sekarang pakai database
+
+        // URL Web App Google Apps Script Anda (Ganti dengan URL yang didapat setelah deploy GAS)
+        const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxepD3BGU993WBCuZjH2Wo4sDyUkwyp4SGE4_mZ6EbrzD_qCDGzkRIOnPqmcXVnKNM/exec"; 
+
+        // Fungsi untuk merender produk ke HTML
+        function renderProducts(products) {
+            const container = document.getElementById('product-container');
+            container.innerHTML = ''; // Clear loading
+
+            products.forEach(product => {
+                const card = `
+                <a href="#" class="bg-white md:rounded md:border border-gray-100 hover:border-shopee hover:-translate-y-0.5 transition duration-200 shadow-[0_1px_2px_0_rgba(0,0,0,0.05)] md:shadow-sm relative group overflow-hidden flex flex-col h-full">
+                    <img src="${product.img}" alt="${product.name}" class="w-full aspect-square object-cover">
+                    
+                    <!-- Tag Promo Kiri Atas -->
+                    <div class="absolute top-0 left-0 bg-shopee text-white text-[9px] md:text-[10px] font-bold px-1.5 py-0.5 rounded-br">Star+</div>
+
+                    <div class="p-2 flex flex-col flex-grow">
+                        <div class="text-[11px] md:text-xs text-gray-700 line-clamp-2 mb-1">
+                            ${product.name}
+                        </div>
+                        
+                        <div class="mt-auto pt-1">
+                            <!-- Label -->
+                            <div class="text-[8px] md:text-[9px] text-shopee border border-shopee inline-block px-1 rounded-sm mb-1 bg-orange-50">Cashback XTRA</div>
+                            
+                            <!-- Harga -->
+                            <div class="text-shopee font-bold text-sm md:text-base">Rp${product.price}</div>
+                            
+                            <!-- Rating & Terjual -->
+                            <div class="flex items-center justify-between text-[9px] md:text-[10px] text-gray-500 mt-1">
+                                <div class="flex text-yellow-400 text-[8px]">
+                                    <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                                </div>
+                                <span class="truncate ml-1">${product.sold}</span>
+                            </div>
+                            
+                            <!-- Lokasi -->
+                            <div class="text-[9px] md:text-[10px] text-gray-400 mt-1 truncate">${product.location}</div>
+                        </div>
+                    </div>
+
+                    <!-- Overlay Hover "Cari Serupa" (Hanya muncul di Desktop) -->
+                    <div class="hidden md:block absolute bottom-0 w-full bg-shopee text-white text-center py-1.5 text-xs opacity-0 group-hover:opacity-100 transition">
+                        Cari Serupa
+                    </div>
+                </a>
+                `;
+                container.insertAdjacentHTML('beforeend', card);
+            });
+        }
+
+        /* * FUNGSI UNTUK MENGAMBIL DATA DARI GOOGLE APPS SCRIPT
+         * Mengambil produk secara nyata dari multple Spreadsheet Kategori
+         */
+        async function fetchProductsFromGAS() {
+            const container = document.getElementById('product-container');
+            container.innerHTML = '<div class="col-span-full text-center py-10 text-gray-500"><i class="fas fa-spinner fa-spin text-3xl mb-2"></i><br>Memuat Rekomendasi Menu...</div>';
+            
+            try {
+                // Mengambil produk dari beberapa kategori sekaligus
+                const categories = ['makanan_berat', 'minuman', 'jajanan'];
+                let allProducts = [];
+                
+                for (let cat of categories) {
+                    const response = await fetch(`${GAS_WEB_APP_URL}?action=getData&type=${cat}`);
+                    const result = await response.json();
+                    // Gabungkan array data jika ada
+                    if (result.status === 'success' && result.data && result.data.length > 0) {
+                        allProducts = allProducts.concat(result.data);
+                    }
+                }
+                
+                if (allProducts.length > 0) {
+                    renderProducts(allProducts); // Render ke UI
+                } else {
+                    container.innerHTML = '<div class="col-span-full text-center py-10 text-gray-500">Belum ada produk yang dijual di FoodCourt. Toko belum menambahkan produk.</div>';
+                }
+            } catch (error) {
+                console.error("Error fetching data:", error);
+                container.innerHTML = '<div class="col-span-full text-center text-red-500">Gagal memuat produk. Periksa koneksi internet.</div>';
+            }
+        }
+
+        // Jalankan saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchProductsFromGAS();
+            fetchFlashPromoFromGAS(); // Memanggil Flash Promo
+            updateAuthUI(); // Inisiasi Tampilan Menu Login
+        });
+
+        let loggedInUser = null; // Menyimpan data sesi user
+
+        function updateAuthUI() {
+            const authLinks = document.getElementById('auth-links');
+            const userLinks = document.getElementById('user-links');
+            const headerUsername = document.getElementById('header-username');
+            const mobileProfileText = document.getElementById('mobile-profile-text');
+
+            if (loggedInUser) {
+                // Tampilan saat Logged In
+                if(authLinks) { authLinks.classList.add('hidden'); authLinks.classList.remove('flex'); }
+                if(userLinks) { userLinks.classList.remove('hidden'); userLinks.classList.add('flex'); }
+                if(headerUsername) headerUsername.innerText = loggedInUser.username;
+                if(mobileProfileText) mobileProfileText.innerText = 'Log Out';
+            } else {
+                // Tampilan saat belum Log In
+                if(authLinks) { authLinks.classList.remove('hidden'); authLinks.classList.add('flex'); }
+                if(userLinks) { userLinks.classList.add('hidden'); userLinks.classList.remove('flex'); }
+                if(mobileProfileText) mobileProfileText.innerText = 'Log In';
+            }
+        }
+
+        function handleLogout() {
+            loggedInUser = null;
+            localStorage.removeItem('foodcourt_buyer_login');
+            updateAuthUI();
+            alert("Anda telah berhasil Log Out.");
+        }
+
+        // --- FUNGSI NAVIGASI AMAN UNTUK MODE PREVIEW ---
+        function goToSellerPage() {
+            try {
+                // Cek apakah aplikasi sedang berjalan di dalam Iframe (Preview Canvas AI)
+                if (window.self !== window.top) {
+                    alert("[Mode Preview] Di lingkungan nyata, Anda akan otomatis dialihkan ke halaman 'seller.html'. Silakan download dan buka file secara lokal di komputer Anda untuk melihat perpindahannya.");
+                    return;
+                }
+            } catch (e) {
+                alert("[Mode Preview] Anda akan dialihkan ke halaman 'seller.html' jika dijalankan di komputer.");
+                return;
+            }
+            // Eksekusi perpindahan halaman di dunia nyata (jika didownload)
+            window.location.href = 'seller.html';
+        }
+
+        // --- FUNGSI KLIK SELLER CENTRE (SINKRONISASI / AUTO LOGIN / AUTO PREFILL) ---
+        async function handleSellerCentreClick() {
+            if (!loggedInUser) {
+                if (confirm("Silakan log in sebagai pembeli terlebih dahulu agar kami dapat mendeteksi atau menyinkronkan data toko Anda. Klik 'OK' untuk log in.")) {
+                    showAuth('login');
+                } else {
+                    goToSellerPage();
+                }
+                return;
+            }
+
+            // Tampilkan loading overlay
+            const loadingOverlay = document.getElementById('loading-overlay');
+            loadingOverlay.classList.remove('hidden');
+            loadingOverlay.classList.add('flex');
+
+            try {
+                // Mengambil daftar penjual yang sudah terdaftar
+                const response = await fetch(`${GAS_WEB_APP_URL}?action=getData&type=users_sellers`);
+                const res = await response.json();
+
+                if (res.status === 'success' && res.data) {
+                    // Cari apakah ada toko yang terdaftar menggunakan Email atau No HP pembeli ini
+                    const matchedSeller = res.data.find(seller => 
+                        seller.email === loggedInUser.email || 
+                        seller.phone === loggedInUser.phone
+                    );
+
+                    if (matchedSeller) {
+                        // Jika terdaftar, simpan sesi seller di localStorage agar seller.html otomatis masuk
+                        localStorage.setItem('foodcourt_seller_login', JSON.stringify(matchedSeller));
+                        alert(`Toko '${matchedSeller.store_name}' terdeteksi! Mengalihkan Anda secara otomatis ke dasbor penjual...`);
+                        goToSellerPage();
+                    } else {
+                        // Jika belum ada, pre-fill data pembeli ini agar form pendaftaran toko otomatis terisi
+                        localStorage.setItem('foodcourt_prefill_seller_reg', JSON.stringify(loggedInUser));
+                        alert("Menyinkronkan data pembeli Anda. Mengalihkan ke formulir pendaftaran toko...");
+                        goToSellerPage();
+                    }
+                } else {
+                    localStorage.setItem('foodcourt_prefill_seller_reg', JSON.stringify(loggedInUser));
+                    goToSellerPage();
+                }
+            } catch (error) {
+                console.error("Gagal mendeteksi status seller:", error);
+                goToSellerPage();
+            } finally {
+                loadingOverlay.classList.add('hidden');
+                loadingOverlay.classList.remove('flex');
+            }
+        }
+
+        // --- AUTHENTICATION LOGIC (BUYER) ---
+        function showAuth(viewType) {
+            const overlay = document.getElementById('auth-overlay');
+            const viewLogin = document.getElementById('view-login');
+            const viewRegister = document.getElementById('view-register');
+            const viewForgot = document.getElementById('view-forgot');
+            const title = document.getElementById('auth-title');
+
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+
+            // Sembunyikan semua dulu
+            viewLogin.classList.add('hidden'); viewLogin.classList.remove('flex');
+            viewRegister.classList.add('hidden'); viewRegister.classList.remove('flex');
+            viewForgot.classList.add('hidden'); viewForgot.classList.remove('flex');
+
+            if (viewType === 'login') {
+                viewLogin.classList.remove('hidden');
+                viewLogin.classList.add('flex');
+                title.innerText = 'Log In';
+            } else if (viewType === 'register') {
+                viewRegister.classList.remove('hidden');
+                viewRegister.classList.add('flex');
+                title.innerText = 'Daftar';
+            } else if (viewType === 'forgot') {
+                viewForgot.classList.remove('hidden');
+                viewForgot.classList.add('flex');
+                title.innerText = 'Lupa Password';
+            }
+        }
+
+        function hideAuth() {
+            const overlay = document.getElementById('auth-overlay');
+            overlay.classList.add('hidden');
+            overlay.classList.remove('flex');
+        }
+
+        async function handleBuyerLogin(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnBuyerLogin');
+            const formInputs = e.target.querySelectorAll('input');
+            const loginId = formInputs[0].value;
+            const password = formInputs[1].value;
+
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+            btn.disabled = true;
+            
+            try {
+                const response = await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'login', type: 'users_buyers', loginId: loginId, password: password })
+                });
+                const res = await response.json();
+                
+                if (res.status === 'success') {
+                    loggedInUser = res.user; // Simpan data user ke lokal memori
+                    updateAuthUI(); // Perbarui tampilan header secara real-time
+                    
+                    alert("Selamat datang, " + res.user.username);
+                    hideAuth();
+                    e.target.reset();
+                } else {
+                    alert(res.message);
+                }
+            } catch (error) {
+                alert("Gagal koneksi ke server.");
+            } finally {
+                btn.innerHTML = 'LOG IN';
+                btn.disabled = false;
+            }
+        }
+
+        async function handleBuyerRegister(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnBuyerRegister');
+            const inputs = e.target.querySelectorAll('input');
+            
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+            btn.disabled = true;
+
+            const newId = "BUY-" + Math.floor(Math.random() * 100000);
+            const rowData = [newId, inputs[0].value, inputs[2].value, inputs[3].value, inputs[1].value, ""]; 
+            // Header: ['user_id', 'username', 'email', 'password', 'phone', 'address']
+
+            try {
+                const response = await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'register', type: 'users_buyers', rowData: rowData })
+                });
+                const res = await response.json();
+                
+                if(res.status === 'success') {
+                    alert("Registrasi Berhasil! Silakan Log In.");
+                    showAuth('login');
+                    e.target.reset();
+                } else {
+                    alert(res.message);
+                }
+            } catch (error) {
+                alert("Gagal koneksi.");
+            } finally {
+                btn.innerHTML = 'DAFTAR';
+                btn.disabled = false;
+            }
+        }
+
+        async function handleBuyerForgot(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnBuyerForgot');
+            const email = document.getElementById('forgotEmailBuyer').value;
+            
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengirim...';
+            btn.disabled = true;
+            
+            try {
+                const response = await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'forgotPassword', type: 'users_buyers', email: email })
+                });
+                const res = await response.json();
+                alert(res.message);
+                if(res.status === 'success') showAuth('login');
+            } catch (error) {
+                alert("Gagal koneksi.");
+            } finally {
+                btn.innerHTML = 'KIRIM PASSWORD BARU';
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
