@@ -35,196 +35,207 @@
             overflow: hidden;
         }
         .leaflet-container { z-index: 1 !important; }
+        
+        /* Animasi Kustom 3D */
+        .btn-3d { transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1); }
+        .btn-3d:active { transform: translateY(3px); box-shadow: 0 0px 0 0 transparent !important; }
+        .nav-3d-pop { transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
     </style>
 </head>
-<body class="bg-[#f5f5f5] font-sans pb-20 md:pb-0 relative">
+<body class="bg-[#f5f5f5] font-sans pb-28 md:pb-0 relative selection:bg-orange-200">
 
     <!-- ================= KERANJANG (CART) OVERLAY ================= -->
-    <div id="cart-overlay" class="hidden fixed inset-0 z-[115] bg-black/50 overflow-y-auto flex-col justify-center items-center p-4">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-0 relative mt-10 md:mt-0 flex flex-col max-h-[90vh]">
-            <div class="p-4 border-b flex justify-between items-center bg-gray-50 rounded-t-lg shrink-0">
-                <h2 class="text-lg font-bold text-gray-800"><i class="fas fa-shopping-cart text-shopee mr-2"></i> Keranjang Saya</h2>
-                <button onclick="hideCart()" class="text-gray-500 hover:text-red-500"><i class="fas fa-times text-xl"></i></button>
+    <div id="cart-overlay" class="hidden fixed inset-0 z-[115] bg-black/50 backdrop-blur-sm overflow-y-auto flex-col justify-center items-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-0 relative mt-10 md:mt-0 flex flex-col max-h-[90vh] overflow-hidden">
+            <div class="p-4 border-b flex justify-between items-center bg-gray-50 shrink-0">
+                <h2 class="text-lg font-bold text-gray-800"><i class="fas fa-shopping-cart text-shopee mr-2 drop-shadow-md"></i> Keranjang Saya</h2>
+                <button onclick="hideCart()" class="text-gray-500 hover:text-red-500 bg-white w-8 h-8 rounded-full shadow flex justify-center items-center transition"><i class="fas fa-times"></i></button>
             </div>
             
-            <div class="p-4 flex-1 overflow-y-auto flex flex-col gap-4">
+            <div class="p-4 flex-1 overflow-y-auto flex flex-col gap-4 bg-gray-50">
                 <div id="cart-items-container" class="flex flex-col gap-3 border-b pb-4">
                     <!-- Item Keranjang akan di-render di sini -->
                 </div>
                 
-                <!-- Form Checkout Keranjang (Alamat & Map) -->
+                <!-- Form Checkout Keranjang -->
                 <form id="cartForm" onsubmit="submitCartOrder(event)" class="flex flex-col gap-4">
-                    <div>
+                    <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-100">
                         <label class="block text-sm font-bold text-gray-700 mb-1">Alamat Lengkap Pengiriman *</label>
-                        <textarea id="cartAddress" required placeholder="Contoh: Jalan Melati No 12, RT 01/RW 02. Patokan: Pagar Hitam." class="w-full px-3 py-2 border rounded focus:border-shopee outline-none h-16 resize-none text-sm text-gray-800"></textarea>
+                        <textarea id="cartAddress" required placeholder="Contoh: Jalan Melati No 12, RT 01/RW 02. Patokan: Pagar Hitam." class="w-full px-3 py-2 border rounded-lg focus:border-shopee outline-none h-16 resize-none text-sm text-gray-800 font-medium"></textarea>
                     </div>
                     
-                    <div class="border rounded bg-blue-50 p-3">
-                        <label class="block text-sm font-bold text-gray-700 mb-1">Pilih Titik Lokasi Peta (GPS) *</label>
-                        <p class="text-[10px] text-gray-500 mb-2">Geser pin merah di peta untuk menyesuaikan titik antar secara akurat.</p>
+                    <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 shadow-inner">
+                        <label class="block text-sm font-bold text-gray-700 mb-1"><i class="fas fa-map-marked-alt text-blue-500 mr-1"></i> Titik Lokasi Peta (GPS) *</label>
+                        <p class="text-[10px] text-gray-500 mb-3">Geser pin merah di peta untuk menyesuaikan titik antar secara akurat.</p>
                         
-                        <div id="cart-map" class="w-full h-40 bg-gray-200 rounded mb-2 border border-gray-300"></div>
+                        <div id="cart-map" class="w-full h-40 bg-gray-200 rounded-lg mb-3 border-2 border-white shadow-sm z-0"></div>
                         
                         <div class="flex flex-col sm:flex-row gap-2">
-                            <input type="text" id="cartLat" required placeholder="Latitude" class="w-full sm:w-1/2 px-2 py-1.5 border rounded outline-none text-xs bg-white text-gray-800" readonly>
-                            <input type="text" id="cartLng" required placeholder="Longitude" class="w-full sm:w-1/2 px-2 py-1.5 border rounded outline-none text-xs bg-white text-gray-800" readonly>
-                            <button type="button" onclick="getLocationBuyer('cartLat', 'cartLng', 'cart-map', 'cartAddress')" class="w-full sm:w-auto bg-blue-500 text-white px-3 py-1.5 rounded hover:bg-blue-600 transition flex items-center justify-center gap-2 whitespace-nowrap text-xs font-bold shadow-sm">
-                                <i class="fas fa-crosshairs"></i> Gunakan GPS
+                            <input type="text" id="cartLat" required placeholder="Latitude" class="w-full sm:w-1/2 px-3 py-2 border rounded-lg outline-none text-xs bg-white text-gray-800 font-bold" readonly>
+                            <input type="text" id="cartLng" required placeholder="Longitude" class="w-full sm:w-1/2 px-3 py-2 border rounded-lg outline-none text-xs bg-white text-gray-800 font-bold" readonly>
+                            <button type="button" onclick="getLocationBuyer('cartLat', 'cartLng', 'cart-map', 'cartAddress')" class="btn-3d w-full sm:w-auto bg-gradient-to-b from-[#4299e1] to-[#2b6cb0] text-white px-3 py-2 rounded-lg hover:from-[#3182ce] hover:to-[#2c5282] transition flex items-center justify-center gap-2 whitespace-nowrap text-xs font-bold shadow-[0_3px_0_0_#1e3a8a]">
+                                <i class="fas fa-crosshairs drop-shadow-md"></i> Lacak GPS
                             </button>
                         </div>
                     </div>
                 </form>
             </div>
             
-            <div class="p-4 border-t bg-gray-50 rounded-b-lg shrink-0">
-                <div class="flex justify-between font-bold text-gray-800 mb-3">
-                    <span>Total Harga:</span>
-                    <span id="cart-total-price" class="text-shopee text-lg">Rp 0</span>
+            <div class="p-4 border-t bg-white shrink-0 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]">
+                <div class="flex justify-between font-bold text-gray-800 mb-3 px-2">
+                    <span>Total Tagihan:</span>
+                    <span id="cart-total-price" class="text-shopee text-xl drop-shadow-sm">Rp 0</span>
                 </div>
-                <button type="submit" form="cartForm" id="btnSubmitCart" class="w-full bg-shopee text-white py-2.5 rounded hover:bg-shopeeHover transition font-bold shadow flex justify-center items-center gap-2">
-                    <i class="fas fa-cash-register"></i> Pesan Semua Sekarang
+                <button type="submit" form="cartForm" id="btnSubmitCart" class="btn-3d w-full bg-gradient-to-b from-[#f36b4e] to-[#ee4d2d] text-white py-3.5 rounded-xl font-bold text-lg hover:from-[#f05c3d] hover:to-[#d73211] shadow-[0_5px_0_0_#be3118] flex justify-center items-center gap-2">
+                    <i class="fas fa-paper-plane drop-shadow-md"></i> Pesan Semua Sekarang
                 </button>
             </div>
         </div>
     </div>
 
     <!-- ================= NOTIFIKASI & RIWAYAT OVERLAY ================= -->
-    <div id="notif-overlay" class="hidden fixed inset-0 z-[115] bg-black/50 overflow-y-auto flex-col justify-center items-center p-4">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-0 relative mt-10 md:mt-0 flex flex-col max-h-[80vh]">
-            <div class="p-4 border-b flex justify-between items-center bg-shopee text-white rounded-t-lg">
-                <h2 class="text-lg font-bold"><i class="far fa-bell mr-2"></i> Notifikasi Pesanan</h2>
-                <button onclick="hideNotifications()" class="text-white hover:text-gray-200"><i class="fas fa-times text-xl"></i></button>
+    <div id="notif-overlay" class="hidden fixed inset-0 z-[115] bg-black/50 backdrop-blur-sm overflow-y-auto flex-col justify-center items-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-0 relative mt-10 md:mt-0 flex flex-col max-h-[80vh] overflow-hidden">
+            <div class="p-4 border-b flex justify-between items-center bg-gradient-to-r from-shopee to-[#ff7337] text-white">
+                <h2 class="text-lg font-bold drop-shadow-md"><i class="far fa-bell mr-2"></i> Notifikasi Pesanan</h2>
+                <button onclick="hideNotifications()" class="text-white hover:text-gray-200 bg-white/20 w-8 h-8 rounded-full flex justify-center items-center transition"><i class="fas fa-times"></i></button>
             </div>
-            <div id="notif-list" class="p-0 flex-1 overflow-y-auto bg-gray-50">
+            <div id="notif-list" class="p-2 flex-1 overflow-y-auto bg-[#f5f5f5]">
                 <!-- Daftar pesanan akan di-render di sini -->
             </div>
         </div>
     </div>
 
     <!-- ================= TRACKING (LACAK) OVERLAY ================= -->
-    <div id="track-overlay" class="hidden fixed inset-0 z-[125] bg-black/50 overflow-y-auto flex-col justify-center items-center p-4">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6 relative mt-10 md:mt-0">
-            <div class="flex justify-between items-center mb-6 border-b pb-2">
-                <h2 class="text-lg font-bold text-gray-800"><i class="fas fa-map-marked-alt text-shopee mr-2"></i> Lacak Pesanan</h2>
-                <button onclick="hideTracking()" class="text-gray-500 hover:text-red-500"><i class="fas fa-times text-xl"></i></button>
+    <div id="track-overlay" class="hidden fixed inset-0 z-[125] bg-black/50 backdrop-blur-sm overflow-y-auto flex-col justify-center items-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 relative mt-10 md:mt-0">
+            <div class="flex justify-between items-center mb-6 border-b pb-3">
+                <h2 class="text-lg font-bold text-gray-800"><i class="fas fa-map-marked-alt text-shopee mr-2 drop-shadow-md"></i> Lacak Pesanan</h2>
+                <button onclick="hideTracking()" class="text-gray-500 hover:text-red-500 bg-gray-100 w-8 h-8 rounded-full flex items-center justify-center transition"><i class="fas fa-times"></i></button>
             </div>
             
-            <div class="mb-6 bg-orange-50 p-3 rounded border border-orange-100">
-                <div class="font-bold text-sm text-gray-800" id="track-product">Nama Produk</div>
-                <div class="text-xs text-gray-600" id="track-outlet">Nama Outlet</div>
+            <div class="mb-6 bg-gradient-to-br from-orange-50 to-white p-4 rounded-xl border border-orange-100 shadow-inner">
+                <div class="font-extrabold text-base text-gray-800" id="track-product">Nama Produk</div>
+                <div class="text-xs font-semibold text-gray-500 mt-1" id="track-outlet">Nama Outlet</div>
             </div>
 
-            <div class="relative pl-4 border-l-2 border-gray-200 space-y-6 ml-2" id="track-timeline">
+            <div class="relative pl-5 border-l-2 border-gray-200 space-y-6 ml-3" id="track-timeline">
                 <!-- Timeline Dinamis -->
             </div>
         </div>
     </div>
 
     <!-- ================= CHECKOUT / PESAN (SINGLE) OVERLAY ================= -->
-    <div id="checkout-overlay" class="hidden fixed inset-0 z-[120] bg-black/50 overflow-y-auto flex-col justify-center items-center p-4">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6 relative mt-32 md:mt-0">
-            <h2 class="text-xl font-bold mb-4 border-b pb-2"><i class="fas fa-motorcycle text-shopee mr-2"></i> Buat Pesanan</h2>
+    <div id="checkout-overlay" class="hidden fixed inset-0 z-[120] bg-black/50 backdrop-blur-sm overflow-y-auto flex-col justify-center items-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 relative mt-32 md:mt-0">
+            <div class="flex justify-between items-center mb-4 border-b pb-3">
+                <h2 class="text-xl font-bold"><i class="fas fa-motorcycle text-shopee mr-2 drop-shadow-md"></i> Buat Pesanan</h2>
+                <button onclick="hideCheckout()" class="bg-gray-100 text-gray-500 hover:bg-gray-200 w-8 h-8 rounded-full flex justify-center items-center transition"><i class="fas fa-times"></i></button>
+            </div>
             <form onsubmit="submitSingleOrder(event)" class="flex flex-col gap-4">
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">Produk Dipesan</label>
-                    <input type="text" id="checkoutProduct" class="w-full px-3 py-2 border rounded bg-gray-50 text-gray-800 text-sm font-semibold" readonly>
+                <div class="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                    <label class="block text-xs font-bold text-gray-500 mb-1 uppercase tracking-wider">Produk Dipesan</label>
+                    <input type="text" id="checkoutProduct" class="w-full bg-transparent text-gray-800 text-sm font-extrabold outline-none" readonly>
                 </div>
-                <div class="flex items-center justify-between border rounded p-2 bg-gray-50">
+                <div class="flex items-center justify-between border-2 border-gray-100 rounded-xl p-3 bg-white shadow-sm">
                     <label class="text-sm font-bold text-gray-700">Jumlah (Qty)</label>
-                    <div class="flex items-center bg-white border rounded">
-                        <button type="button" onclick="changeSingleCheckoutQty(-1)" class="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-100 font-bold">-</button>
-                        <input type="number" id="checkoutQty" value="1" min="1" class="w-10 text-center text-sm font-bold outline-none bg-transparent" readonly>
-                        <button type="button" onclick="changeSingleCheckoutQty(1)" class="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-100 font-bold">+</button>
+                    <div class="flex items-center bg-gray-100 rounded-lg p-1">
+                        <button type="button" onclick="changeSingleCheckoutQty(-1)" class="w-8 h-8 flex items-center justify-center bg-white rounded-md text-gray-600 hover:text-shopee font-bold shadow-sm">-</button>
+                        <input type="number" id="checkoutQty" value="1" min="1" class="w-12 text-center text-sm font-extrabold outline-none bg-transparent" readonly>
+                        <button type="button" onclick="changeSingleCheckoutQty(1)" class="w-8 h-8 flex items-center justify-center bg-white rounded-md text-gray-600 hover:text-shopee font-bold shadow-sm">+</button>
                     </div>
                 </div>
-                <div class="flex justify-between items-center text-lg font-bold text-gray-800 mt-1 mb-2">
-                    <span>Total:</span>
-                    <span id="checkoutTotalDisplay" class="text-shopee">Rp 0</span>
+                <div class="flex justify-between items-center text-lg font-bold text-gray-800 mt-1 mb-2 px-1">
+                    <span>Total Tagihan:</span>
+                    <span id="checkoutTotalDisplay" class="text-shopee text-xl drop-shadow-sm">Rp 0</span>
                 </div>
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-1">Alamat Lengkap Pengiriman *</label>
-                    <textarea id="checkoutAddress" required placeholder="Contoh: Jalan Melati No 12, RT 01/RW 02. Patokan: Pagar Hitam." class="w-full px-3 py-2 border rounded focus:border-shopee outline-none h-16 resize-none text-sm text-gray-800"></textarea>
+                    <textarea id="checkoutAddress" required placeholder="Contoh: Jalan Melati No 12, RT 01/RW 02. Patokan: Pagar Hitam." class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:border-shopee outline-none h-20 resize-none text-sm text-gray-800 font-medium"></textarea>
                 </div>
                 
                 <!-- PETA INTERAKTIF AREA -->
-                <div class="border rounded bg-blue-50 p-3">
-                    <label class="block text-sm font-bold text-gray-700 mb-1">Pilih Titik Lokasi Peta (GPS) *</label>
-                    <p class="text-[10px] text-gray-500 mb-2">Geser pin merah di peta untuk menyesuaikan titik antar secara akurat.</p>
-                        <div id="checkout-map" class="w-full h-40 bg-gray-200 rounded mb-2 border border-gray-300"></div>
+                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 shadow-inner">
+                    <label class="block text-sm font-bold text-gray-700 mb-1"><i class="fas fa-map-marked-alt text-blue-500 mr-1"></i> Titik Lokasi Peta (GPS) *</label>
+                    <p class="text-[10px] text-gray-500 mb-3">Geser pin merah di peta untuk menyesuaikan titik antar secara akurat.</p>
+                        <div id="checkout-map" class="w-full h-40 bg-gray-200 rounded-lg mb-3 border-2 border-white shadow-sm z-0"></div>
                         
                         <div class="flex flex-col sm:flex-row gap-2">
-                            <input type="text" id="checkoutLat" required placeholder="Latitude" class="w-full sm:w-1/2 px-2 py-1.5 border rounded outline-none text-xs bg-white text-gray-800" readonly>
-                            <input type="text" id="checkoutLng" required placeholder="Longitude" class="w-full sm:w-1/2 px-2 py-1.5 border rounded outline-none text-xs bg-white text-gray-800" readonly>
-                            <button type="button" onclick="getLocationBuyer('checkoutLat', 'checkoutLng', 'checkout-map', 'checkoutAddress')" class="w-full sm:w-auto bg-blue-500 text-white px-3 py-1.5 rounded hover:bg-blue-600 transition flex items-center justify-center gap-2 whitespace-nowrap text-xs font-bold shadow-sm">
-                                <i class="fas fa-crosshairs"></i> Gunakan GPS
+                            <input type="text" id="checkoutLat" required placeholder="Latitude" class="w-full sm:w-1/2 px-3 py-2 border rounded-lg outline-none text-xs bg-white text-gray-800 font-bold" readonly>
+                            <input type="text" id="checkoutLng" required placeholder="Longitude" class="w-full sm:w-1/2 px-3 py-2 border rounded-lg outline-none text-xs bg-white text-gray-800 font-bold" readonly>
+                            <button type="button" onclick="getLocationBuyer('checkoutLat', 'checkoutLng', 'checkout-map', 'checkoutAddress')" class="btn-3d w-full sm:w-auto bg-gradient-to-b from-[#4299e1] to-[#2b6cb0] text-white px-4 py-2 rounded-lg hover:from-[#3182ce] hover:to-[#2c5282] transition flex items-center justify-center gap-2 whitespace-nowrap text-xs font-bold shadow-[0_3px_0_0_#1e3a8a]">
+                                <i class="fas fa-crosshairs drop-shadow-md"></i> Lacak GPS
                             </button>
                         </div>
                     </div>
 
-                <div class="flex justify-end gap-2 mt-2 pt-4 border-t">
-                    <button type="button" onclick="hideCheckout()" class="px-6 py-2 border rounded text-gray-600 hover:bg-gray-50 font-bold text-sm">Batal</button>
-                    <button type="submit" id="btnSubmitOrder" class="px-6 py-2 bg-shopee text-white rounded hover:bg-shopeeHover transition font-bold text-sm shadow-sm flex items-center gap-2">Pesan Sekarang</button>
+                <div class="mt-4 pt-4 border-t border-gray-100">
+                    <button type="submit" id="btnSubmitOrder" class="btn-3d w-full bg-gradient-to-b from-[#f36b4e] to-[#ee4d2d] text-white py-3.5 rounded-xl font-bold text-lg hover:from-[#f05c3d] hover:to-[#d73211] shadow-[0_5px_0_0_#be3118] flex items-center justify-center gap-2">
+                        <i class="fas fa-paper-plane drop-shadow-md"></i> Pesan Sekarang
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 
     <!-- ================= PROFILE OVERLAY DENGAN FITUR EDIT ================= -->
-    <div id="profile-overlay" class="hidden fixed inset-0 z-[116] bg-black/50 overflow-y-auto flex-col justify-center items-center p-4">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-sm p-0 relative mt-10 md:mt-0 flex flex-col">
-            <div class="p-4 border-b flex justify-between items-center bg-shopee text-white rounded-t-lg">
-                <h2 class="text-lg font-bold"><i class="fas fa-user-circle mr-2"></i> Akun Saya</h2>
-                <button onclick="hideProfile()" class="text-white hover:text-gray-200"><i class="fas fa-times text-xl"></i></button>
+    <div id="profile-overlay" class="hidden fixed inset-0 z-[116] bg-black/50 backdrop-blur-sm overflow-y-auto flex-col justify-center items-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-0 relative mt-10 md:mt-0 flex flex-col overflow-hidden">
+            <div class="p-4 border-b flex justify-between items-center bg-gradient-to-r from-shopee to-[#ff7337] text-white">
+                <h2 class="text-lg font-bold drop-shadow-md"><i class="fas fa-user-circle mr-2"></i> Akun Saya</h2>
+                <button onclick="hideProfile()" class="text-white hover:text-gray-200 bg-white/20 w-8 h-8 rounded-full flex justify-center items-center transition"><i class="fas fa-times"></i></button>
             </div>
 
             <!-- MODE BACA (VIEW) -->
-            <div id="profile-view-mode" class="p-6 flex flex-col gap-4">
-                <div class="flex items-center gap-4 border-b pb-4">
-                    <div class="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center text-gray-500 text-3xl">
-                        <i class="fas fa-user"></i>
+            <div id="profile-view-mode" class="p-6 flex flex-col gap-4 bg-[#f9f9f9]">
+                <div class="flex items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                    <div class="w-16 h-16 bg-gradient-to-br from-orange-100 to-orange-50 rounded-full flex items-center justify-center text-shopee text-3xl shadow-inner border border-orange-200">
+                        <i class="fas fa-user drop-shadow-sm"></i>
                     </div>
                     <div>
-                        <div class="font-bold text-lg text-gray-800" id="profDetailName">Nama</div>
-                        <div class="text-sm text-gray-500" id="profDetailPhone">08...</div>
+                        <div class="font-extrabold text-xl text-gray-800" id="profDetailName">Nama</div>
+                        <div class="text-sm font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded inline-block mt-1" id="profDetailPhone">08...</div>
                     </div>
                 </div>
-                <div class="text-sm text-gray-700">
-                    <p class="mb-3"><i class="fas fa-envelope w-5 text-gray-400"></i> <span id="profDetailEmail">email@...</span></p>
-                    <p class="mb-3 flex items-start gap-1"><i class="fas fa-map-marker-alt w-5 mt-0.5 text-gray-400"></i> <span id="profDetailAddress" class="flex-1">Alamat...</span></p>
+                <div class="text-sm text-gray-700 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                    <p class="mb-3 font-semibold flex items-center gap-2"><div class="w-6 text-center"><i class="fas fa-envelope text-gray-400"></i></div> <span id="profDetailEmail">email@...</span></p>
+                    <p class="flex items-start gap-2 font-semibold"><div class="w-6 text-center mt-1"><i class="fas fa-map-marker-alt text-gray-400"></i></div> <span id="profDetailAddress" class="flex-1 leading-relaxed">Alamat...</span></p>
                 </div>
                 
-                <button onclick="toggleEditProfileBuyer()" class="w-full bg-blue-100 text-blue-600 py-2.5 rounded font-bold hover:bg-blue-200 transition mt-2 flex items-center justify-center gap-2">
-                    <i class="fas fa-edit"></i> Edit Profil
-                </button>
-                <button onclick="handleLogout()" class="w-full bg-red-100 text-red-600 py-2.5 rounded font-bold hover:bg-red-200 transition flex items-center justify-center gap-2">
-                    <i class="fas fa-sign-out-alt"></i> Log Out
-                </button>
+                <div class="mt-4 flex flex-col gap-3">
+                    <button onclick="toggleEditProfileBuyer()" class="btn-3d w-full bg-blue-50 text-blue-600 border-2 border-blue-200 py-3 rounded-xl font-bold hover:bg-blue-100 transition flex items-center justify-center gap-2 shadow-[0_3px_0_0_#bfdbfe]">
+                        <i class="fas fa-user-edit"></i> Edit Profil
+                    </button>
+                    <button onclick="handleLogout()" class="btn-3d w-full bg-red-50 text-red-600 border-2 border-red-200 py-3 rounded-xl font-bold hover:bg-red-100 transition flex items-center justify-center gap-2 shadow-[0_3px_0_0_#fecaca]">
+                        <i class="fas fa-sign-out-alt"></i> Log Out
+                    </button>
+                </div>
             </div>
 
             <!-- MODE EDIT -->
-            <div id="profile-edit-mode" class="hidden p-6 flex flex-col gap-4">
-                <h3 class="font-bold text-gray-800 border-b pb-2 mb-1">Ubah Data Profil</h3>
-                <form onsubmit="submitEditProfileBuyer(event)" class="flex flex-col gap-3">
+            <div id="profile-edit-mode" class="hidden p-6 flex flex-col gap-4 bg-white">
+                <h3 class="font-bold text-gray-800 border-b pb-2 mb-1 text-lg">Ubah Data Profil</h3>
+                <form onsubmit="submitEditProfileBuyer(event)" class="flex flex-col gap-4">
                     <div>
-                        <label class="block text-xs font-bold text-gray-700 mb-1">Nama Lengkap</label>
-                        <input type="text" id="editBuyerName" required class="w-full px-3 py-2 border rounded outline-none focus:border-shopee text-sm">
+                        <label class="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">Nama Lengkap</label>
+                        <input type="text" id="editBuyerName" required class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl outline-none focus:border-shopee text-sm font-semibold shadow-inner bg-gray-50">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 mb-1">Nomor HP <span class="text-[10px] font-normal italic">(Tidak dapat diubah)</span></label>
-                        <input type="tel" id="editBuyerPhone" disabled class="w-full px-3 py-2 border rounded outline-none bg-gray-100 text-sm text-gray-500 cursor-not-allowed">
+                        <label class="block text-xs font-bold text-gray-500 mb-1 uppercase tracking-wider">Nomor HP</label>
+                        <input type="tel" id="editBuyerPhone" disabled class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl outline-none bg-gray-200 text-sm font-bold text-gray-400 cursor-not-allowed">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-700 mb-1">Email</label>
-                        <input type="email" id="editBuyerEmail" required class="w-full px-3 py-2 border rounded outline-none focus:border-shopee text-sm">
+                        <label class="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">Email</label>
+                        <input type="email" id="editBuyerEmail" required class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl outline-none focus:border-shopee text-sm font-semibold shadow-inner bg-gray-50">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-700 mb-1">Alamat Pengiriman Bawaan</label>
-                        <textarea id="editBuyerAddress" required class="w-full px-3 py-2 border rounded outline-none focus:border-shopee text-sm h-16 resize-none"></textarea>
+                        <label class="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">Alamat Pengiriman</label>
+                        <textarea id="editBuyerAddress" required class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl outline-none focus:border-shopee text-sm h-20 resize-none font-semibold shadow-inner bg-gray-50"></textarea>
                     </div>
                     
-                    <div class="flex gap-2 mt-4 pt-4 border-t">
-                        <button type="button" onclick="toggleEditProfileBuyer()" class="flex-1 py-2 border rounded text-gray-600 font-bold hover:bg-gray-50 text-sm">Batal</button>
-                        <button type="submit" id="btnSaveProfileBuyer" class="flex-1 bg-shopee text-white py-2 rounded font-bold hover:bg-shopeeHover text-sm shadow-sm">Simpan</button>
+                    <div class="flex gap-3 mt-4 pt-4 border-t border-gray-100">
+                        <button type="button" onclick="toggleEditProfileBuyer()" class="btn-3d flex-1 py-3 border-2 border-gray-200 rounded-xl text-gray-600 font-bold hover:bg-gray-50 text-sm shadow-[0_3px_0_0_#e5e7eb]">Batal</button>
+                        <button type="submit" id="btnSaveProfileBuyer" class="btn-3d flex-[2] bg-gradient-to-b from-[#f36b4e] to-[#ee4d2d] text-white py-3 rounded-xl font-bold hover:from-[#f05c3d] hover:to-[#d73211] text-sm shadow-[0_4px_0_0_#be3118] flex justify-center items-center gap-2"><i class="fas fa-save"></i> Simpan</button>
                     </div>
                 </form>
             </div>
@@ -232,78 +243,88 @@
     </div>
 
     <!-- ================= AUTHENTICATION OVERLAY ================= -->
-    <div id="auth-overlay" class="hidden fixed inset-0 z-[100] bg-shopee overflow-y-auto flex-col h-full w-full">
-        <div class="bg-white px-4 md:px-8 py-4 shadow-sm flex items-center justify-between flex-shrink-0">
-            <div class="flex items-center gap-3 text-shopee text-2xl font-bold cursor-pointer" onclick="hideAuth()">
-                <i class="fas fa-utensils"></i> <span class="text-xl" id="auth-title">Log In</span>
+    <div id="auth-overlay" class="hidden fixed inset-0 z-[100] bg-shopee overflow-y-auto flex-col h-full w-full bg-[url('https://www.transparenttextures.com/patterns/food.png')]">
+        <div class="bg-white/90 backdrop-blur-md px-4 md:px-8 py-4 shadow-md flex items-center justify-between flex-shrink-0 sticky top-0 z-10">
+            <div class="flex items-center gap-3 text-shopee text-2xl font-black cursor-pointer drop-shadow-sm" onclick="hideAuth()">
+                <i class="fas fa-utensils"></i> <span class="text-xl tracking-tight" id="auth-title">Log In</span>
             </div>
-            <button onclick="hideAuth()" class="text-gray-500 hover:text-shopee text-sm font-bold flex items-center gap-1"><i class="fas fa-times"></i> Tutup</button>
+            <button onclick="hideAuth()" class="bg-gray-100 text-gray-600 hover:text-shopee hover:bg-orange-50 w-8 h-8 rounded-full flex items-center justify-center font-bold transition shadow-sm"><i class="fas fa-times"></i></button>
         </div>
 
         <div class="flex-1 flex justify-center items-center p-4">
-            <div class="bg-white rounded shadow-lg w-full max-w-[400px] p-6 md:p-8">
+            <div class="bg-white rounded-3xl shadow-2xl w-full max-w-[400px] p-6 md:p-8 transform transition-all border-4 border-white/40">
                 
                 <!-- VIEW: LOGIN -->
                 <div id="view-login" class="flex flex-col">
-                    <div class="text-xl font-bold mb-6 text-gray-800">Log In</div>
+                    <div class="text-center mb-6 animate-bounce mt-2">
+                        <div class="w-20 h-20 bg-orange-50 rounded-full mx-auto flex justify-center items-center shadow-inner border border-orange-100 mb-3">
+                            <i class="fas fa-user-circle text-4xl text-shopee drop-shadow-md"></i>
+                        </div>
+                        <h2 class="text-2xl font-extrabold text-gray-800 tracking-tight">Selamat Datang</h2>
+                        <p class="text-xs text-gray-500 font-semibold mt-1">Silakan masuk untuk memesan makanan</p>
+                    </div>
                     <form onsubmit="handleBuyerLogin(event)" class="flex flex-col gap-4">
                         <div>
-                            <input type="text" id="buyerLoginId" required placeholder="No. Handphone/Username/Email" class="w-full px-3 py-2.5 border border-gray-300 rounded outline-none focus:border-shopee text-sm transition bg-white text-gray-800">
+                            <input type="text" id="buyerLoginId" required placeholder="No. Handphone/Username/Email" class="w-full px-4 py-3.5 border-2 border-gray-100 rounded-xl outline-none focus:border-shopee text-sm transition bg-gray-50 text-gray-800 font-semibold shadow-inner">
                         </div>
                         <div>
-                            <input type="password" id="buyerLoginPass" required placeholder="Password" class="w-full px-3 py-2.5 border border-gray-300 rounded outline-none focus:border-shopee text-sm transition bg-white text-gray-800">
+                            <input type="password" id="buyerLoginPass" required placeholder="Password" class="w-full px-4 py-3.5 border-2 border-gray-100 rounded-xl outline-none focus:border-shopee text-sm transition bg-gray-50 text-gray-800 font-semibold shadow-inner">
                         </div>
-                        <button type="submit" id="btnBuyerLogin" class="w-full bg-shopee text-white py-2.5 rounded font-bold text-sm hover:bg-shopeeHover transition mt-2 shadow-sm">LOG IN</button>
+                        <button type="submit" id="btnBuyerLogin" class="btn-3d w-full bg-gradient-to-b from-[#f36b4e] to-[#ee4d2d] text-white py-3.5 rounded-xl font-bold text-base hover:from-[#f05c3d] hover:to-[#d73211] transition mt-2 shadow-[0_5px_0_0_#be3118] tracking-wider">LOG IN</button>
                         
-                        <div class="flex justify-between items-center text-xs mt-2 mb-2">
-                            <a href="#" onclick="showAuth('forgot')" class="text-blue-600 hover:text-blue-800">Lupa Password</a>
-                            <a href="#" class="text-blue-600 hover:text-blue-800">Log in dengan no. handphone</a>
+                        <div class="flex justify-between items-center text-xs mt-3 mb-2 font-bold px-1">
+                            <a href="#" onclick="showAuth('forgot')" class="text-blue-500 hover:text-blue-700 transition">Lupa Password?</a>
+                            <a href="#" class="text-gray-400 hover:text-gray-600 transition">Bantuan</a>
                         </div>
 
-                        <div class="text-center text-sm mt-6">
-                            <span class="text-gray-500">Baru di FoodCourt?</span> <a href="#" onclick="showAuth('register')" class="text-shopee font-bold">Daftar</a>
+                        <div class="text-center text-sm mt-6 pt-4 border-t-2 border-gray-50 font-semibold">
+                            <span class="text-gray-500">Baru di FoodCourt?</span> <a href="#" onclick="showAuth('register')" class="text-shopee font-extrabold ml-1 hover:underline">Daftar Sekarang</a>
                         </div>
                     </form>
                 </div>
 
                 <!-- VIEW: REGISTER -->
                 <div id="view-register" class="hidden flex-col">
-                    <div class="text-xl font-bold mb-6 text-gray-800">Daftar</div>
+                    <div class="flex items-center gap-3 mb-6">
+                        <button type="button" onclick="showAuth('login')" class="w-8 h-8 bg-gray-100 text-gray-500 rounded-full flex justify-center items-center hover:bg-gray-200 transition"><i class="fas fa-arrow-left"></i></button>
+                        <h2 class="text-xl font-extrabold text-gray-800 tracking-tight">Daftar Akun Baru</h2>
+                    </div>
                     <form onsubmit="handleBuyerRegister(event)" class="flex flex-col gap-4">
                         <div>
-                            <input type="text" id="buyerRegName" required placeholder="Nama Lengkap" class="w-full px-3 py-2.5 border border-gray-300 rounded outline-none focus:border-shopee text-sm transition bg-white text-gray-800">
+                            <input type="text" id="buyerRegName" required placeholder="Nama Lengkap" class="w-full px-4 py-3.5 border-2 border-gray-100 rounded-xl outline-none focus:border-shopee text-sm transition bg-gray-50 text-gray-800 font-semibold shadow-inner">
                         </div>
                         <div>
-                            <input type="tel" id="buyerRegPhone" required placeholder="No. Handphone" class="w-full px-3 py-2.5 border border-gray-300 rounded outline-none focus:border-shopee text-sm transition bg-white text-gray-800">
+                            <input type="tel" id="buyerRegPhone" required placeholder="No. Handphone" class="w-full px-4 py-3.5 border-2 border-gray-100 rounded-xl outline-none focus:border-shopee text-sm transition bg-gray-50 text-gray-800 font-semibold shadow-inner">
                         </div>
                         <div>
-                            <input type="email" id="buyerRegEmail" required placeholder="Email" class="w-full px-3 py-2.5 border border-gray-300 rounded outline-none focus:border-shopee text-sm transition bg-white text-gray-800">
+                            <input type="email" id="buyerRegEmail" required placeholder="Email Aktif" class="w-full px-4 py-3.5 border-2 border-gray-100 rounded-xl outline-none focus:border-shopee text-sm transition bg-gray-50 text-gray-800 font-semibold shadow-inner">
                         </div>
                         <div>
-                            <input type="password" id="buyerRegPass" required placeholder="Password" class="w-full px-3 py-2.5 border border-gray-300 rounded outline-none focus:border-shopee text-sm transition bg-white text-gray-800">
+                            <input type="password" id="buyerRegPass" required placeholder="Buat Password" class="w-full px-4 py-3.5 border-2 border-gray-100 rounded-xl outline-none focus:border-shopee text-sm transition bg-gray-50 text-gray-800 font-semibold shadow-inner">
                         </div>
-                        <button type="submit" id="btnBuyerRegister" class="w-full bg-shopee text-white py-2.5 rounded font-bold text-sm hover:bg-shopeeHover transition mt-2 shadow-sm">DAFTAR</button>
+                        <button type="submit" id="btnBuyerRegister" class="btn-3d w-full bg-gradient-to-b from-[#f36b4e] to-[#ee4d2d] text-white py-3.5 rounded-xl font-bold text-base hover:from-[#f05c3d] hover:to-[#d73211] transition mt-2 shadow-[0_5px_0_0_#be3118] tracking-wider">BUAT AKUN</button>
                         
-                        <p class="text-[10px] text-gray-500 text-center mt-2 px-2">Dengan mendaftar, Anda setuju dengan Syarat, Ketentuan dan Kebijakan Privasi FoodCourt.</p>
-
-                        <div class="text-center text-sm mt-4">
-                            <span class="text-gray-500">Punya akun?</span> <a href="#" onclick="showAuth('login')" class="text-shopee font-bold">Log in</a>
-                        </div>
+                        <p class="text-[10px] text-gray-400 text-center mt-3 px-2 font-medium">Dengan mendaftar, Anda setuju dengan Syarat, Ketentuan dan Kebijakan Privasi FoodCourt.</p>
                     </form>
                 </div>
 
                 <!-- VIEW: FORGOT PASSWORD -->
                 <div id="view-forgot" class="hidden flex-col">
-                    <button type="button" onclick="showAuth('login')" class="text-gray-500 mb-4 flex items-center gap-2 hover:text-shopee w-fit text-sm">
-                        <i class="fas fa-arrow-left"></i> Kembali ke Log In
-                    </button>
-                    <div class="text-xl font-bold mb-2 text-gray-800">Lupa Password?</div>
-                    <p class="text-sm text-gray-500 mb-6">Masukkan email Anda. Kami akan mengirimkan password baru ke email tersebut.</p>
+                    <div class="flex items-center gap-3 mb-6">
+                        <button type="button" onclick="showAuth('login')" class="w-8 h-8 bg-gray-100 text-gray-500 rounded-full flex justify-center items-center hover:bg-gray-200 transition"><i class="fas fa-arrow-left"></i></button>
+                        <h2 class="text-xl font-extrabold text-gray-800 tracking-tight">Lupa Password?</h2>
+                    </div>
+                    <div class="text-center mb-6">
+                        <div class="w-16 h-16 bg-blue-50 rounded-full mx-auto flex justify-center items-center mb-3">
+                            <i class="fas fa-unlock-alt text-2xl text-blue-500 drop-shadow-sm"></i>
+                        </div>
+                        <p class="text-xs text-gray-500 font-semibold px-4">Masukkan email terdaftar Anda. Kami akan membuatkan password baru secara otomatis.</p>
+                    </div>
                     <form onsubmit="handleBuyerForgot(event)" class="flex flex-col gap-4">
                         <div>
-                            <input type="email" id="forgotEmailBuyer" required placeholder="Email terdaftar" class="w-full px-3 py-2.5 border border-gray-300 rounded outline-none focus:border-shopee text-sm transition bg-white text-gray-800">
+                            <input type="email" id="forgotEmailBuyer" required placeholder="Alamat Email Terdaftar" class="w-full px-4 py-3.5 border-2 border-gray-100 rounded-xl outline-none focus:border-shopee text-sm transition bg-gray-50 text-gray-800 font-semibold shadow-inner">
                         </div>
-                        <button type="submit" id="btnBuyerForgot" class="w-full bg-shopee text-white py-2.5 rounded font-bold text-sm hover:bg-shopeeHover transition mt-2 shadow-sm">KIRIM PASSWORD BARU</button>
+                        <button type="submit" id="btnBuyerForgot" class="btn-3d w-full bg-gradient-to-b from-[#4299e1] to-[#2b6cb0] text-white py-3.5 rounded-xl font-bold text-base hover:from-[#3182ce] hover:to-[#2c5282] transition mt-2 shadow-[0_5px_0_0_#1e3a8a] tracking-wider">KIRIM PASSWORD BARU</button>
                     </form>
                 </div>
 
@@ -312,85 +333,84 @@
     </div>
 
     <!-- ================= SINKRONISASI LOADING OVERLAY ================= -->
-    <div id="loading-overlay" class="hidden fixed inset-0 z-[110] bg-black/50 justify-center items-center">
-        <div class="bg-white p-6 rounded-lg shadow-lg text-center flex flex-col items-center">
-            <i class="fas fa-spinner fa-spin text-4xl text-shopee mb-3"></i>
-            <p class="text-sm font-semibold text-gray-700 mt-2">Memeriksa status Toko Anda...</p>
+    <div id="loading-overlay" class="hidden fixed inset-0 z-[110] bg-black/50 backdrop-blur-sm justify-center items-center">
+        <div class="bg-white p-6 rounded-2xl shadow-2xl text-center flex flex-col items-center transform scale-105">
+            <div class="w-12 h-12 rounded-full border-4 border-gray-100 border-t-shopee animate-spin mb-3"></div>
+            <p class="text-sm font-extrabold text-gray-700 mt-2">Memeriksa status Toko Anda...</p>
         </div>
     </div>
 
     <!-- HEADER DEKSTOP & MOBILE -->
-    <header class="bg-shopee sticky top-0 z-50 shadow-sm">
+    <header class="bg-gradient-to-r from-shopee to-[#ff7337] sticky top-0 z-50 shadow-md border-b border-orange-400">
         <!-- Top Nav (Desktop only) -->
-        <div class="hidden md:flex justify-between items-center max-w-6xl mx-auto text-white text-sm py-1 px-4">
+        <div class="hidden md:flex justify-between items-center max-w-6xl mx-auto text-white text-sm py-1.5 px-4 font-medium">
             <div class="flex gap-4">
-                <div class="flex gap-2 items-center">
+                <div class="flex gap-2 items-center opacity-90 hover:opacity-100 transition">
                     <span>Ikuti kami di</span>
-                    <i class="fab fa-facebook cursor-pointer"></i>
-                    <i class="fab fa-instagram cursor-pointer"></i>
+                    <i class="fab fa-facebook cursor-pointer text-lg"></i>
+                    <i class="fab fa-instagram cursor-pointer text-lg"></i>
                 </div>
             </div>
-            <div class="flex gap-4 items-center">
-                <!-- Modifikasi: Menambahkan Badge Order pada Desktop -->
-                <a href="javascript:void(0)" onclick="showNotifications()" class="font-bold hover:text-gray-200 relative">
-                    <i class="fas fa-receipt mr-1"></i> Pesanan Saya
-                    <span class="absolute -top-2 -right-3 bg-white text-shopee text-[9px] font-bold px-1.5 py-0.5 rounded-full order-badge hidden shadow-sm">0</span>
+            <div class="flex gap-5 items-center">
+                <a href="javascript:void(0)" onclick="showNotifications()" class="hover:text-orange-100 transition relative flex items-center gap-1.5">
+                    <i class="fas fa-receipt"></i> Pesanan Saya
+                    <span class="absolute -top-1.5 -right-3.5 bg-white text-shopee text-[9px] font-black px-1.5 py-0.5 rounded-full order-badge hidden shadow-[0_2px_4px_rgba(0,0,0,0.2)]">0</span>
                 </a>
-                <a href="javascript:void(0)" onclick="showNotifications()" class="hover:text-gray-200"><i class="far fa-bell mr-1"></i> Notifikasi</a>
-                <a href="https://wa.me/6282233828384?text=Halo%20Admin%20FoodCourt,%20saya%20butuh%20bantuan." target="_blank" class="hover:text-gray-200"><i class="fab fa-whatsapp mr-1"></i> Bantuan</a>
-                <a href="#" class="hover:text-gray-200"><i class="fas fa-globe mr-1"></i> ID</a>
-                <div id="auth-links" class="flex items-center gap-4">
-                    <a href="#" onclick="showAuth('register')" class="font-bold hover:text-gray-200">Daftar</a>
-                    <span class="border-l border-white/40 h-4"></span>
-                    <a href="#" onclick="showAuth('login')" class="font-bold hover:text-gray-200">Log In</a>
+                <a href="javascript:void(0)" onclick="showNotifications()" class="hover:text-orange-100 transition flex items-center gap-1.5"><i class="far fa-bell"></i> Notifikasi</a>
+                <a href="https://wa.me/6282233828384?text=Halo%20Admin%20FoodCourt,%20saya%20butuh%20bantuan." target="_blank" class="hover:text-orange-100 transition flex items-center gap-1.5"><i class="fab fa-whatsapp"></i> Bantuan</a>
+                <a href="#" class="hover:text-orange-100 transition flex items-center gap-1.5"><i class="fas fa-globe"></i> ID</a>
+                <div id="auth-links" class="flex items-center gap-4 border-l border-white/30 pl-4 ml-1">
+                    <a href="#" onclick="showAuth('register')" class="font-bold hover:text-orange-100 transition">Daftar</a>
+                    <a href="#" onclick="showAuth('login')" class="font-bold hover:text-orange-100 transition">Log In</a>
                 </div>
-                <div id="user-links" class="hidden items-center gap-4">
+                <div id="user-links" class="hidden items-center gap-4 border-l border-white/30 pl-4 ml-1">
                     <!-- Text Profil Desktop -->
-                    <a href="javascript:void(0)" onclick="showProfile()" id="header-username" class="font-bold text-white hover:text-gray-200">
-                        <i class="fas fa-user-circle mr-1"></i> Profil
+                    <a href="javascript:void(0)" onclick="showProfile()" id="header-username" class="font-bold hover:text-orange-100 transition flex items-center gap-1.5">
+                        <i class="fas fa-user-circle text-lg"></i> Profil
                     </a>
                 </div>
             </div>
         </div>
 
         <!-- Main Header / Search bar -->
-        <div class="flex items-center max-w-6xl mx-auto py-2 md:py-4 px-2 md:px-4 gap-2 md:gap-8">
+        <div class="flex items-center max-w-6xl mx-auto py-3 md:py-5 px-3 md:px-4 gap-3 md:gap-8">
             <!-- Logo (Hidden on mobile) -->
-            <div class="hidden md:flex text-white text-3xl font-bold items-center gap-2 w-48">
+            <div class="hidden md:flex text-white text-3xl font-black items-center gap-2 w-48 tracking-tight drop-shadow-md">
                 <i class="fas fa-utensils"></i> FoodCourt
             </div>
 
             <!-- Ikon Outlet (Di Kiri Pencarian untuk Desktop & Mobile) -->
-            <div onclick="handleSellerCentreClick()" class="text-white text-2xl px-1 cursor-pointer hover:text-gray-200 transition" title="Toko Saya (Outlet)">
-                <i class="fas fa-store"></i>
+            <div onclick="handleSellerCentreClick()" class="btn-3d bg-white/20 text-white w-10 h-10 md:w-auto md:px-4 rounded-xl flex items-center justify-center gap-2 cursor-pointer hover:bg-white/30 transition shadow-inner border border-white/30" title="Toko Saya (Outlet)">
+                <i class="fas fa-store text-lg drop-shadow-sm"></i> <span class="hidden md:inline font-bold">Toko Saya</span>
             </div>
 
             <!-- Search Box -->
             <div class="flex-1">
-                <div class="bg-white rounded flex items-center p-1 shadow-sm">
-                    <input type="text" id="searchInput" onkeyup="if(event.key === 'Enter') handleSearch()" placeholder="Cari makanan, minuman, atau outlet" class="w-full px-3 py-1.5 outline-none text-sm text-gray-700 bg-white">
-                    <button onclick="handleSearch()" class="bg-shopee text-white px-5 py-1.5 rounded hover:bg-shopeeHover transition">
-                        <i class="fas fa-search"></i>
+                <div class="bg-white rounded-xl flex items-center p-1 shadow-[0_4px_15px_rgba(0,0,0,0.1)] border-2 border-white/50">
+                    <input type="text" id="searchInput" onkeyup="if(event.key === 'Enter') handleSearch()" placeholder="Cari makanan atau minuman hari ini..." class="w-full px-4 py-2 outline-none text-sm text-gray-700 bg-transparent font-semibold">
+                    <button onclick="handleSearch()" class="btn-3d bg-gradient-to-b from-[#f36b4e] to-[#ee4d2d] text-white px-6 py-2 rounded-lg hover:from-[#f05c3d] hover:to-[#d73211] transition shadow-[0_3px_0_0_#be3118] ml-1 flex items-center justify-center">
+                        <i class="fas fa-search drop-shadow-sm"></i>
                     </button>
                 </div>
-                <div class="hidden md:flex gap-3 text-white text-xs mt-1">
-                    <a href="javascript:void(0)" onclick="handleSearchQuery('Ayam Geprek')" class="hover:underline">Ayam Geprek</a>
-                    <a href="javascript:void(0)" onclick="handleSearchQuery('Es Teh')" class="hover:underline">Es Teh</a>
-                    <a href="javascript:void(0)" onclick="handleSearchQuery('Seblak')" class="hover:underline">Seblak</a>
-                    <a href="javascript:void(0)" onclick="handleSearchQuery('Boba')" class="hover:underline">Boba</a>
-                    <a href="javascript:void(0)" onclick="handleSearchQuery('Nasi Goreng')" class="hover:underline">Nasi Goreng</a>
+                <div class="hidden md:flex gap-4 text-white/90 text-[11px] mt-2 font-medium">
+                    <a href="javascript:void(0)" onclick="handleSearchQuery('Ayam Geprek')" class="hover:text-white hover:underline transition">Ayam Geprek</a>
+                    <a href="javascript:void(0)" onclick="handleSearchQuery('Es Teh')" class="hover:text-white hover:underline transition">Es Teh</a>
+                    <a href="javascript:void(0)" onclick="handleSearchQuery('Seblak')" class="hover:text-white hover:underline transition">Seblak</a>
+                    <a href="javascript:void(0)" onclick="handleSearchQuery('Boba')" class="hover:text-white hover:underline transition">Boba</a>
+                    <a href="javascript:void(0)" onclick="handleSearchQuery('Nasi Goreng')" class="hover:text-white hover:underline transition">Nasi Goreng</a>
                 </div>
             </div>
 
             <!-- Cart Icon -->
-            <div onclick="showCart()" class="text-white text-2xl px-4 relative cursor-pointer hover:text-gray-200 transition">
-                <i class="fas fa-shopping-cart"></i>
-                <span class="absolute top-0 right-1 bg-white text-shopee text-[10px] font-bold px-1.5 rounded-full border border-shopee cart-counter-badge hidden">0</span>
+            <div onclick="showCart()" class="btn-3d bg-white/20 text-white w-11 h-11 rounded-xl flex items-center justify-center relative cursor-pointer hover:bg-white/30 transition shadow-inner border border-white/30">
+                <i class="fas fa-shopping-cart text-xl drop-shadow-sm"></i>
+                <span class="absolute -top-1.5 -right-1.5 bg-white text-shopee text-[10px] font-black px-2 py-0.5 rounded-full border border-shopee cart-counter-badge hidden shadow-[0_2px_5px_rgba(0,0,0,0.2)]">0</span>
             </div>
             
             <!-- Mobile Chat/Notif Icon -->
-            <div class="md:hidden text-white text-2xl pr-2 cursor-pointer relative" onclick="showNotifications()">
-                <i class="far fa-bell"></i>
+            <div class="md:hidden text-white w-10 h-10 flex items-center justify-center cursor-pointer relative btn-3d active:scale-90" onclick="showNotifications()">
+                <i class="far fa-bell text-2xl drop-shadow-md"></i>
+                <span class="absolute top-0 right-0 bg-white text-shopee text-[8px] font-black px-1.5 py-0.5 rounded-full order-badge hidden shadow-md">0</span>
             </div>
         </div>
     </header>
@@ -399,115 +419,158 @@
     <main class="max-w-6xl mx-auto md:mt-6 px-0 md:px-4">
         
         <!-- Banner Carousel (Sembunyikan Default - Muncul Jika Ada Data) -->
-        <div id="banner-carousel" class="hidden gap-2 mb-2 md:mb-4 bg-white md:bg-transparent p-2 md:p-0">
+        <div id="banner-carousel" class="hidden gap-3 mb-4 md:mb-6 bg-white md:bg-transparent p-3 md:p-0">
             <div class="w-full md:w-2/3">
-                <img id="main-banner-img" src="https://placehold.co/800x300/ee4d2d/white?text=PROMO+FOODCOURT" alt="Banner Main" class="w-full h-32 sm:h-48 md:h-64 object-cover rounded md:shadow-sm bg-gray-200">
+                <img id="main-banner-img" src="https://placehold.co/800x300/ee4d2d/white?text=PROMO+FOODCOURT" alt="Banner Main" class="w-full h-36 sm:h-48 md:h-64 object-cover rounded-2xl md:shadow-[0_8px_20px_rgba(0,0,0,0.1)] bg-gray-200 border border-gray-100">
             </div>
-            <div class="hidden md:flex w-1/3 flex-col gap-2">
-                <img id="sub-banner-1-img" src="https://placehold.co/400x145/ffb3a7/white?text=Gratis+Ongkir+Outlet" alt="Banner Sub 1" class="w-full h-[124px] object-cover rounded shadow-sm">
-                <img id="sub-banner-2-img" src="https://placehold.co/400x145/ffb3a7/white?text=Diskon+Makan+Siang" alt="Banner Sub 2" class="w-full h-[124px] object-cover rounded shadow-sm">
-            </div>
-        </div>
-
-        <!-- Quick Menus (Kategori Bulat) Terkoneksi Database -->
-        <div class="bg-white rounded-none md:rounded md:shadow-sm p-4 mb-2 md:mb-4 overflow-x-auto hide-scrollbar">
-            <!-- Menambahkan ID khusus pada setiap ikon agar bisa disembunyikan jika kosong -->
-            <div class="grid grid-cols-5 md:grid-cols-10 gap-y-4 gap-x-2 md:gap-x-4 text-center min-w-[320px]">
-                <div id="menu-cat-gratis_ongkir" onclick="loadCategory('gratis_ongkir', 'Gratis Ongkir')" class="hidden flex-col items-center gap-1 md:gap-2 cursor-pointer hover:-translate-y-1 transition">
-                    <div class="w-10 h-10 md:w-12 md:h-12 border md:border-2 rounded-xl flex items-center justify-center text-shopee bg-orange-50"><i class="fas fa-shipping-fast text-lg md:text-xl"></i></div>
-                    <span class="text-[9px] md:text-xs leading-tight">Gratis Ongkir</span>
-                </div>
-                <div id="menu-cat-makanan_berat" onclick="loadCategory('makanan_berat', 'Makanan Berat')" class="hidden flex-col items-center gap-1 md:gap-2 cursor-pointer hover:-translate-y-1 transition">
-                    <div class="w-10 h-10 md:w-12 md:h-12 border md:border-2 rounded-xl flex items-center justify-center text-shopee bg-orange-50"><i class="fas fa-drumstick-bite text-lg md:text-xl"></i></div>
-                    <span class="text-[9px] md:text-xs leading-tight">Makanan Berat</span>
-                </div>
-                <div id="menu-cat-minuman" onclick="loadCategory('minuman', 'Minuman')" class="hidden flex-col items-center gap-1 md:gap-2 cursor-pointer hover:-translate-y-1 transition">
-                    <div class="w-10 h-10 md:w-12 md:h-12 border md:border-2 rounded-xl flex items-center justify-center text-shopee bg-orange-50"><i class="fas fa-coffee text-lg md:text-xl"></i></div>
-                    <span class="text-[9px] md:text-xs leading-tight">Minuman</span>
-                </div>
-                <div id="menu-cat-jajanan" onclick="loadCategory('jajanan', 'Jajanan')" class="hidden flex-col items-center gap-1 md:gap-2 cursor-pointer hover:-translate-y-1 transition">
-                    <div class="w-10 h-10 md:w-12 md:h-12 border md:border-2 rounded-xl flex items-center justify-center text-shopee bg-orange-50"><i class="fas fa-hotdog text-lg md:text-xl"></i></div>
-                    <span class="text-[9px] md:text-xs leading-tight">Jajanan</span>
-                </div>
-                <div id="menu-cat-dessert" onclick="loadCategory('dessert', 'Dessert')" class="hidden flex-col items-center gap-1 md:gap-2 cursor-pointer hover:-translate-y-1 transition">
-                    <div class="w-10 h-10 md:w-12 md:h-12 border md:border-2 rounded-xl flex items-center justify-center text-shopee bg-orange-50"><i class="fas fa-ice-cream text-lg md:text-xl"></i></div>
-                    <span class="text-[9px] md:text-xs leading-tight">Dessert</span>
-                </div>
-                <div id="menu-cat-flash_promo" onclick="loadCategory('flash_promo', 'Flash Promo')" class="hidden flex-col items-center gap-1 md:gap-2 cursor-pointer hover:-translate-y-1 transition">
-                    <div class="w-10 h-10 md:w-12 md:h-12 border md:border-2 rounded-xl flex items-center justify-center text-shopee bg-orange-50"><i class="fas fa-bolt text-lg md:text-xl"></i></div>
-                    <span class="text-[9px] md:text-xs leading-tight">Flash Promo</span>
-                </div>
-                <div id="menu-cat-outlet_resmi" onclick="loadCategory('outlet_resmi', 'Outlet Resmi')" class="hidden flex-col items-center gap-1 md:gap-2 cursor-pointer hover:-translate-y-1 transition">
-                    <div class="w-10 h-10 md:w-12 md:h-12 border md:border-2 rounded-xl flex items-center justify-center text-shopee bg-orange-50"><i class="fas fa-store text-lg md:text-xl"></i></div>
-                    <span class="text-[9px] md:text-xs leading-tight">Outlet Resmi</span>
-                </div>
-                <div id="menu-cat-vegan_sehat" onclick="loadCategory('vegan_sehat', 'Vegan / Sehat')" class="hidden flex-col items-center gap-1 md:gap-2 cursor-pointer hover:-translate-y-1 transition">
-                    <div class="w-10 h-10 md:w-12 md:h-12 border md:border-2 rounded-xl flex items-center justify-center text-shopee bg-orange-50"><i class="fas fa-leaf text-lg md:text-xl"></i></div>
-                    <span class="text-[9px] md:text-xs leading-tight">Vegan / Sehat</span>
-                </div>
-                <div id="menu-cat-menu_pedas" onclick="loadCategory('menu_pedas', 'Menu Pedas')" class="hidden flex-col items-center gap-1 md:gap-2 cursor-pointer hover:-translate-y-1 transition">
-                    <div class="w-10 h-10 md:w-12 md:h-12 border md:border-2 rounded-xl flex items-center justify-center text-shopee bg-orange-50"><i class="fas fa-pepper-hot text-lg md:text-xl"></i></div>
-                    <span class="text-[9px] md:text-xs leading-tight">Menu Pedas</span>
-                </div>
-                <div id="menu-cat-menu_lainnya" onclick="loadCategory('menu_lainnya', 'Menu Lainnya')" class="hidden flex-col items-center gap-1 md:gap-2 cursor-pointer hover:-translate-y-1 transition">
-                    <div class="w-10 h-10 md:w-12 md:h-12 border md:border-2 rounded-xl flex items-center justify-center text-shopee bg-orange-50"><i class="fas fa-ellipsis-h text-lg md:text-xl"></i></div>
-                    <span class="text-[9px] md:text-xs leading-tight">Menu Lainnya</span>
-                </div>
+            <div class="hidden md:flex w-1/3 flex-col gap-3">
+                <img id="sub-banner-1-img" src="https://placehold.co/400x145/ffb3a7/white?text=Gratis+Ongkir+Outlet" alt="Banner Sub 1" class="w-full h-[122px] object-cover rounded-2xl shadow-[0_4px_10px_rgba(0,0,0,0.05)] border border-gray-100">
+                <img id="sub-banner-2-img" src="https://placehold.co/400x145/ffb3a7/white?text=Diskon+Makan+Siang" alt="Banner Sub 2" class="w-full h-[122px] object-cover rounded-2xl shadow-[0_4px_10px_rgba(0,0,0,0.05)] border border-gray-100">
             </div>
         </div>
 
-        <!-- Flash Sale Section (Muncul Jika Ada Data) -->
-        <div id="flash-sale-section" class="hidden bg-white rounded-none md:rounded md:shadow-sm mb-2 md:mb-4">
-            <div class="flex justify-between items-center p-4 border-b">
-                <div class="flex items-center gap-2">
-                    <h2 class="text-xl font-bold text-shopee italic"><i class="fas fa-bolt"></i> FLASH PROMO</h2>
+        <!-- Quick Menus (Kategori Bulat) Terkoneksi Database dengan Desain 3D -->
+        <div class="bg-white rounded-none md:rounded-2xl md:shadow-sm p-4 mb-4 md:mb-6 overflow-x-auto hide-scrollbar border-b md:border border-gray-100">
+            <div class="grid grid-cols-5 md:grid-cols-10 gap-y-6 gap-x-2 md:gap-x-4 text-center min-w-[320px] px-1">
+                
+                <div id="menu-cat-gratis_ongkir" onclick="loadCategory('gratis_ongkir', 'Gratis Ongkir')" class="hidden flex-col items-center gap-2 cursor-pointer group">
+                    <div class="w-12 h-12 md:w-14 md:h-14 rounded-2xl flex items-center justify-center text-shopee bg-gradient-to-br from-white to-orange-50 shadow-[0_4px_10px_rgba(238,77,45,0.15)] border border-orange-100 transform transition-all duration-300 group-hover:-translate-y-1.5 group-hover:shadow-[0_8px_15px_rgba(238,77,45,0.25)] group-active:scale-90">
+                        <i class="fas fa-shipping-fast text-xl md:text-2xl drop-shadow-sm transition-transform duration-300 group-hover:scale-110"></i>
+                    </div>
+                    <span class="text-[9px] md:text-xs font-bold text-gray-600 leading-tight group-hover:text-shopee transition-colors">Gratis Ongkir</span>
+                </div>
+                
+                <div id="menu-cat-makanan_berat" onclick="loadCategory('makanan_berat', 'Makanan Berat')" class="hidden flex-col items-center gap-2 cursor-pointer group">
+                    <div class="w-12 h-12 md:w-14 md:h-14 rounded-2xl flex items-center justify-center text-shopee bg-gradient-to-br from-white to-orange-50 shadow-[0_4px_10px_rgba(238,77,45,0.15)] border border-orange-100 transform transition-all duration-300 group-hover:-translate-y-1.5 group-hover:shadow-[0_8px_15px_rgba(238,77,45,0.25)] group-active:scale-90">
+                        <i class="fas fa-drumstick-bite text-xl md:text-2xl drop-shadow-sm transition-transform duration-300 group-hover:scale-110"></i>
+                    </div>
+                    <span class="text-[9px] md:text-xs font-bold text-gray-600 leading-tight group-hover:text-shopee transition-colors">Makanan Berat</span>
+                </div>
+                
+                <div id="menu-cat-minuman" onclick="loadCategory('minuman', 'Minuman')" class="hidden flex-col items-center gap-2 cursor-pointer group">
+                    <div class="w-12 h-12 md:w-14 md:h-14 rounded-2xl flex items-center justify-center text-shopee bg-gradient-to-br from-white to-orange-50 shadow-[0_4px_10px_rgba(238,77,45,0.15)] border border-orange-100 transform transition-all duration-300 group-hover:-translate-y-1.5 group-hover:shadow-[0_8px_15px_rgba(238,77,45,0.25)] group-active:scale-90">
+                        <i class="fas fa-coffee text-xl md:text-2xl drop-shadow-sm transition-transform duration-300 group-hover:scale-110"></i>
+                    </div>
+                    <span class="text-[9px] md:text-xs font-bold text-gray-600 leading-tight group-hover:text-shopee transition-colors">Minuman</span>
+                </div>
+                
+                <div id="menu-cat-jajanan" onclick="loadCategory('jajanan', 'Jajanan')" class="hidden flex-col items-center gap-2 cursor-pointer group">
+                    <div class="w-12 h-12 md:w-14 md:h-14 rounded-2xl flex items-center justify-center text-shopee bg-gradient-to-br from-white to-orange-50 shadow-[0_4px_10px_rgba(238,77,45,0.15)] border border-orange-100 transform transition-all duration-300 group-hover:-translate-y-1.5 group-hover:shadow-[0_8px_15px_rgba(238,77,45,0.25)] group-active:scale-90">
+                        <i class="fas fa-hotdog text-xl md:text-2xl drop-shadow-sm transition-transform duration-300 group-hover:scale-110"></i>
+                    </div>
+                    <span class="text-[9px] md:text-xs font-bold text-gray-600 leading-tight group-hover:text-shopee transition-colors">Jajanan</span>
+                </div>
+                
+                <div id="menu-cat-dessert" onclick="loadCategory('dessert', 'Dessert')" class="hidden flex-col items-center gap-2 cursor-pointer group">
+                    <div class="w-12 h-12 md:w-14 md:h-14 rounded-2xl flex items-center justify-center text-shopee bg-gradient-to-br from-white to-orange-50 shadow-[0_4px_10px_rgba(238,77,45,0.15)] border border-orange-100 transform transition-all duration-300 group-hover:-translate-y-1.5 group-hover:shadow-[0_8px_15px_rgba(238,77,45,0.25)] group-active:scale-90">
+                        <i class="fas fa-ice-cream text-xl md:text-2xl drop-shadow-sm transition-transform duration-300 group-hover:scale-110"></i>
+                    </div>
+                    <span class="text-[9px] md:text-xs font-bold text-gray-600 leading-tight group-hover:text-shopee transition-colors">Dessert</span>
+                </div>
+                
+                <div id="menu-cat-flash_promo" onclick="loadCategory('flash_promo', 'Flash Promo')" class="hidden flex-col items-center gap-2 cursor-pointer group">
+                    <div class="w-12 h-12 md:w-14 md:h-14 rounded-2xl flex items-center justify-center text-yellow-500 bg-gradient-to-br from-white to-yellow-50 shadow-[0_4px_10px_rgba(234,179,8,0.15)] border border-yellow-100 transform transition-all duration-300 group-hover:-translate-y-1.5 group-hover:shadow-[0_8px_15px_rgba(234,179,8,0.25)] group-active:scale-90">
+                        <i class="fas fa-bolt text-xl md:text-2xl drop-shadow-sm transition-transform duration-300 group-hover:scale-110"></i>
+                    </div>
+                    <span class="text-[9px] md:text-xs font-bold text-gray-600 leading-tight group-hover:text-yellow-500 transition-colors">Flash Promo</span>
+                </div>
+                
+                <div id="menu-cat-outlet_resmi" onclick="loadCategory('outlet_resmi', 'Outlet Resmi')" class="hidden flex-col items-center gap-2 cursor-pointer group">
+                    <div class="w-12 h-12 md:w-14 md:h-14 rounded-2xl flex items-center justify-center text-shopee bg-gradient-to-br from-white to-orange-50 shadow-[0_4px_10px_rgba(238,77,45,0.15)] border border-orange-100 transform transition-all duration-300 group-hover:-translate-y-1.5 group-hover:shadow-[0_8px_15px_rgba(238,77,45,0.25)] group-active:scale-90">
+                        <i class="fas fa-store text-xl md:text-2xl drop-shadow-sm transition-transform duration-300 group-hover:scale-110"></i>
+                    </div>
+                    <span class="text-[9px] md:text-xs font-bold text-gray-600 leading-tight group-hover:text-shopee transition-colors">Outlet Resmi</span>
+                </div>
+                
+                <div id="menu-cat-vegan_sehat" onclick="loadCategory('vegan_sehat', 'Vegan / Sehat')" class="hidden flex-col items-center gap-2 cursor-pointer group">
+                    <div class="w-12 h-12 md:w-14 md:h-14 rounded-2xl flex items-center justify-center text-green-500 bg-gradient-to-br from-white to-green-50 shadow-[0_4px_10px_rgba(34,197,94,0.15)] border border-green-100 transform transition-all duration-300 group-hover:-translate-y-1.5 group-hover:shadow-[0_8px_15px_rgba(34,197,94,0.25)] group-active:scale-90">
+                        <i class="fas fa-leaf text-xl md:text-2xl drop-shadow-sm transition-transform duration-300 group-hover:scale-110"></i>
+                    </div>
+                    <span class="text-[9px] md:text-xs font-bold text-gray-600 leading-tight group-hover:text-green-500 transition-colors">Vegan / Sehat</span>
+                </div>
+                
+                <div id="menu-cat-menu_pedas" onclick="loadCategory('menu_pedas', 'Menu Pedas')" class="hidden flex-col items-center gap-2 cursor-pointer group">
+                    <div class="w-12 h-12 md:w-14 md:h-14 rounded-2xl flex items-center justify-center text-red-500 bg-gradient-to-br from-white to-red-50 shadow-[0_4px_10px_rgba(239,68,68,0.15)] border border-red-100 transform transition-all duration-300 group-hover:-translate-y-1.5 group-hover:shadow-[0_8px_15px_rgba(239,68,68,0.25)] group-active:scale-90">
+                        <i class="fas fa-pepper-hot text-xl md:text-2xl drop-shadow-sm transition-transform duration-300 group-hover:scale-110"></i>
+                    </div>
+                    <span class="text-[9px] md:text-xs font-bold text-gray-600 leading-tight group-hover:text-red-500 transition-colors">Menu Pedas</span>
+                </div>
+                
+                <div id="menu-cat-menu_lainnya" onclick="loadCategory('menu_lainnya', 'Menu Lainnya')" class="hidden flex-col items-center gap-2 cursor-pointer group">
+                    <div class="w-12 h-12 md:w-14 md:h-14 rounded-2xl flex items-center justify-center text-gray-500 bg-gradient-to-br from-white to-gray-100 shadow-[0_4px_10px_rgba(0,0,0,0.1)] border border-gray-200 transform transition-all duration-300 group-hover:-translate-y-1.5 group-hover:shadow-[0_8px_15px_rgba(0,0,0,0.15)] group-active:scale-90">
+                        <i class="fas fa-ellipsis-h text-xl md:text-2xl drop-shadow-sm transition-transform duration-300 group-hover:scale-110"></i>
+                    </div>
+                    <span class="text-[9px] md:text-xs font-bold text-gray-600 leading-tight group-hover:text-gray-800 transition-colors">Menu Lainnya</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Flash Sale Section -->
+        <div id="flash-sale-section" class="hidden bg-white rounded-none md:rounded-2xl md:shadow-sm mb-4 md:mb-6 border-b md:border border-gray-100 overflow-hidden">
+            <div class="flex justify-between items-center p-4 bg-gradient-to-r from-shopee to-[#ff7337] text-white shadow-inner">
+                <div class="flex items-center gap-3">
+                    <h2 class="text-lg md:text-xl font-black italic tracking-wider drop-shadow-md"><i class="fas fa-bolt text-yellow-300 mr-1"></i> FLASH PROMO</h2>
                     <div class="flex gap-1 text-white text-xs font-bold">
-                        <span id="global-timer-h" class="bg-black px-1.5 py-0.5 rounded">00</span><span class="text-black">:</span>
-                        <span id="global-timer-m" class="bg-black px-1.5 py-0.5 rounded">00</span><span class="text-black">:</span>
-                        <span id="global-timer-s" class="bg-black px-1.5 py-0.5 rounded">00</span>
+                        <span id="global-timer-h" class="bg-black/40 backdrop-blur px-2 py-1 rounded shadow-inner border border-white/20">00</span><span class="font-black self-center">:</span>
+                        <span id="global-timer-m" class="bg-black/40 backdrop-blur px-2 py-1 rounded shadow-inner border border-white/20">00</span><span class="font-black self-center">:</span>
+                        <span id="global-timer-s" class="bg-black/40 backdrop-blur px-2 py-1 rounded shadow-inner border border-white/20">00</span>
                     </div>
                 </div>
-                <a href="javascript:void(0)" onclick="loadCategory('flash_promo', 'Flash Promo')" class="text-sm text-shopee hover:underline">Lihat Semua ></a>
+                <a href="javascript:void(0)" onclick="loadCategory('flash_promo', 'Flash Promo')" class="text-xs md:text-sm font-bold text-white hover:text-yellow-200 transition flex items-center gap-1">Lihat Semua <i class="fas fa-chevron-right text-[10px]"></i></a>
             </div>
-            <div class="flex overflow-x-auto hide-scrollbar p-4 gap-4" id="flash-sale-container">
-                <div class="text-center w-full py-4 text-gray-500"><i class="fas fa-spinner fa-spin"></i> Memuat Promo...</div>
+            <div class="flex overflow-x-auto hide-scrollbar p-4 gap-4 bg-[#fdfdfd]" id="flash-sale-container">
+                <div class="text-center w-full py-4 text-gray-500 font-bold"><i class="fas fa-spinner fa-spin mr-2"></i> Memuat Promo...</div>
             </div>
         </div>
 
         <!-- Area Judul Grid Produk Dinamis -->
-        <div class="bg-white sticky top-[52px] md:top-28 z-40 border-b-4 border-shopee mb-2" id="grid-header">
-            <h2 id="section-title" class="text-center text-shopee font-bold py-3 text-sm md:text-base uppercase">Rekomendasi Untukmu</h2>
+        <div class="bg-[#f5f5f5] md:bg-transparent sticky top-[68px] md:top-24 z-40 mb-3 pt-2 md:pt-0" id="grid-header">
+            <div class="flex items-center justify-center gap-4 py-2">
+                <div class="h-[2px] bg-gray-300 w-12 md:w-32 rounded-full"></div>
+                <h2 id="section-title" class="text-center text-shopee font-black text-sm md:text-xl uppercase tracking-widest drop-shadow-sm">Rekomendasi Untukmu</h2>
+                <div class="h-[2px] bg-gray-300 w-12 md:w-32 rounded-full"></div>
+            </div>
         </div>
         
-        <div id="product-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 md:gap-4 pb-4 px-2 md:px-0 min-h-[300px]">
-            <div class="text-center col-span-full py-10 text-gray-500">
-                <i class="fas fa-spinner fa-spin text-3xl mb-2"></i><br>
-                Memuat Produk...
+        <div id="product-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4 pb-4 px-3 md:px-0 min-h-[300px]">
+            <div class="text-center col-span-full py-16 text-gray-400 font-bold">
+                <i class="fas fa-spinner fa-spin text-4xl mb-3"></i><br>
+                Memuat Etalase Produk...
             </div>
         </div>
 
-        <div class="text-center mt-4 mb-8">
-            <button class="bg-white border border-gray-300 text-gray-600 px-10 py-2 rounded hover:bg-gray-50 font-bold" onclick="fetchProductsFromGAS()">Tampilkan Semua Rekomendasi</button>
+        <div class="text-center mt-6 mb-10 pb-6 md:pb-0">
+            <button class="btn-3d bg-white border-2 border-gray-200 text-gray-600 px-12 py-3.5 rounded-xl hover:bg-gray-50 hover:text-shopee font-bold shadow-[0_4px_0_0_#d1d5db] transition-colors" onclick="fetchProductsFromGAS()">Tampilkan Semua Rekomendasi</button>
         </div>
 
     </main>
 
-    <!-- MOBILE BOTTOM NAVIGATION -->
-    <nav class="md:hidden fixed bottom-0 left-0 right-0 w-full bg-white border-t flex justify-around text-[10px] text-gray-500 pb-3 pt-2 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-50">
-        <div onclick="window.location.reload()" class="flex flex-col items-center text-shopee cursor-pointer py-1 w-1/3">
-            <i class="fas fa-home text-xl mb-1"></i>
-            <span>Beranda</span>
+    <!-- MOBILE BOTTOM NAVIGATION (3D FLOATING NAV) -->
+    <nav class="md:hidden fixed bottom-4 left-4 right-4 bg-white/90 backdrop-blur-xl border border-white flex justify-around items-end text-[10px] text-gray-500 pb-2 pt-2 shadow-[0_10px_30px_rgba(0,0,0,0.15)] rounded-3xl z-50 h-[70px]">
+        <!-- Pantulan Cahaya (Glossy effect) -->
+        <div class="absolute inset-0 bg-gradient-to-t from-transparent to-white/80 rounded-3xl pointer-events-none"></div>
+
+        <!-- Tombol Home selalu pop-up (aktif by default) -->
+        <div onclick="window.location.reload()" class="flex flex-col items-center text-shopee cursor-pointer w-1/3 relative z-10 group">
+            <div class="w-14 h-14 absolute -top-[45px] bg-gradient-to-b from-[#f36b4e] to-[#ee4d2d] text-white rounded-full shadow-[0_8px_15px_rgba(238,77,45,0.4)] border-4 border-white flex items-center justify-center transform group-active:scale-95 transition-transform">
+                <i class="fas fa-home text-2xl drop-shadow-md"></i>
+            </div>
+            <span class="font-extrabold mt-6 text-shopee">Beranda</span>
         </div>
-        <!-- Modifikasi: Menambahkan order-badge ke Menu Mobile -->
-        <div class="flex flex-col items-center hover:text-shopee cursor-pointer w-1/3" onclick="showNotifications()">
-            <i class="fas fa-receipt text-xl mb-1 relative">
-                <span class="absolute -top-1 -right-2 bg-shopee text-white text-[8px] px-1 rounded-full order-badge hidden shadow-sm">0</span>
-            </i>
-            <span>Pesanan Saya</span>
+        
+        <div class="flex flex-col items-center hover:text-shopee cursor-pointer w-1/3 relative z-10 group transition-all" onclick="showNotifications()">
+            <div class="w-12 h-12 flex items-center justify-center transform group-hover:-translate-y-10 group-hover:bg-gradient-to-b from-orange-100 to-white group-hover:shadow-[0_8px_15px_rgba(238,77,45,0.3)] group-hover:border-[3px] border-white rounded-full transition-all duration-300 relative group-active:scale-90">
+                <i class="fas fa-receipt text-2xl drop-shadow-sm group-hover:drop-shadow-md text-gray-400 group-hover:text-shopee transition-colors"></i>
+                <span class="absolute -top-1 -right-1 bg-shopee text-white text-[9px] font-black px-1.5 py-0.5 rounded-full order-badge hidden shadow-[0_2px_5px_rgba(238,77,45,0.5)] border border-white">0</span>
+            </div>
+            <span class="font-bold mt-1 group-hover:opacity-0 transition-opacity duration-300">Pesanan</span>
         </div>
-        <div class="flex flex-col items-center hover:text-shopee cursor-pointer py-1 w-1/3" onclick="handleMobileProfileClick()" id="mobile-profile-btn">
-            <i id="mobile-profile-icon" class="far fa-user text-xl mb-1"></i>
-            <span id="mobile-profile-text">Log In</span>
+
+        <div class="flex flex-col items-center hover:text-shopee cursor-pointer w-1/3 relative z-10 group transition-all" onclick="handleMobileProfileClick()" id="mobile-profile-btn">
+            <div class="w-12 h-12 flex items-center justify-center transform group-hover:-translate-y-10 group-hover:bg-gradient-to-b from-orange-100 to-white group-hover:shadow-[0_8px_15px_rgba(238,77,45,0.3)] group-hover:border-[3px] border-white rounded-full transition-all duration-300 group-active:scale-90">
+                <i id="mobile-profile-icon" class="far fa-user text-2xl drop-shadow-sm group-hover:drop-shadow-md text-gray-400 group-hover:text-shopee transition-colors"></i>
+            </div>
+            <span id="mobile-profile-text" class="font-bold mt-1 group-hover:opacity-0 transition-opacity duration-300">Log In</span>
         </div>
     </nav>
 
@@ -517,16 +580,13 @@
         const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxepD3BGU993WBCuZjH2Wo4sDyUkwyp4SGE4_mZ6EbrzD_qCDGzkRIOnPqmcXVnKNM/exec"; 
 
         let loggedInUser = null; 
-        
-        // --- TAMBAHAN: VARIABEL BACKGROUND SYNC ---
         let syncInterval;
         let currentViewMode = 'recommendation'; 
         let currentCategorySheet = '';
         let currentCategoryTitle = '';
         let currentSearchQuery = '';
-        let activeTrackOrderId = null; // Menyimpan ID pesanan yang sedang dilacak
+        let activeTrackOrderId = null; 
 
-        // --- LOGIKA MENYEMBUNYIKAN MENU KATEGORI KOSONG SECARA OTOMATIS ---
         function checkEmptyCategories() {
             const allCategories = ['gratis_ongkir', 'makanan_berat', 'minuman', 'jajanan', 'dessert', 'flash_promo', 'outlet_resmi', 'vegan_sehat', 'menu_pedas', 'menu_lainnya'];
             allCategories.forEach(cat => {
@@ -553,7 +613,6 @@
             });
         }
 
-        // --- LOGIKA KERANJANG (CART) ---
         let cartItems = JSON.parse(localStorage.getItem('foodcourt_cart')) || [];
 
         function updateCartCount() {
@@ -581,7 +640,6 @@
             localStorage.setItem('foodcourt_cart', JSON.stringify(cartItems));
             updateCartCount();
             
-            // Animasi Bounce Icon Cart
             const cartIcon = document.querySelector('.fa-shopping-cart');
             cartIcon.classList.add('text-yellow-300', 'scale-125');
             setTimeout(() => { cartIcon.classList.remove('text-yellow-300', 'scale-125'); }, 300);
@@ -599,7 +657,7 @@
             const totalEl = document.getElementById('cart-total-price');
             
             if (cartItems.length === 0) {
-                container.innerHTML = '<div class="text-center py-10 text-gray-400"><i class="fas fa-shopping-basket text-4xl mb-3 opacity-50"></i><p>Keranjang Anda kosong.</p></div>';
+                container.innerHTML = '<div class="text-center py-10 text-gray-400"><i class="fas fa-shopping-basket text-5xl mb-3 opacity-50 drop-shadow"></i><p class="font-bold">Keranjang Anda masih kosong.</p></div>';
                 totalEl.innerText = "Rp 0";
                 document.getElementById('cartForm').style.display = 'none';
                 document.getElementById('btnSubmitCart').style.display = 'none';
@@ -618,19 +676,19 @@
                 total += subtotal;
                 const priceFormatted = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(subtotal);
                 html += `
-                    <div class="flex justify-between items-center border p-3 rounded shadow-sm bg-white">
+                    <div class="flex justify-between items-center border border-gray-100 p-3 rounded-xl shadow-sm bg-white">
                         <div class="flex-1">
-                            <div class="font-bold text-sm text-gray-800 line-clamp-1">${item.name}</div>
-                            <div class="text-xs text-gray-500"><i class="fas fa-store text-shopee mr-1"></i> ${item.seller}</div>
-                            <div class="text-shopee font-bold text-sm mt-1">${priceFormatted} <span class="text-xs text-gray-400 font-normal">(@Rp${item.price/1000}k)</span></div>
+                            <div class="font-extrabold text-sm text-gray-800 line-clamp-1">${item.name}</div>
+                            <div class="text-xs font-semibold text-gray-500 mt-0.5"><i class="fas fa-store text-shopee mr-1"></i> ${item.seller}</div>
+                            <div class="text-shopee font-black text-sm mt-1.5">${priceFormatted} <span class="text-[10px] text-gray-400 font-medium bg-gray-100 px-1 rounded">(@Rp${item.price/1000}k)</span></div>
                         </div>
                         <div class="flex items-center gap-3">
-                            <div class="flex items-center border rounded">
-                                <button type="button" onclick="updateCartItemQty(${index}, -1)" class="w-7 h-7 flex items-center justify-center text-gray-600 hover:bg-gray-100">-</button>
-                                <span class="w-6 text-center text-sm font-bold">${itemQty}</span>
-                                <button type="button" onclick="updateCartItemQty(${index}, 1)" class="w-7 h-7 flex items-center justify-center text-gray-600 hover:bg-gray-100">+</button>
+                            <div class="flex items-center border-2 border-gray-100 rounded-lg p-0.5 bg-gray-50">
+                                <button type="button" onclick="updateCartItemQty(${index}, -1)" class="w-7 h-7 flex items-center justify-center bg-white rounded shadow-sm text-gray-600 hover:text-shopee font-bold">-</button>
+                                <span class="w-6 text-center text-sm font-black">${itemQty}</span>
+                                <button type="button" onclick="updateCartItemQty(${index}, 1)" class="w-7 h-7 flex items-center justify-center bg-white rounded shadow-sm text-gray-600 hover:text-shopee font-bold">+</button>
                             </div>
-                            <button type="button" onclick="removeCartItem(${index})" class="text-red-500 bg-red-50 w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-100 transition"><i class="fas fa-trash"></i></button>
+                            <button type="button" onclick="removeCartItem(${index})" class="text-red-500 bg-red-50 w-9 h-9 rounded-full flex items-center justify-center hover:bg-red-100 transition shadow-sm border border-red-100"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>
                 `;
@@ -639,7 +697,6 @@
             container.innerHTML = html;
             totalEl.innerText = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(total);
 
-            // Set Alamat Default & Peta Keranjang
             document.getElementById('cartAddress').value = loggedInUser.address || '';
             let startLat = loggedInUser.lat || -6.200000; 
             let startLng = loggedInUser.lng || 106.816666;
@@ -647,7 +704,10 @@
             document.getElementById('cartLat').value = startLat;
             document.getElementById('cartLng').value = startLng;
 
-            setTimeout(() => { initInteractiveMap('cart-map', 'cartLat', 'cartLng', 'cartAddress', startLat, startLng); }, 100);
+            setTimeout(() => { 
+                initInteractiveMap('cart-map', 'cartLat', 'cartLng', 'cartAddress', startLat, startLng); 
+                autoGetLocationBuyer('cartLat', 'cartLng', 'cart-map', 'cartAddress');
+            }, 100);
         }
 
         function updateCartItemQty(index, change) {
@@ -667,7 +727,7 @@
             cartItems.splice(index, 1);
             localStorage.setItem('foodcourt_cart', JSON.stringify(cartItems));
             updateCartCount();
-            showCart(); // Refresh cart UI
+            showCart();
         }
 
         function hideCart() {
@@ -715,19 +775,18 @@
                     cartItems = [];
                     localStorage.removeItem('foodcourt_cart');
                     updateCartCount();
-                    syncOrdersSilently(); // Update notif lencana
+                    syncOrdersSilently();
                 } else {
                     alert("Gagal membuat pesanan.");
                 }
             } catch(error) {
                 alert("Koneksi gagal. Pastikan internet Anda stabil.");
             } finally {
-                btn.innerHTML = '<i class="fas fa-cash-register"></i> Pesan Semua Sekarang';
+                btn.innerHTML = '<i class="fas fa-paper-plane drop-shadow-md"></i> Pesan Semua Sekarang';
                 btn.disabled = false;
             }
         }
 
-        // --- TAMBAHAN: FUNGSI SYNC ORDER (Notifikasi & Lencana) ---
         async function syncOrdersSilently() {
             if (!loggedInUser) return;
             try {
@@ -735,8 +794,6 @@
                 const data = await res.json();
                 if(data.status === 'success' && data.data) {
                     const myOrders = data.data.filter(o => o.user_id === loggedInUser.user_id);
-                    
-                    // Hitung pesanan yang belum selesai untuk lencana (Badge)
                     const activeOrders = myOrders.filter(o => !o.status.includes('Selesai'));
                     
                     document.querySelectorAll('.order-badge').forEach(el => {
@@ -745,12 +802,10 @@
                         else el.classList.add('hidden');
                     });
 
-                    // Jika pop-up riwayat pesanan sedang terbuka, perbarui isinya secara senyap
                     if (!document.getElementById('notif-overlay').classList.contains('hidden')) {
                         showNotifications(true); 
                     }
 
-                    // Jika sedang memantau/lacak pesanan, perbarui peta pelacakan secara live!
                     if (activeTrackOrderId) {
                         const trackedOrder = myOrders.find(o => o.order_id === activeTrackOrderId);
                         if (trackedOrder) {
@@ -761,7 +816,6 @@
             } catch(e) {}
         }
 
-        // --- FUNGSI NOTIFIKASI & LACAK PESANAN ---
         async function showNotifications(isBackground = false) {
             if (!loggedInUser) return showAuth('login');
             
@@ -781,7 +835,7 @@
                     const myOrders = data.data.filter(o => o.user_id === loggedInUser.user_id).reverse();
                     
                     if(myOrders.length === 0) {
-                        container.innerHTML = '<div class="text-center text-gray-400 py-10"><i class="fas fa-receipt text-4xl mb-3 opacity-50"></i><p>Belum ada riwayat pesanan.</p></div>';
+                        container.innerHTML = '<div class="text-center text-gray-400 py-10 font-bold"><i class="fas fa-receipt text-5xl mb-3 opacity-30 drop-shadow"></i><p>Belum ada riwayat pesanan.</p></div>';
                     } else {
                         let html = '';
                         myOrders.forEach(o => {
@@ -793,25 +847,25 @@
                             const escOut = o.outlet.replace(/'/g, "\\'");
                             
                             html += `
-                            <div onclick="showTracking('${o.order_id}', '${o.status}', '${escProd}', '${escOut}')" class="border-b p-4 cursor-pointer hover:bg-orange-50 transition bg-white mb-1 shadow-sm">
-                                <div class="flex justify-between mb-2">
-                                    <span class="font-bold text-sm text-gray-800 flex items-center gap-2"><i class="fas fa-store text-gray-400"></i> ${o.outlet}</span>
-                                    <span class="text-[10px] bg-gray-100 px-2 py-0.5 rounded font-bold ${statusColor}">${o.status}</span>
+                            <div onclick="showTracking('${o.order_id}', '${o.status}', '${escProd}', '${escOut}')" class="bg-white border border-gray-100 rounded-xl p-4 m-2 cursor-pointer hover:border-shopee transition shadow-sm group">
+                                <div class="flex justify-between mb-3 border-b border-gray-50 pb-2">
+                                    <span class="font-extrabold text-sm text-gray-800 flex items-center gap-2"><i class="fas fa-store text-shopee/70"></i> ${o.outlet}</span>
+                                    <span class="text-[10px] bg-gray-50 border border-gray-100 px-2 py-0.5 rounded-full font-black tracking-wide ${statusColor} shadow-inner">${o.status}</span>
                                 </div>
-                                <div class="text-xs text-gray-600 line-clamp-1 mb-1 font-semibold">${o.qty || 1}x ${o.product_name}</div>
-                                <div class="flex justify-between items-center">
-                                    <div class="text-[10px] text-gray-400"><i class="far fa-clock"></i> ${o.timestamp || '-'}</div>
-                                    <div class="text-[10px] text-blue-500 hover:underline">Lacak <i class="fas fa-chevron-right text-[8px] ml-1"></i></div>
+                                <div class="text-xs text-gray-700 line-clamp-2 mb-2 font-bold leading-relaxed">${o.qty || 1}x ${o.product_name}</div>
+                                <div class="flex justify-between items-center mt-2 bg-gray-50 p-2 rounded-lg border border-gray-100">
+                                    <div class="text-[10px] text-gray-500 font-semibold"><i class="far fa-clock"></i> ${o.timestamp || '-'}</div>
+                                    <div class="text-[10px] font-bold text-blue-500 group-hover:text-shopee transition">Lacak <i class="fas fa-chevron-right text-[8px] ml-1"></i></div>
                                 </div>
                             </div>`;
                         });
                         container.innerHTML = html;
                     }
                 } else {
-                    if(!isBackground) container.innerHTML = '<div class="text-center text-gray-500 py-4">Database kosong.</div>';
+                    if(!isBackground) container.innerHTML = '<div class="text-center text-gray-500 py-10 font-bold">Database kosong.</div>';
                 }
             } catch(e) {
-                if(!isBackground) container.innerHTML = '<div class="text-center text-red-500 py-4">Gagal memuat. Periksa internet.</div>';
+                if(!isBackground) container.innerHTML = '<div class="text-center text-red-500 py-10 font-bold">Gagal memuat. Periksa internet.</div>';
             }
         }
 
@@ -837,42 +891,42 @@
             let s1 = "text-gray-400", s2 = "text-gray-400", s3 = "text-gray-400", s4 = "text-gray-400";
             let b1 = "bg-gray-200 border-gray-200", b2 = "bg-gray-200 border-gray-200", b3 = "bg-gray-200 border-gray-200", b4 = "bg-gray-200 border-gray-200";
 
-            if (status.includes("Konfirmasi") || status.includes("Belum")) { s1 = "text-shopee font-bold"; b1 = "bg-shopee border-shopee"; }
-            else if (status.includes("Kurir")) { s1 = "text-shopee font-bold"; b1 = "bg-shopee border-shopee"; s2 = "text-blue-500 font-bold"; b2 = "bg-blue-500 border-blue-500"; }
-            else if (status.includes("Tujuan") || status.includes("Diambil")) { s1 = "text-shopee font-bold"; b1 = "bg-shopee border-shopee"; s2 = "text-blue-500 font-bold"; b2 = "bg-blue-500 border-blue-500"; s3 = "text-orange-500 font-bold"; b3 = "bg-orange-500 border-orange-500"; }
-            else if (status.includes("Selesai")) { s1 = "text-shopee font-bold"; b1 = "bg-shopee border-shopee"; s2 = "text-blue-500 font-bold"; b2 = "bg-blue-500 border-blue-500"; s3 = "text-orange-500 font-bold"; b3 = "bg-orange-500 border-orange-500"; s4 = "text-green-600 font-bold"; b4 = "bg-green-600 border-green-600"; }
+            if (status.includes("Konfirmasi") || status.includes("Belum")) { s1 = "text-shopee font-bold"; b1 = "bg-shopee border-shopee shadow-[0_0_10px_rgba(238,77,45,0.5)]"; }
+            else if (status.includes("Kurir")) { s1 = "text-shopee font-bold"; b1 = "bg-shopee border-shopee"; s2 = "text-blue-500 font-bold"; b2 = "bg-blue-500 border-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]"; }
+            else if (status.includes("Tujuan") || status.includes("Diambil")) { s1 = "text-shopee font-bold"; b1 = "bg-shopee border-shopee"; s2 = "text-blue-500 font-bold"; b2 = "bg-blue-500 border-blue-500"; s3 = "text-orange-500 font-bold"; b3 = "bg-orange-500 border-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.5)]"; }
+            else if (status.includes("Selesai")) { s1 = "text-shopee font-bold"; b1 = "bg-shopee border-shopee"; s2 = "text-blue-500 font-bold"; b2 = "bg-blue-500 border-blue-500"; s3 = "text-orange-500 font-bold"; b3 = "bg-orange-500 border-orange-500"; s4 = "text-green-600 font-bold"; b4 = "bg-green-600 border-green-600 shadow-[0_0_10px_rgba(22,163,74,0.5)]"; }
 
             timeline.innerHTML = `
                 <div class="relative">
-                    <div class="absolute -left-[23px] top-1 w-3 h-3 rounded-full border-2 ${b1}"></div>
-                    <div class="text-sm ${s1}">Pesanan Dibuat</div>
-                    <div class="text-xs text-gray-500">Menunggu konfirmasi / disiapkan oleh toko.</div>
+                    <div class="absolute -left-[24px] top-1 w-3 h-3 rounded-full border-[3px] ${b1} transition-all duration-500"></div>
+                    <div class="text-sm ${s1} transition-colors duration-500">Pesanan Dibuat</div>
+                    <div class="text-[11px] font-semibold text-gray-400 mt-0.5">Menunggu konfirmasi / disiapkan toko.</div>
                 </div>
                 <div class="relative">
-                    <div class="absolute -left-[23px] top-1 w-3 h-3 rounded-full border-2 ${b2}"></div>
-                    <div class="text-sm ${s2}">Kurir Menuju Outlet</div>
-                    <div class="text-xs text-gray-500">Mitra kurir sedang dalam perjalanan ke toko.</div>
+                    <div class="absolute -left-[24px] top-1 w-3 h-3 rounded-full border-[3px] ${b2} transition-all duration-500"></div>
+                    <div class="text-sm ${s2} transition-colors duration-500">Kurir Menuju Outlet</div>
+                    <div class="text-[11px] font-semibold text-gray-400 mt-0.5">Mitra kurir sedang dalam perjalanan.</div>
                 </div>
                 <div class="relative">
-                    <div class="absolute -left-[23px] top-1 w-3 h-3 rounded-full border-2 ${b3}"></div>
-                    <div class="text-sm ${s3}">Pesanan Sedang Dikirim</div>
-                    <div class="text-xs text-gray-500">Kurir telah mengambil pesanan dan menuju ke lokasi Anda.</div>
+                    <div class="absolute -left-[24px] top-1 w-3 h-3 rounded-full border-[3px] ${b3} transition-all duration-500"></div>
+                    <div class="text-sm ${s3} transition-colors duration-500">Pesanan Sedang Dikirim</div>
+                    <div class="text-[11px] font-semibold text-gray-400 mt-0.5">Kurir telah mengambil pesanan Anda.</div>
                 </div>
                 <div class="relative">
-                    <div class="absolute -left-[23px] top-1 w-3 h-3 rounded-full border-2 ${b4}"></div>
-                    <div class="text-sm ${s4}">Pesanan Selesai</div>
-                    <div class="text-xs text-gray-500">Pesanan telah diterima. Selamat menikmati!</div>
+                    <div class="absolute -left-[24px] top-1 w-3 h-3 rounded-full border-[3px] ${b4} transition-all duration-500"></div>
+                    <div class="text-sm ${s4} transition-colors duration-500">Pesanan Selesai</div>
+                    <div class="text-[11px] font-semibold text-gray-400 mt-0.5">Pesanan telah diterima. Nikmati!</div>
                 </div>
             `;
         }
 
         function hideTracking() {
-            activeTrackOrderId = null; // Reset pelacakan
+            activeTrackOrderId = null; 
             document.getElementById('track-overlay').classList.add('hidden');
             document.getElementById('track-overlay').classList.remove('flex');
         }
 
-        // FUNGSI UNTUK MERENDER PRODUK DENGAN TOMBOL KERANJANG DAN PESAN
+        // FUNGSI UNTUK MERENDER PRODUK (DENGAN TAMPILAN KARTU 3D)
         function renderProducts(products) {
             const container = document.getElementById('product-container');
             container.innerHTML = ''; 
@@ -882,35 +936,36 @@
                 const escapeLocation = product.location.replace(/'/g, "\\'");
                 
                 const card = `
-                <div class="bg-white md:rounded md:border border-gray-100 hover:border-shopee hover:-translate-y-0.5 transition duration-200 shadow-[0_1px_2px_0_rgba(0,0,0,0.05)] md:shadow-sm relative flex flex-col h-full overflow-hidden">
-                    <img src="${product.img}" alt="${product.name}" class="w-full aspect-square object-cover" onerror="this.src='https://placehold.co/300x300/e0e0e0/333?text=Makanan'">
-                    
-                    <div class="absolute top-0 left-0 bg-shopee text-white text-[9px] md:text-[10px] font-bold px-1.5 py-0.5 rounded-br">Star+</div>
+                <div class="bg-white rounded-2xl border border-gray-100 hover:border-orange-200 transition-all duration-300 shadow-[0_4px_10px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_20px_rgba(238,77,45,0.15)] relative flex flex-col h-full overflow-hidden transform hover:-translate-y-1 group">
+                    <div class="relative overflow-hidden">
+                        <img src="${product.img}" alt="${product.name}" class="w-full aspect-square object-cover transition-transform duration-500 group-hover:scale-105" onerror="this.src='https://placehold.co/300x300/e0e0e0/333?text=Makanan'">
+                        <div class="absolute top-0 left-0 bg-gradient-to-r from-shopee to-[#ff7337] text-white text-[9px] md:text-[10px] font-bold px-2 py-0.5 rounded-br-lg shadow-md">Star+</div>
+                    </div>
 
-                    <div class="p-2 flex flex-col flex-grow">
-                        <div class="text-[11px] md:text-xs text-gray-700 line-clamp-2 mb-1">
+                    <div class="p-2.5 flex flex-col flex-grow bg-gradient-to-b from-white to-gray-50/50">
+                        <div class="text-[11px] md:text-xs text-gray-700 line-clamp-2 mb-1 font-bold">
                             ${product.name}
                         </div>
                         
                         <div class="mt-auto pt-1">
-                            <div class="text-[8px] md:text-[9px] text-shopee border border-shopee inline-block px-1 rounded-sm mb-1 bg-orange-50">Cashback XTRA</div>
-                            <div class="text-shopee font-bold text-sm md:text-base">Rp${new Intl.NumberFormat('id-ID').format(product.price)}</div>
+                            <div class="text-[8px] md:text-[9px] text-shopee border border-shopee/50 inline-block px-1.5 rounded-sm mb-1 bg-orange-50/80 font-semibold shadow-sm">Cashback XTRA</div>
+                            <div class="text-shopee font-extrabold text-sm md:text-base drop-shadow-sm">Rp${new Intl.NumberFormat('id-ID').format(product.price)}</div>
                             <div class="flex items-center justify-between text-[9px] md:text-[10px] text-gray-500 mt-1">
-                                <div class="flex text-yellow-400 text-[8px]">
+                                <div class="flex text-yellow-400 text-[8px] drop-shadow-sm">
                                     <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
                                 </div>
-                                <span class="truncate ml-1">${product.sold}</span>
+                                <span class="truncate ml-1 font-semibold">${product.sold || '0 Terjual'}</span>
                             </div>
-                            <div class="text-[9px] md:text-[10px] text-gray-400 mt-1 truncate">${product.location}</div>
+                            <div class="text-[9px] md:text-[10px] text-gray-400 mt-1 truncate font-medium"><i class="fas fa-map-marker-alt text-gray-300 mr-0.5"></i> ${product.location}</div>
                         </div>
                         
-                        <!-- TOMBOL AKSI: TAMBAH KERANJANG & PESAN -->
-                        <div class="flex gap-1.5 mt-2">
-                            <button onclick="addToCart('${escapeName}', ${product.price}, '${escapeLocation}')" class="flex-1 border border-shopee text-shopee rounded text-[10px] md:text-xs py-1 hover:bg-orange-50 transition flex items-center justify-center" title="Tambah ke Keranjang">
-                                <i class="fas fa-cart-plus"></i>
+                        <!-- TOMBOL AKSI 3D -->
+                        <div class="flex gap-1.5 mt-3">
+                            <button onclick="addToCart('${escapeName}', ${product.price}, '${escapeLocation}')" class="flex-1 bg-gradient-to-b from-orange-50 to-orange-100 border border-orange-200 text-shopee rounded-lg text-[10px] md:text-xs py-1.5 hover:from-orange-100 hover:to-orange-200 transition-all shadow-[0_3px_0_0_#fdba74] active:shadow-none active:translate-y-[3px] flex items-center justify-center" title="Tambah ke Keranjang">
+                                <i class="fas fa-cart-plus drop-shadow-sm text-sm"></i>
                             </button>
-                            <button onclick="showCheckout('${escapeName}', '${product.price}', '${escapeLocation}')" class="flex-[3] bg-shopee text-white rounded text-[10px] md:text-xs font-bold py-1 hover:bg-shopeeHover transition">
-                                Pesan Sekarang
+                            <button onclick="showCheckout('${escapeName}', '${product.price}', '${escapeLocation}')" class="flex-[3] bg-gradient-to-b from-[#f36b4e] to-[#ee4d2d] text-white rounded-lg text-[10px] md:text-xs font-bold py-1.5 hover:from-[#f05c3d] hover:to-[#d73211] transition-all shadow-[0_3px_0_0_#be3118] active:shadow-none active:translate-y-[3px] flex items-center justify-center gap-1">
+                                Pesan <i class="fas fa-chevron-right text-[8px]"></i>
                             </button>
                         </div>
                     </div>
@@ -920,7 +975,6 @@
             });
         }
 
-        // --- PETA LEAFLET GENERIK (UNTUK KERANJANG & PESAN LANGSUNG) ---
         let maps = {};
         let markers = {};
 
@@ -962,6 +1016,28 @@
             setTimeout(() => { maps[mapId].invalidateSize(); }, 200);
         }
 
+        function autoGetLocationBuyer(latInputId, lngInputId, mapId, addressInputId) {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    const lat = position.coords.latitude.toFixed(6);
+                    const lng = position.coords.longitude.toFixed(6);
+                    
+                    document.getElementById(latInputId).value = lat;
+                    document.getElementById(lngInputId).value = lng;
+                    
+                    if (maps[mapId] && markers[mapId]) {
+                        maps[mapId].flyTo([lat, lng], 17, { animate: true, duration: 1.5 });
+                        markers[mapId].setLatLng([lat, lng]);
+                    }
+
+                    document.getElementById(addressInputId).value = "Mendapatkan alamat sesuai GPS saat ini...";
+                    reverseGeocode(lat, lng, addressInputId);
+                }, function(error) {
+                    console.log("GPS otomatis gagal, menggunakan fallback.");
+                }, { timeout: 10000, enableHighAccuracy: true });
+            }
+        }
+
         function getLocationBuyer(latInputId, lngInputId, mapId, addressInputId) {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(function(position) {
@@ -972,24 +1048,20 @@
                     document.getElementById(lngInputId).value = lng;
                     
                     if (maps[mapId] && markers[mapId]) {
-                        maps[mapId].setView([lat, lng], 17);
+                        maps[mapId].flyTo([lat, lng], 17, { animate: true, duration: 1.5 });
                         markers[mapId].setLatLng([lat, lng]);
                     }
 
                     document.getElementById(addressInputId).value = "Mendapatkan alamat sesuai GPS saat ini...";
                     reverseGeocode(lat, lng, addressInputId);
 
-                    alert("GPS Berhasil menangkap lokasi Anda! Silakan geser pin merah pada peta jika titik tersebut belum tepat berada di rumah Anda.");
                 }, function(error) {
                     alert("Gagal mendeteksi lokasi. Pastikan izin GPS (Lokasi) pada browser atau HP Anda sudah diaktifkan.");
-                });
+                }, { timeout: 10000, enableHighAccuracy: true });
             } else {
                 alert("Browser tidak mendukung pencarian lokasi.");
             }
         }
-
-        // --- LOGIKA CHECKOUT (PESAN LANGSUNG - SINGLE ORDER) ---
-        let currentSinglePrice = 0;
 
         function showCheckout(productName, price, sellerName) {
             if (!loggedInUser) {
@@ -1017,7 +1089,10 @@
             document.getElementById('checkoutLat').value = startLat;
             document.getElementById('checkoutLng').value = startLng;
 
-            setTimeout(() => { initInteractiveMap('checkout-map', 'checkoutLat', 'checkoutLng', 'checkoutAddress', startLat, startLng); }, 100);
+            setTimeout(() => { 
+                initInteractiveMap('checkout-map', 'checkoutLat', 'checkoutLng', 'checkoutAddress', startLat, startLng); 
+                autoGetLocationBuyer('checkoutLat', 'checkoutLng', 'checkout-map', 'checkoutAddress');
+            }, 100);
         }
 
         function changeSingleCheckoutQty(change) {
@@ -1075,33 +1150,31 @@
                 if(res.status === 'success') {
                     alert("Pesanan Berhasil Dibuat!\nToko akan segera mengonfirmasi pesanan Anda.");
                     hideCheckout();
-                    syncOrdersSilently(); // Update notif lencana
+                    syncOrdersSilently(); 
                 } else {
                     alert("Gagal membuat pesanan.");
                 }
             } catch(error) {
                 alert("Koneksi gagal. Pastikan internet Anda stabil.");
             } finally {
-                btn.innerHTML = 'Pesan Sekarang';
+                btn.innerHTML = '<i class="fas fa-paper-plane drop-shadow-md"></i> Pesan Sekarang';
                 btn.disabled = false;
             }
         }
 
-        /* * FUNGSI UNTUK MENGAMBIL DATA REKOMENDASI (Default) */
         async function fetchProductsFromGAS(isBackground = false) {
             currentViewMode = 'recommendation';
             
             if(!isBackground) {
                 document.getElementById('section-title').innerText = "REKOMENDASI UNTUKMU";
                 const container = document.getElementById('product-container');
-                container.innerHTML = '<div class="col-span-full text-center py-10 text-gray-500"><i class="fas fa-spinner fa-spin text-3xl mb-2"></i><br>Memuat Rekomendasi Menu...</div>';
+                container.innerHTML = '<div class="col-span-full text-center py-16 text-gray-400 font-bold"><i class="fas fa-spinner fa-spin text-4xl mb-3"></i><br>Memuat Etalase Produk...</div>';
             }
             
             try {
                 const categories = ['makanan_berat', 'minuman', 'jajanan', 'dessert'];
                 let allProducts = [];
                 
-                // Gunakan promise all agar fetch lebih cepat (asynchronous murni)
                 const promises = categories.map(cat => fetch(`${GAS_WEB_APP_URL}?action=getData&type=${cat}`).then(r => r.json()));
                 const results = await Promise.all(promises);
 
@@ -1114,17 +1187,16 @@
                 
                 const container = document.getElementById('product-container');
                 if (allProducts.length > 0) {
-                    if(!isBackground) allProducts.sort(() => Math.random() - 0.5); // Acak posisi jika bukan background sync agar tidak lompat-lompat
+                    if(!isBackground) allProducts.sort(() => Math.random() - 0.5); 
                     renderProducts(allProducts);
                 } else {
-                    if(!isBackground) container.innerHTML = '<div class="col-span-full text-center py-10 text-gray-500">Belum ada produk yang dijual di FoodCourt. Toko belum menambahkan produk.</div>';
+                    if(!isBackground) container.innerHTML = '<div class="col-span-full text-center py-16 text-gray-400 font-bold"><i class="fas fa-store-slash text-5xl mb-3 opacity-30"></i><br>Belum ada produk yang dijual di FoodCourt.</div>';
                 }
             } catch (error) {
-                if(!isBackground) document.getElementById('product-container').innerHTML = '<div class="col-span-full text-center text-red-500">Gagal memuat produk. Periksa koneksi internet.</div>';
+                if(!isBackground) document.getElementById('product-container').innerHTML = '<div class="col-span-full text-center text-red-500 font-bold py-16">Gagal memuat produk. Periksa koneksi internet.</div>';
             }
         }
 
-        /* * FUNGSI MEMUAT KATEGORI SPESIFIK SAAT IKON BULAT DIKLIK */
         async function loadCategory(sheetName, title, isBackground = false) {
             currentViewMode = 'category';
             currentCategorySheet = sheetName;
@@ -1133,7 +1205,7 @@
             if(!isBackground) {
                 document.getElementById('section-title').innerText = title.toUpperCase();
                 document.getElementById('grid-header').scrollIntoView({ behavior: 'smooth', block: 'start' });
-                document.getElementById('product-container').innerHTML = `<div class="col-span-full text-center py-10 text-gray-500"><i class="fas fa-spinner fa-spin text-3xl mb-2"></i><br>Memuat ${title}...</div>`;
+                document.getElementById('product-container').innerHTML = `<div class="col-span-full text-center py-16 text-gray-400 font-bold"><i class="fas fa-spinner fa-spin text-4xl mb-3"></i><br>Memuat kategori ${title}...</div>`;
             }
 
             try {
@@ -1146,21 +1218,20 @@
                     if (activeItems.length > 0) {
                         renderProducts(activeItems);
                     } else {
-                        if(!isBackground) container.innerHTML = `<div class="col-span-full text-center py-10 text-gray-500">
-                            <i class="fas fa-box-open text-4xl mb-3 opacity-50"></i><br>Saat ini semua produk di kategori ${title} sedang kosong.
+                        if(!isBackground) container.innerHTML = `<div class="col-span-full text-center py-16 text-gray-400 font-bold">
+                            <i class="fas fa-box-open text-5xl mb-3 opacity-30 drop-shadow"></i><br>Saat ini semua produk di kategori ${title} sedang kosong.
                         </div>`;
                     }
                 } else {
-                    if(!isBackground) container.innerHTML = `<div class="col-span-full text-center py-10 text-gray-500">
-                        <i class="fas fa-box-open text-4xl mb-3 opacity-50"></i><br>Belum ada produk untuk kategori ${title}.
+                    if(!isBackground) container.innerHTML = `<div class="col-span-full text-center py-16 text-gray-400 font-bold">
+                        <i class="fas fa-box-open text-5xl mb-3 opacity-30 drop-shadow"></i><br>Belum ada produk untuk kategori ${title}.
                     </div>`;
                 }
             } catch (error) {
-                if(!isBackground) document.getElementById('product-container').innerHTML = '<div class="col-span-full text-center text-red-500">Gagal memuat kategori. Periksa koneksi internet.</div>';
+                if(!isBackground) document.getElementById('product-container').innerHTML = '<div class="col-span-full text-center text-red-500 font-bold py-16">Gagal memuat kategori. Periksa koneksi internet.</div>';
             }
         }
 
-        /* * FUNGSI PENCARIAN (SEARCH BAR) */
         function handleSearchQuery(queryText) {
             document.getElementById('searchInput').value = queryText;
             handleSearch();
@@ -1180,7 +1251,7 @@
             if(!isBackground) {
                 document.getElementById('section-title').innerText = `HASIL PENCARIAN: "${query.toUpperCase()}"`;
                 document.getElementById('grid-header').scrollIntoView({ behavior: 'smooth', block: 'start' });
-                document.getElementById('product-container').innerHTML = '<div class="col-span-full text-center py-10 text-gray-500"><i class="fas fa-spinner fa-spin text-3xl mb-2"></i><br>Mencari produk...</div>';
+                document.getElementById('product-container').innerHTML = '<div class="col-span-full text-center py-16 text-gray-400 font-bold"><i class="fas fa-spinner fa-spin text-4xl mb-3"></i><br>Mencari produk...</div>';
             }
 
             try {
@@ -1205,16 +1276,16 @@
                 if (allProducts.length > 0) {
                     renderProducts(allProducts);
                 } else {
-                    if(!isBackground) container.innerHTML = `<div class="col-span-full text-center py-10 text-gray-500">
-                        <i class="fas fa-search text-4xl mb-3 opacity-50"></i><br>Tidak menemukan hasil untuk "${query}".
+                    if(!isBackground) container.innerHTML = `<div class="col-span-full text-center py-16 text-gray-400 font-bold">
+                        <i class="fas fa-search text-5xl mb-3 opacity-30 drop-shadow"></i><br>Tidak menemukan hasil untuk "${query}".
                     </div>`;
                 }
             } catch(e) {
-                if(!isBackground) document.getElementById('product-container').innerHTML = '<div class="col-span-full text-center text-red-500">Gagal mencari produk.</div>';
+                if(!isBackground) document.getElementById('product-container').innerHTML = '<div class="col-span-full text-center text-red-500 font-bold py-16">Gagal mencari produk.</div>';
             }
         }
 
-        /* * FUNGSI UNTUK MENGAMBIL DATA FLASH PROMO (Slider) */
+        // --- FLASH PROMO RENDER (DENGAN TOMBOL 3D) ---
         async function fetchFlashPromoFromGAS(isBackground = false) {
             const container = document.getElementById('flash-sale-container');
             const section = document.getElementById('flash-sale-section');
@@ -1222,7 +1293,7 @@
             
             if (!container || !section) return;
 
-            if(!isBackground) container.innerHTML = '<div class="text-center w-full py-6 text-gray-500"><i class="fas fa-spinner fa-spin text-2xl mb-2"></i><br>Memuat Flash Promo...</div>';
+            if(!isBackground) container.innerHTML = '<div class="text-center w-full py-6 text-gray-500 font-bold"><i class="fas fa-spinner fa-spin text-2xl mb-2"></i><br>Memuat Promo...</div>';
 
             try {
                 const response = await fetch(`${GAS_WEB_APP_URL}?action=getData&type=flash_promo`);
@@ -1250,25 +1321,26 @@
                             const escapeLocation = promo.location ? promo.location.replace(/'/g, "\\'") : '';
                             
                             const card = `
-                            <div class="min-w-[140px] w-[140px] bg-white rounded border border-gray-100 hover:border-shopee transition flex flex-col overflow-hidden shrink-0">
-                                <div class="relative">
-                                    <img src="${promo.img}" class="w-full h-[140px] object-cover border-b" onerror="this.src='https://placehold.co/200x200/ddd/555?text=Promo'">
-                                    <div class="absolute top-0 right-0 bg-yellow-400 text-shopee text-[10px] font-bold px-1 py-0.5 shadow">PROMO</div>
+                            <div class="min-w-[150px] w-[150px] bg-white rounded-2xl border border-gray-100 hover:border-yellow-200 transition-all duration-300 flex flex-col overflow-hidden shrink-0 shadow-[0_4px_10px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_20px_rgba(234,179,8,0.2)] transform hover:-translate-y-1 group">
+                                <div class="relative overflow-hidden">
+                                    <img src="${promo.img}" class="w-full h-[150px] object-cover transition-transform duration-500 group-hover:scale-105" onerror="this.src='https://placehold.co/200x200/ddd/555?text=Promo'">
+                                    <div class="absolute top-0 right-0 bg-gradient-to-r from-yellow-400 to-yellow-300 text-shopee text-[10px] font-black px-2 py-1 shadow-md rounded-bl-lg">PROMO</div>
                                 </div>
-                                <div class="p-1.5 flex flex-col flex-grow">
-                                    <div class="text-[11px] md:text-xs text-gray-700 line-clamp-1 mb-1 font-bold">${promo.name}</div>
-                                    <div class="text-shopee text-sm md:text-base font-bold text-center mt-auto">${formattedPrice}</div>
+                                <div class="p-2.5 flex flex-col flex-grow bg-gradient-to-b from-white to-yellow-50/30">
+                                    <div class="text-[11px] md:text-xs text-gray-700 line-clamp-1 mb-1 font-extrabold tracking-tight">${promo.name}</div>
+                                    <div class="text-shopee text-sm md:text-base font-black text-center mt-auto drop-shadow-sm">${formattedPrice}</div>
                                     
-                                    <div class="product-timer text-center text-[9px] font-bold text-shopee bg-orange-50 border border-orange-100 rounded mt-1 py-0.5" data-end="${promo.promo_end || ''}">
+                                    <div class="product-timer text-center text-[9px] font-bold text-shopee bg-red-50 border border-red-100 rounded-md mt-1.5 py-1 shadow-inner" data-end="${promo.promo_end || ''}">
                                         Memuat waktu...
                                     </div>
                                     
-                                    <div class="flex gap-1 mt-2">
-                                        <button onclick="addToCart('${escapeName}', ${promo.price}, '${escapeLocation}')" class="flex-1 border border-shopee text-shopee rounded text-[10px] py-1 hover:bg-orange-50 transition" title="Tambah ke Keranjang">
-                                            <i class="fas fa-cart-plus"></i>
+                                    <!-- TOMBOL AKSI 3D -->
+                                    <div class="flex gap-1.5 mt-2.5">
+                                        <button onclick="addToCart('${escapeName}', ${promo.price}, '${escapeLocation}')" class="flex-1 bg-gradient-to-b from-yellow-50 to-yellow-100 border border-yellow-200 text-yellow-600 rounded-lg text-[10px] py-1.5 hover:from-yellow-100 hover:to-yellow-200 transition-all shadow-[0_3px_0_0_#fde047] active:shadow-none active:translate-y-[3px] flex items-center justify-center" title="Tambah ke Keranjang">
+                                            <i class="fas fa-cart-plus drop-shadow-sm"></i>
                                         </button>
-                                        <button onclick="showCheckout('${escapeName}', '${promo.price}', '${escapeLocation}')" class="flex-[3] bg-shopee text-white rounded text-[10px] font-bold py-1 hover:bg-shopeeHover transition">
-                                            Pesan
+                                        <button onclick="showCheckout('${escapeName}', '${promo.price}', '${escapeLocation}')" class="flex-[3] bg-gradient-to-b from-[#f36b4e] to-[#ee4d2d] text-white rounded-lg text-[10px] font-bold py-1.5 hover:from-[#f05c3d] hover:to-[#d73211] transition-all shadow-[0_3px_0_0_#be3118] active:shadow-none active:translate-y-[3px] flex items-center justify-center gap-1">
+                                            Pesan <i class="fas fa-chevron-right text-[8px]"></i>
                                         </button>
                                     </div>
                                 </div>
@@ -1286,23 +1358,16 @@
             }
         }
 
-        // --- TAMBAHAN: SISTEM BACKGROUND SYNC PEMBELI ---
         function startBackgroundSync() {
             if(syncInterval) clearInterval(syncInterval);
-            syncInterval = setInterval(syncDataBackground, 10000); // 10 detik
+            syncInterval = setInterval(syncDataBackground, 10000); 
         }
 
         async function syncDataBackground() {
-            // 1. Sinkronisasi notifikasi dan status order
             syncOrdersSilently();
-
-            // 2. Sinkronisasi Flash Promo
             fetchFlashPromoFromGAS(true);
-
-            // 3. Sinkronisasi Kategori (Sembunyikan icon kalau kategori kosong di DB)
             checkEmptyCategories();
 
-            // 4. Sinkronisasi Grid Produk yang sedang terbuka (Rekomendasi/Kategori/Pencarian)
             if (currentViewMode === 'recommendation') {
                 fetchProductsFromGAS(true);
             } else if (currentViewMode === 'category') {
@@ -1312,7 +1377,6 @@
             }
         }
 
-        // --- Modifikasi: FUNGSI TIMER COUNTDOWN (GLOBAL & PER PRODUK) ---
         function runPromoTimers() {
             const now = new Date();
             let targetGlobal = new Date();
@@ -1361,13 +1425,12 @@
                 } else {
                     el.innerText = "Promo Berakhir";
                     el.classList.replace('text-shopee', 'text-gray-400');
-                    el.classList.replace('bg-orange-50', 'bg-gray-100');
-                    el.classList.replace('border-orange-100', 'border-gray-200');
+                    el.classList.replace('bg-red-50', 'bg-gray-100');
+                    el.classList.replace('border-red-100', 'border-gray-200');
                 }
             });
         }
 
-        // --- FUNGSI TAMPILKAN PROFIL PINTAR (DENGAN EDIT) ---
         function showProfile() {
             if (!loggedInUser) return;
             document.getElementById('profile-overlay').classList.remove('hidden');
@@ -1444,12 +1507,11 @@
             } catch(e) {
                 alert('Koneksi gagal. Pastikan internet Anda stabil.');
             } finally {
-                btn.innerHTML = 'Simpan';
+                btn.innerHTML = '<i class="fas fa-save"></i> Simpan';
                 btn.disabled = false;
             }
         }
 
-        // --- FUNGSI UPDATE UI HEADER SAAT LOGIN/LOGOUT ---
         function updateAuthUI() {
             const authLinks = document.getElementById('auth-links');
             const userLinks = document.getElementById('user-links');
@@ -1462,12 +1524,12 @@
                 if(userLinks) { userLinks.classList.remove('hidden'); userLinks.classList.add('flex'); }
                 if(headerUsername) headerUsername.innerHTML = `<i class="fas fa-user-circle mr-1"></i> Profil`;
                 if(mobileProfileText) mobileProfileText.innerText = 'Profil';
-                if(mobileProfileIcon) mobileProfileIcon.className = 'fas fa-user-circle text-xl mb-1';
+                if(mobileProfileIcon) mobileProfileIcon.className = 'fas fa-user-circle text-2xl drop-shadow-md text-gray-400 group-hover:text-shopee transition-colors';
             } else {
                 if(authLinks) { authLinks.classList.remove('hidden'); authLinks.classList.add('flex'); }
                 if(userLinks) { userLinks.classList.add('hidden'); userLinks.classList.remove('flex'); }
                 if(mobileProfileText) mobileProfileText.innerText = 'Log In';
-                if(mobileProfileIcon) mobileProfileIcon.className = 'far fa-user text-xl mb-1';
+                if(mobileProfileIcon) mobileProfileIcon.className = 'far fa-user text-2xl drop-shadow-md text-gray-400 group-hover:text-shopee transition-colors';
             }
         }
 
@@ -1610,7 +1672,6 @@
                     hideAuth();
                     e.target.reset();
                     
-                    // Langsung jalankan sinkronisasi senyap setelah login
                     syncOrdersSilently();
                 } else {
                     alert(res.message);
@@ -1656,7 +1717,7 @@
                 console.error("Error Registrasi:", error);
                 alert("Gagal koneksi. Pastikan URL GAS benar dan Anda terhubung internet.");
             } finally {
-                btn.innerHTML = 'DAFTAR';
+                btn.innerHTML = 'BUAT AKUN';
                 btn.disabled = false;
             }
         }
@@ -1686,7 +1747,6 @@
             }
         }
 
-        // Jalankan saat halaman dimuat
         document.addEventListener('DOMContentLoaded', () => {
             fetchProductsFromGAS();
             fetchFlashPromoFromGAS();
@@ -1705,10 +1765,7 @@
             updateAuthUI();
             updateCartCount(); 
             
-            // Aktifkan sinkronisasi otomatis tiap 10 detik
             startBackgroundSync();
-            
-            // Lakukan sinkronisasi awal notifikasi
             if(loggedInUser) syncOrdersSilently();
         });
     </script>
