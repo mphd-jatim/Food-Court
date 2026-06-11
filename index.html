@@ -331,7 +331,11 @@
                 </div>
             </div>
             <div class="flex gap-4 items-center">
-                <a href="javascript:void(0)" onclick="showNotifications()" class="font-bold hover:text-gray-200"><i class="fas fa-receipt mr-1"></i> Pesanan Saya</a>
+                <!-- Modifikasi: Menambahkan Badge Order pada Desktop -->
+                <a href="javascript:void(0)" onclick="showNotifications()" class="font-bold hover:text-gray-200 relative">
+                    <i class="fas fa-receipt mr-1"></i> Pesanan Saya
+                    <span class="absolute -top-2 -right-3 bg-white text-shopee text-[9px] font-bold px-1.5 py-0.5 rounded-full order-badge hidden shadow-sm">0</span>
+                </a>
                 <a href="javascript:void(0)" onclick="showNotifications()" class="hover:text-gray-200"><i class="far fa-bell mr-1"></i> Notifikasi</a>
                 <a href="https://wa.me/6282233828384?text=Halo%20Admin%20FoodCourt,%20saya%20butuh%20bantuan." target="_blank" class="hover:text-gray-200"><i class="fab fa-whatsapp mr-1"></i> Bantuan</a>
                 <a href="#" class="hover:text-gray-200"><i class="fas fa-globe mr-1"></i> ID</a>
@@ -385,7 +389,7 @@
             </div>
             
             <!-- Mobile Chat/Notif Icon -->
-            <div class="md:hidden text-white text-2xl pr-2 cursor-pointer" onclick="showNotifications()">
+            <div class="md:hidden text-white text-2xl pr-2 cursor-pointer relative" onclick="showNotifications()">
                 <i class="far fa-bell"></i>
             </div>
         </div>
@@ -494,9 +498,10 @@
             <i class="fas fa-home text-xl mb-1"></i>
             <span>Beranda</span>
         </div>
+        <!-- Modifikasi: Menambahkan order-badge ke Menu Mobile -->
         <div class="flex flex-col items-center hover:text-shopee cursor-pointer w-1/3" onclick="showNotifications()">
             <i class="fas fa-receipt text-xl mb-1 relative">
-                <span class="absolute -top-1 -right-2 bg-shopee text-white text-[8px] px-1 rounded-full cart-counter-badge hidden">0</span>
+                <span class="absolute -top-1 -right-2 bg-shopee text-white text-[8px] px-1 rounded-full order-badge hidden shadow-sm">0</span>
             </i>
             <span>Pesanan Saya</span>
         </div>
@@ -513,6 +518,14 @@
 
         let loggedInUser = null; 
         
+        // --- TAMBAHAN: VARIABEL BACKGROUND SYNC ---
+        let syncInterval;
+        let currentViewMode = 'recommendation'; 
+        let currentCategorySheet = '';
+        let currentCategoryTitle = '';
+        let currentSearchQuery = '';
+        let activeTrackOrderId = null; // Menyimpan ID pesanan yang sedang dilacak
+
         // --- LOGIKA MENYEMBUNYIKAN MENU KATEGORI KOSONG SECARA OTOMATIS ---
         function checkEmptyCategories() {
             const allCategories = ['gratis_ongkir', 'makanan_berat', 'minuman', 'jajanan', 'dessert', 'flash_promo', 'outlet_resmi', 'vegan_sehat', 'menu_pedas', 'menu_lainnya'];
@@ -522,9 +535,15 @@
                 .then(result => {
                     const el = document.getElementById(`menu-cat-${cat}`);
                     if (el) {
-                        if (result.status === 'success' && result.data && result.data.length > 0) {
-                            el.classList.remove('hidden');
-                            el.classList.add('flex');
+                        if (result.status === 'success' && result.data) {
+                            const activeItems = result.data.filter(p => p.status !== 'Nonaktif');
+                            if (activeItems.length > 0) {
+                                el.classList.remove('hidden');
+                                el.classList.add('flex');
+                            } else {
+                                el.classList.add('hidden');
+                                el.classList.remove('flex');
+                            }
                         } else {
                             el.classList.add('hidden');
                             el.classList.remove('flex');
@@ -696,6 +715,7 @@
                     cartItems = [];
                     localStorage.removeItem('foodcourt_cart');
                     updateCartCount();
+                    syncOrdersSilently(); // Update notif lencana
                 } else {
                     alert("Gagal membuat pesanan.");
                 }
@@ -707,15 +727,51 @@
             }
         }
 
+        // --- TAMBAHAN: FUNGSI SYNC ORDER (Notifikasi & Lencana) ---
+        async function syncOrdersSilently() {
+            if (!loggedInUser) return;
+            try {
+                const res = await fetch(`${GAS_WEB_APP_URL}?action=getData&type=orders`);
+                const data = await res.json();
+                if(data.status === 'success' && data.data) {
+                    const myOrders = data.data.filter(o => o.user_id === loggedInUser.user_id);
+                    
+                    // Hitung pesanan yang belum selesai untuk lencana (Badge)
+                    const activeOrders = myOrders.filter(o => !o.status.includes('Selesai'));
+                    
+                    document.querySelectorAll('.order-badge').forEach(el => {
+                        el.innerText = activeOrders.length;
+                        if(activeOrders.length > 0) el.classList.remove('hidden');
+                        else el.classList.add('hidden');
+                    });
+
+                    // Jika pop-up riwayat pesanan sedang terbuka, perbarui isinya secara senyap
+                    if (!document.getElementById('notif-overlay').classList.contains('hidden')) {
+                        showNotifications(true); 
+                    }
+
+                    // Jika sedang memantau/lacak pesanan, perbarui peta pelacakan secara live!
+                    if (activeTrackOrderId) {
+                        const trackedOrder = myOrders.find(o => o.order_id === activeTrackOrderId);
+                        if (trackedOrder) {
+                            showTracking(trackedOrder.order_id, trackedOrder.status, trackedOrder.product_name, trackedOrder.outlet, true);
+                        }
+                    }
+                }
+            } catch(e) {}
+        }
+
         // --- FUNGSI NOTIFIKASI & LACAK PESANAN ---
-        async function showNotifications() {
+        async function showNotifications(isBackground = false) {
             if (!loggedInUser) return showAuth('login');
             
-            document.getElementById('notif-overlay').classList.remove('hidden');
-            document.getElementById('notif-overlay').classList.add('flex');
+            if(!isBackground) {
+                document.getElementById('notif-overlay').classList.remove('hidden');
+                document.getElementById('notif-overlay').classList.add('flex');
+            }
             
             const container = document.getElementById('notif-list');
-            container.innerHTML = '<div class="text-center py-10 text-gray-500"><i class="fas fa-spinner fa-spin text-3xl mb-3"></i><br>Memuat riwayat pesanan...</div>';
+            if(!isBackground) container.innerHTML = '<div class="text-center py-10 text-gray-500"><i class="fas fa-spinner fa-spin text-3xl mb-3"></i><br>Memuat riwayat pesanan...</div>';
             
             try {
                 const res = await fetch(`${GAS_WEB_APP_URL}?action=getData&type=orders`);
@@ -727,7 +783,8 @@
                     if(myOrders.length === 0) {
                         container.innerHTML = '<div class="text-center text-gray-400 py-10"><i class="fas fa-receipt text-4xl mb-3 opacity-50"></i><p>Belum ada riwayat pesanan.</p></div>';
                     } else {
-                        container.innerHTML = myOrders.map(o => {
+                        let html = '';
+                        myOrders.forEach(o => {
                             let statusColor = "text-shopee";
                             if (o.status.includes('Selesai')) statusColor = "text-green-600";
                             else if (o.status.includes('Kurir') || o.status.includes('Tujuan')) statusColor = "text-blue-500";
@@ -735,25 +792,26 @@
                             const escProd = o.product_name.replace(/'/g, "\\'");
                             const escOut = o.outlet.replace(/'/g, "\\'");
                             
-                            return `
+                            html += `
                             <div onclick="showTracking('${o.order_id}', '${o.status}', '${escProd}', '${escOut}')" class="border-b p-4 cursor-pointer hover:bg-orange-50 transition bg-white mb-1 shadow-sm">
                                 <div class="flex justify-between mb-2">
                                     <span class="font-bold text-sm text-gray-800 flex items-center gap-2"><i class="fas fa-store text-gray-400"></i> ${o.outlet}</span>
                                     <span class="text-[10px] bg-gray-100 px-2 py-0.5 rounded font-bold ${statusColor}">${o.status}</span>
                                 </div>
-                                <div class="text-xs text-gray-600 line-clamp-1 mb-1 font-semibold">${o.qty}x ${o.product_name}</div>
+                                <div class="text-xs text-gray-600 line-clamp-1 mb-1 font-semibold">${o.qty || 1}x ${o.product_name}</div>
                                 <div class="flex justify-between items-center">
                                     <div class="text-[10px] text-gray-400"><i class="far fa-clock"></i> ${o.timestamp || '-'}</div>
                                     <div class="text-[10px] text-blue-500 hover:underline">Lacak <i class="fas fa-chevron-right text-[8px] ml-1"></i></div>
                                 </div>
-                            </div>
-                        `}).join('');
+                            </div>`;
+                        });
+                        container.innerHTML = html;
                     }
                 } else {
-                    container.innerHTML = '<div class="text-center text-gray-500 py-4">Database kosong.</div>';
+                    if(!isBackground) container.innerHTML = '<div class="text-center text-gray-500 py-4">Database kosong.</div>';
                 }
             } catch(e) {
-                container.innerHTML = '<div class="text-center text-red-500 py-4">Gagal memuat. Periksa internet.</div>';
+                if(!isBackground) container.innerHTML = '<div class="text-center text-red-500 py-4">Gagal memuat. Periksa internet.</div>';
             }
         }
 
@@ -762,10 +820,14 @@
             document.getElementById('notif-overlay').classList.remove('flex');
         }
 
-        function showTracking(orderId, status, productName, outlet) {
-            hideNotifications();
-            document.getElementById('track-overlay').classList.remove('hidden');
-            document.getElementById('track-overlay').classList.add('flex');
+        function showTracking(orderId, status, productName, outlet, isBackground = false) {
+            activeTrackOrderId = orderId; 
+
+            if(!isBackground) {
+                hideNotifications();
+                document.getElementById('track-overlay').classList.remove('hidden');
+                document.getElementById('track-overlay').classList.add('flex');
+            }
             
             document.getElementById('track-product').innerText = productName;
             document.getElementById('track-outlet').innerText = `Toko: ${outlet} | Order ID: ${orderId}`;
@@ -805,6 +867,7 @@
         }
 
         function hideTracking() {
+            activeTrackOrderId = null; // Reset pelacakan
             document.getElementById('track-overlay').classList.add('hidden');
             document.getElementById('track-overlay').classList.remove('flex');
         }
@@ -1012,6 +1075,7 @@
                 if(res.status === 'success') {
                     alert("Pesanan Berhasil Dibuat!\nToko akan segera mengonfirmasi pesanan Anda.");
                     hideCheckout();
+                    syncOrdersSilently(); // Update notif lencana
                 } else {
                     alert("Gagal membuat pesanan.");
                 }
@@ -1024,55 +1088,75 @@
         }
 
         /* * FUNGSI UNTUK MENGAMBIL DATA REKOMENDASI (Default) */
-        async function fetchProductsFromGAS() {
-            document.getElementById('section-title').innerText = "REKOMENDASI UNTUKMU";
-            const container = document.getElementById('product-container');
-            container.innerHTML = '<div class="col-span-full text-center py-10 text-gray-500"><i class="fas fa-spinner fa-spin text-3xl mb-2"></i><br>Memuat Rekomendasi Menu...</div>';
+        async function fetchProductsFromGAS(isBackground = false) {
+            currentViewMode = 'recommendation';
+            
+            if(!isBackground) {
+                document.getElementById('section-title').innerText = "REKOMENDASI UNTUKMU";
+                const container = document.getElementById('product-container');
+                container.innerHTML = '<div class="col-span-full text-center py-10 text-gray-500"><i class="fas fa-spinner fa-spin text-3xl mb-2"></i><br>Memuat Rekomendasi Menu...</div>';
+            }
             
             try {
                 const categories = ['makanan_berat', 'minuman', 'jajanan', 'dessert'];
                 let allProducts = [];
                 
-                for (let cat of categories) {
-                    const response = await fetch(`${GAS_WEB_APP_URL}?action=getData&type=${cat}`);
-                    const result = await response.json();
+                // Gunakan promise all agar fetch lebih cepat (asynchronous murni)
+                const promises = categories.map(cat => fetch(`${GAS_WEB_APP_URL}?action=getData&type=${cat}`).then(r => r.json()));
+                const results = await Promise.all(promises);
+
+                results.forEach((result) => {
                     if (result.status === 'success' && result.data && result.data.length > 0) {
-                        allProducts = allProducts.concat(result.data);
+                        const activeItems = result.data.filter(p => p.status !== 'Nonaktif');
+                        allProducts = allProducts.concat(activeItems);
                     }
-                }
+                });
                 
+                const container = document.getElementById('product-container');
                 if (allProducts.length > 0) {
-                    allProducts.sort(() => Math.random() - 0.5);
+                    if(!isBackground) allProducts.sort(() => Math.random() - 0.5); // Acak posisi jika bukan background sync agar tidak lompat-lompat
                     renderProducts(allProducts);
                 } else {
-                    container.innerHTML = '<div class="col-span-full text-center py-10 text-gray-500">Belum ada produk yang dijual di FoodCourt. Toko belum menambahkan produk.</div>';
+                    if(!isBackground) container.innerHTML = '<div class="col-span-full text-center py-10 text-gray-500">Belum ada produk yang dijual di FoodCourt. Toko belum menambahkan produk.</div>';
                 }
             } catch (error) {
-                container.innerHTML = '<div class="col-span-full text-center text-red-500">Gagal memuat produk. Periksa koneksi internet.</div>';
+                if(!isBackground) document.getElementById('product-container').innerHTML = '<div class="col-span-full text-center text-red-500">Gagal memuat produk. Periksa koneksi internet.</div>';
             }
         }
 
         /* * FUNGSI MEMUAT KATEGORI SPESIFIK SAAT IKON BULAT DIKLIK */
-        async function loadCategory(sheetName, title) {
-            document.getElementById('section-title').innerText = title.toUpperCase();
-            document.getElementById('grid-header').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        async function loadCategory(sheetName, title, isBackground = false) {
+            currentViewMode = 'category';
+            currentCategorySheet = sheetName;
+            currentCategoryTitle = title;
 
-            const container = document.getElementById('product-container');
-            container.innerHTML = `<div class="col-span-full text-center py-10 text-gray-500"><i class="fas fa-spinner fa-spin text-3xl mb-2"></i><br>Memuat ${title}...</div>`;
+            if(!isBackground) {
+                document.getElementById('section-title').innerText = title.toUpperCase();
+                document.getElementById('grid-header').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                document.getElementById('product-container').innerHTML = `<div class="col-span-full text-center py-10 text-gray-500"><i class="fas fa-spinner fa-spin text-3xl mb-2"></i><br>Memuat ${title}...</div>`;
+            }
 
             try {
                 const response = await fetch(`${GAS_WEB_APP_URL}?action=getData&type=${sheetName}`);
                 const result = await response.json();
+                const container = document.getElementById('product-container');
 
                 if (result.status === 'success' && result.data && result.data.length > 0) {
-                    renderProducts(result.data);
+                    const activeItems = result.data.filter(p => p.status !== 'Nonaktif');
+                    if (activeItems.length > 0) {
+                        renderProducts(activeItems);
+                    } else {
+                        if(!isBackground) container.innerHTML = `<div class="col-span-full text-center py-10 text-gray-500">
+                            <i class="fas fa-box-open text-4xl mb-3 opacity-50"></i><br>Saat ini semua produk di kategori ${title} sedang kosong.
+                        </div>`;
+                    }
                 } else {
-                    container.innerHTML = `<div class="col-span-full text-center py-10 text-gray-500">
+                    if(!isBackground) container.innerHTML = `<div class="col-span-full text-center py-10 text-gray-500">
                         <i class="fas fa-box-open text-4xl mb-3 opacity-50"></i><br>Belum ada produk untuk kategori ${title}.
                     </div>`;
                 }
             } catch (error) {
-                container.innerHTML = '<div class="col-span-full text-center text-red-500">Gagal memuat kategori. Periksa koneksi internet.</div>';
+                if(!isBackground) document.getElementById('product-container').innerHTML = '<div class="col-span-full text-center text-red-500">Gagal memuat kategori. Periksa koneksi internet.</div>';
             }
         }
 
@@ -1082,111 +1166,149 @@
             handleSearch();
         }
 
-        async function handleSearch() {
+        async function handleSearch(isBackground = false) {
             const query = document.getElementById('searchInput').value.toLowerCase();
+            
             if(!query) {
-                fetchProductsFromGAS(); 
+                fetchProductsFromGAS(isBackground); 
                 return;
             }
 
-            document.getElementById('section-title').innerText = `HASIL PENCARIAN: "${query.toUpperCase()}"`;
-            document.getElementById('grid-header').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            currentViewMode = 'search';
+            currentSearchQuery = query;
 
-            const container = document.getElementById('product-container');
-            container.innerHTML = '<div class="col-span-full text-center py-10 text-gray-500"><i class="fas fa-spinner fa-spin text-3xl mb-2"></i><br>Mencari produk...</div>';
+            if(!isBackground) {
+                document.getElementById('section-title').innerText = `HASIL PENCARIAN: "${query.toUpperCase()}"`;
+                document.getElementById('grid-header').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                document.getElementById('product-container').innerHTML = '<div class="col-span-full text-center py-10 text-gray-500"><i class="fas fa-spinner fa-spin text-3xl mb-2"></i><br>Mencari produk...</div>';
+            }
 
             try {
                 const categories = ['makanan_berat', 'minuman', 'jajanan', 'dessert', 'flash_promo', 'gratis_ongkir', 'vegan_sehat', 'menu_pedas'];
                 let allProducts = [];
 
-                for (let cat of categories) {
-                    const response = await fetch(`${GAS_WEB_APP_URL}?action=getData&type=${cat}`);
-                    const result = await response.json();
+                const promises = categories.map(cat => fetch(`${GAS_WEB_APP_URL}?action=getData&type=${cat}`).then(r => r.json()));
+                const results = await Promise.all(promises);
+
+                results.forEach(result => {
                     if (result.status === 'success' && result.data) {
                         const filtered = result.data.filter(p => 
-                            (p.name && p.name.toLowerCase().includes(query)) || 
-                            (p.location && p.location.toLowerCase().includes(query))
+                            p.status !== 'Nonaktif' &&
+                            ((p.name && p.name.toLowerCase().includes(query)) || 
+                             (p.location && p.location.toLowerCase().includes(query)))
                         );
                         allProducts = allProducts.concat(filtered);
                     }
-                }
+                });
 
+                const container = document.getElementById('product-container');
                 if (allProducts.length > 0) {
                     renderProducts(allProducts);
                 } else {
-                    container.innerHTML = `<div class="col-span-full text-center py-10 text-gray-500">
+                    if(!isBackground) container.innerHTML = `<div class="col-span-full text-center py-10 text-gray-500">
                         <i class="fas fa-search text-4xl mb-3 opacity-50"></i><br>Tidak menemukan hasil untuk "${query}".
                     </div>`;
                 }
             } catch(e) {
-                container.innerHTML = '<div class="col-span-full text-center text-red-500">Gagal mencari produk.</div>';
+                if(!isBackground) document.getElementById('product-container').innerHTML = '<div class="col-span-full text-center text-red-500">Gagal mencari produk.</div>';
             }
         }
 
         /* * FUNGSI UNTUK MENGAMBIL DATA FLASH PROMO (Slider) */
-        async function fetchFlashPromoFromGAS() {
+        async function fetchFlashPromoFromGAS(isBackground = false) {
             const container = document.getElementById('flash-sale-container');
             const section = document.getElementById('flash-sale-section');
             const bannerCarousel = document.getElementById('banner-carousel');
             
             if (!container || !section) return;
 
-            container.innerHTML = '<div class="text-center w-full py-6 text-gray-500"><i class="fas fa-spinner fa-spin text-2xl mb-2"></i><br>Memuat Flash Promo...</div>';
+            if(!isBackground) container.innerHTML = '<div class="text-center w-full py-6 text-gray-500"><i class="fas fa-spinner fa-spin text-2xl mb-2"></i><br>Memuat Flash Promo...</div>';
 
             try {
                 const response = await fetch(`${GAS_WEB_APP_URL}?action=getData&type=flash_promo`);
                 const result = await response.json();
 
                 if (result.status === 'success' && result.data && result.data.length > 0) {
-                    if (bannerCarousel) {
-                        bannerCarousel.classList.remove('hidden');
-                        bannerCarousel.classList.add('flex');
-                        
-                        if(result.data[0] && document.getElementById('main-banner-img')) document.getElementById('main-banner-img').src = result.data[0].img;
-                        if(result.data[1] && document.getElementById('sub-banner-1-img')) document.getElementById('sub-banner-1-img').src = result.data[1].img;
-                        if(result.data[2] && document.getElementById('sub-banner-2-img')) document.getElementById('sub-banner-2-img').src = result.data[2].img;
-                    }
+                    const activePromo = result.data.filter(p => p.status !== 'Nonaktif');
                     
-                    section.classList.remove('hidden');
-
-                    container.innerHTML = ''; 
-                    result.data.forEach(promo => {
-                        const formattedPrice = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(promo.price);
+                    if (activePromo.length > 0) {
+                        if (bannerCarousel) {
+                            bannerCarousel.classList.remove('hidden');
+                            bannerCarousel.classList.add('flex');
+                            
+                            if(activePromo[0] && document.getElementById('main-banner-img')) document.getElementById('main-banner-img').src = activePromo[0].img;
+                            if(activePromo[1] && document.getElementById('sub-banner-1-img')) document.getElementById('sub-banner-1-img').src = activePromo[1].img;
+                            if(activePromo[2] && document.getElementById('sub-banner-2-img')) document.getElementById('sub-banner-2-img').src = activePromo[2].img;
+                        }
                         
-                        const escapeName = promo.name.replace(/'/g, "\\'");
-                        const escapeLocation = promo.location ? promo.location.replace(/'/g, "\\'") : '';
-
-                        const card = `
-                        <div class="min-w-[140px] w-[140px] bg-white rounded border border-gray-100 hover:border-shopee transition flex flex-col overflow-hidden shrink-0">
-                            <div class="relative">
-                                <img src="${promo.img}" class="w-full h-[140px] object-cover border-b" onerror="this.src='https://placehold.co/200x200/ddd/555?text=Promo'">
-                                <div class="absolute top-0 right-0 bg-yellow-400 text-shopee text-[10px] font-bold px-1 py-0.5 shadow">PROMO</div>
-                            </div>
-                            <div class="p-1.5 flex flex-col flex-grow">
-                                <div class="text-[11px] md:text-xs text-gray-700 line-clamp-1 mb-1 font-bold">${promo.name}</div>
-                                <div class="text-shopee text-sm md:text-base font-bold text-center mt-auto">${formattedPrice}</div>
-                                
-                                <div class="product-timer text-center text-[9px] font-bold text-shopee bg-orange-50 border border-orange-100 rounded mt-1 py-0.5" data-end="${promo.promo_end || ''}">
-                                    Memuat waktu...
+                        section.classList.remove('hidden');
+                        container.innerHTML = ''; 
+                        
+                        activePromo.forEach(promo => {
+                            const formattedPrice = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(promo.price);
+                            const escapeName = promo.name.replace(/'/g, "\\'");
+                            const escapeLocation = promo.location ? promo.location.replace(/'/g, "\\'") : '';
+                            
+                            const card = `
+                            <div class="min-w-[140px] w-[140px] bg-white rounded border border-gray-100 hover:border-shopee transition flex flex-col overflow-hidden shrink-0">
+                                <div class="relative">
+                                    <img src="${promo.img}" class="w-full h-[140px] object-cover border-b" onerror="this.src='https://placehold.co/200x200/ddd/555?text=Promo'">
+                                    <div class="absolute top-0 right-0 bg-yellow-400 text-shopee text-[10px] font-bold px-1 py-0.5 shadow">PROMO</div>
                                 </div>
-                                
-                                <div class="flex gap-1 mt-2">
-                                    <button onclick="addToCart('${escapeName}', ${promo.price}, '${escapeLocation}')" class="flex-1 border border-shopee text-shopee rounded text-[10px] py-1 hover:bg-orange-50 transition" title="Tambah ke Keranjang">
-                                        <i class="fas fa-cart-plus"></i>
-                                    </button>
-                                    <button onclick="showCheckout('${escapeName}', '${promo.price}', '${escapeLocation}')" class="flex-[3] bg-shopee text-white rounded text-[10px] font-bold py-1 hover:bg-shopeeHover transition">
-                                        Pesan
-                                    </button>
+                                <div class="p-1.5 flex flex-col flex-grow">
+                                    <div class="text-[11px] md:text-xs text-gray-700 line-clamp-1 mb-1 font-bold">${promo.name}</div>
+                                    <div class="text-shopee text-sm md:text-base font-bold text-center mt-auto">${formattedPrice}</div>
+                                    
+                                    <div class="product-timer text-center text-[9px] font-bold text-shopee bg-orange-50 border border-orange-100 rounded mt-1 py-0.5" data-end="${promo.promo_end || ''}">
+                                        Memuat waktu...
+                                    </div>
+                                    
+                                    <div class="flex gap-1 mt-2">
+                                        <button onclick="addToCart('${escapeName}', ${promo.price}, '${escapeLocation}')" class="flex-1 border border-shopee text-shopee rounded text-[10px] py-1 hover:bg-orange-50 transition" title="Tambah ke Keranjang">
+                                            <i class="fas fa-cart-plus"></i>
+                                        </button>
+                                        <button onclick="showCheckout('${escapeName}', '${promo.price}', '${escapeLocation}')" class="flex-[3] bg-shopee text-white rounded text-[10px] font-bold py-1 hover:bg-shopeeHover transition">
+                                            Pesan
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
-                        </div>`;
-                        container.insertAdjacentHTML('beforeend', card);
-                    });
+                            </div>`;
+                            container.insertAdjacentHTML('beforeend', card);
+                        });
+                    } else {
+                        section.classList.add('hidden');
+                    }
                 } else {
                     section.classList.add('hidden');
                 }
             } catch (error) {
-                section.classList.add('hidden');
+                if(!isBackground) section.classList.add('hidden');
+            }
+        }
+
+        // --- TAMBAHAN: SISTEM BACKGROUND SYNC PEMBELI ---
+        function startBackgroundSync() {
+            if(syncInterval) clearInterval(syncInterval);
+            syncInterval = setInterval(syncDataBackground, 10000); // 10 detik
+        }
+
+        async function syncDataBackground() {
+            // 1. Sinkronisasi notifikasi dan status order
+            syncOrdersSilently();
+
+            // 2. Sinkronisasi Flash Promo
+            fetchFlashPromoFromGAS(true);
+
+            // 3. Sinkronisasi Kategori (Sembunyikan icon kalau kategori kosong di DB)
+            checkEmptyCategories();
+
+            // 4. Sinkronisasi Grid Produk yang sedang terbuka (Rekomendasi/Kategori/Pencarian)
+            if (currentViewMode === 'recommendation') {
+                fetchProductsFromGAS(true);
+            } else if (currentViewMode === 'category') {
+                loadCategory(currentCategorySheet, currentCategoryTitle, true);
+            } else if (currentViewMode === 'search') {
+                handleSearch(true);
             }
         }
 
@@ -1351,6 +1473,7 @@
 
         function handleLogout() {
             loggedInUser = null;
+            if(syncInterval) clearInterval(syncInterval);
             localStorage.removeItem('foodcourt_buyer_login');
             updateAuthUI();
             hideProfile();
@@ -1365,7 +1488,10 @@
             }
         }
 
-        function goToSellerPage() {
+        function goToSellerPage(forceRegister = false) {
+            if (forceRegister) {
+                localStorage.setItem('foodcourt_force_register', 'true');
+            }
             try {
                 if (window.self !== window.top) {
                     alert("[Mode Preview] Di lingkungan nyata, Anda akan otomatis dialihkan ke halaman 'seller.html'. Silakan download dan buka file secara lokal di komputer Anda untuk melihat perpindahannya.");
@@ -1380,10 +1506,10 @@
 
         async function handleSellerCentreClick() {
             if (!loggedInUser) {
-                if (confirm("Silakan log in sebagai pembeli terlebih dahulu agar kami dapat mendeteksi atau menyinkronkan data toko Anda. Klik 'OK' untuk log in.")) {
-                    showAuth('login');
+                if (confirm("Anda belum Log In. Jika belum memiliki Toko, klik 'OK' untuk Mendaftar sebagai Penjual. Jika sudah punya akun, klik 'Batal' untuk Log In.")) {
+                    goToSellerPage(true); 
                 } else {
-                    goToSellerPage();
+                    goToSellerPage(false); 
                 }
                 return;
             }
@@ -1405,19 +1531,19 @@
                     if (matchedSeller) {
                         localStorage.setItem('foodcourt_seller_login', JSON.stringify(matchedSeller));
                         alert(`Toko '${matchedSeller.store_name}' terdeteksi! Mengalihkan Anda secara otomatis ke dasbor penjual...`);
-                        goToSellerPage();
+                        goToSellerPage(false);
                     } else {
                         localStorage.setItem('foodcourt_prefill_seller_reg', JSON.stringify(loggedInUser));
-                        alert("Menyinkronkan data pembeli Anda. Mengalihkan ke formulir pendaftaran toko...");
-                        goToSellerPage();
+                        alert("Anda belum memiliki Toko. Mengalihkan ke formulir pendaftaran toko...");
+                        goToSellerPage(true); 
                     }
                 } else {
                     localStorage.setItem('foodcourt_prefill_seller_reg', JSON.stringify(loggedInUser));
-                    goToSellerPage();
+                    goToSellerPage(true);
                 }
             } catch (error) {
                 console.error("Gagal mendeteksi status seller:", error);
-                goToSellerPage();
+                goToSellerPage(false);
             } finally {
                 loadingOverlay.classList.add('hidden');
                 loadingOverlay.classList.remove('flex');
@@ -1483,6 +1609,9 @@
                     alert("Selamat datang, " + res.user.username);
                     hideAuth();
                     e.target.reset();
+                    
+                    // Langsung jalankan sinkronisasi senyap setelah login
+                    syncOrdersSilently();
                 } else {
                     alert(res.message);
                 }
@@ -1575,6 +1704,12 @@
             }
             updateAuthUI();
             updateCartCount(); 
+            
+            // Aktifkan sinkronisasi otomatis tiap 10 detik
+            startBackgroundSync();
+            
+            // Lakukan sinkronisasi awal notifikasi
+            if(loggedInUser) syncOrdersSilently();
         });
     </script>
 </body>
