@@ -16,6 +16,11 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
     <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 
+    <!-- PWA THEME COLOR -->
+    <meta name="theme-color" content="#ee4d2d">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
     <script>
         tailwind.config = {
             theme: {
@@ -44,10 +49,32 @@
         
         /* Map Customization */
         .leaflet-container { z-index: 0 !important; }
-        .leaflet-routing-container { display: none !important; } /* Sembunyikan panel teks instruksi bawaan */
+        .leaflet-routing-container { display: none !important; } 
     </style>
 </head>
 <body class="bg-bgMain font-sans text-gray-800 h-screen flex flex-col md:max-w-md md:mx-auto md:border-x md:shadow-2xl relative overflow-hidden selection:bg-orange-200">
+
+    <!-- ================= PWA INSTALL PROMPT MODAL ================= -->
+    <div id="pwa-install-modal" class="hidden fixed inset-0 z-[300] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 transition-opacity duration-300 md:max-w-md md:mx-auto">
+        <div class="bg-white rounded-3xl shadow-[0_15px_50px_rgba(0,0,0,0.3)] w-full max-w-sm overflow-hidden flex flex-col transform scale-95 transition-transform duration-300 border border-white/20">
+            <div class="bg-gradient-to-r from-shopee to-[#ff7337] text-white p-5 font-black text-lg flex items-center gap-3">
+                <i class="fas fa-download text-2xl drop-shadow-md"></i> <span class="drop-shadow-md">Instal Aplikasi</span>
+            </div>
+            <div class="p-6 bg-gray-50 flex flex-col items-center text-center">
+                <div class="w-20 h-20 bg-orange-100 rounded-3xl flex items-center justify-center text-shopee text-4xl shadow-inner border border-orange-200 mb-4 transform -rotate-6">
+                    <i class="fas fa-motorcycle drop-shadow-sm"></i>
+                </div>
+                <h3 class="font-extrabold text-gray-800 text-lg mb-2 tracking-tight">Lebih Cepat & Tanggap!</h3>
+                <p class="text-gray-600 text-xs font-semibold mb-6 leading-relaxed w-full px-2">Instal aplikasi FoodCourt Driver di layar utama (Homescreen) HP Anda agar pengalaman menerima pesanan lebih mulus tanpa perlu buka browser.</p>
+                <div class="flex justify-center gap-3 w-full mt-2">
+                    <button onclick="dismissInstallPrompt()" class="btn-3d flex-1 py-3.5 bg-white border-2 border-gray-200 text-gray-500 rounded-xl font-bold hover:bg-gray-100 shadow-[0_3px_0_0_#e5e7eb] transition text-sm">Nanti Saja</button>
+                    <button onclick="acceptInstallPrompt()" class="btn-3d flex-[1.5] py-3.5 bg-gradient-to-b from-[#f36b4e] to-[#ee4d2d] text-white rounded-xl font-bold hover:from-[#f05c3d] hover:to-[#d73211] shadow-[0_4px_0_0_#be3118] transition text-sm flex items-center justify-center gap-2">
+                        <i class="fas fa-home"></i> Instal Sekarang
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- ================= CUSTOM MODAL NOTIFICATION ================= -->
     <div id="customModal" class="hidden fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 transition-opacity duration-300 md:max-w-md md:mx-auto">
@@ -211,7 +238,7 @@
     </div>
 
     <!-- ================= MAIN APP VIEW ================= -->
-    <div id="app-container" class="hidden flex-col h-full w-full relative pb-28"> <!-- pb-28 untuk ruang floating nav -->
+    <div id="app-container" class="hidden flex-col h-full w-full relative pb-28">
 
     <!-- HEADER DRIVER -->
     <header class="bg-gradient-to-r from-white to-gray-50 shadow-md z-40 sticky top-0 border-b border-gray-200">
@@ -278,19 +305,17 @@
         <!-- SECTION: AKTIF (Active Delivery) -->
         <section id="section-active" class="hidden h-full flex flex-col bg-[#f9f9f9]">
             
-            <!-- Map Routing Interaktif (Leaflet Routing Machine) -->
+            <!-- Map Routing Interaktif -->
             <div class="w-full h-64 relative border-b-4 border-shopee shadow-sm shrink-0 bg-gray-200">
                 <div id="live-map-leaflet" class="w-full h-full z-0"></div>
                 
-                <!-- Indikator Estimasi Jarak & Waktu -->
                 <div class="absolute top-3 left-3 bg-white/95 backdrop-blur-sm px-4 py-2 rounded-xl shadow-[0_5px_15px_rgba(0,0,0,0.15)] z-[10] border border-gray-200 flex flex-col">
                     <span class="text-[10px] font-extrabold text-gray-500 uppercase tracking-wider mb-0.5">Estimasi Perjalanan</span>
                     <span class="text-shopee font-black text-base drop-shadow-sm flex items-center gap-1" id="route-info">
-                        <i class="fas fa-spinner fa-spin text-sm"></i> Menghitung...
+                        Standby...
                     </span>
                 </div>
 
-                <!-- Tombol Buka Navigasi Google Maps -->
                 <button onclick="openGoogleMapsNav()" class="btn-3d absolute bottom-4 right-4 bg-gradient-to-b from-[#4299e1] to-[#2b6cb0] text-white px-5 py-3 rounded-2xl shadow-[0_5px_0_0_#1e3a8a] text-xs font-extrabold flex items-center gap-2 hover:from-[#3182ce] hover:to-[#2c5282] z-[10]">
                     <i class="fas fa-location-arrow text-white text-lg drop-shadow-md"></i> Buka Navigasi
                 </button>
@@ -300,7 +325,7 @@
             <div class="p-4 flex-1 overflow-y-auto flex flex-col">
                 <div class="flex justify-between items-center mb-4 bg-white p-3 rounded-xl shadow-sm border border-gray-100">
                     <h2 class="font-black text-gray-800 text-lg"><i class="fas fa-motorcycle text-shopee mr-1"></i> Detail Antaran</h2>
-                    <span class="bg-gradient-to-r from-orange-100 to-orange-50 border border-orange-200 text-shopee px-3 py-1 text-[10px] font-black tracking-widest uppercase rounded-full shadow-inner" id="order-status-badge">Menuju Outlet</span>
+                    <span class="bg-gradient-to-r from-gray-100 to-gray-50 border border-gray-200 text-gray-500 px-3 py-1 text-[10px] font-black tracking-widest uppercase rounded-full shadow-inner" id="order-status-badge">Menunggu Tugas</span>
                 </div>
 
                 <!-- Info Resto -->
@@ -344,9 +369,9 @@
                 </div>
 
                 <!-- Action Button -->
-                <div id="action-container" class="mt-auto pt-2">
-                    <button id="btnAction" onclick="updateOrderStatus()" class="btn-3d w-full bg-gradient-to-b from-[#f36b4e] to-[#ee4d2d] text-white py-4 rounded-xl font-black text-lg hover:from-[#f05c3d] hover:to-[#d73211] shadow-[0_5px_0_0_#be3118] tracking-wide">
-                        Saya Sudah di Outlet
+                <div id="action-container" class="mt-auto pt-2 pb-4">
+                    <button id="btnAction" onclick="updateOrderStatus()" disabled class="btn-3d w-full bg-gray-300 text-white py-4 rounded-xl font-black text-lg shadow-sm tracking-wide transition-all">
+                        <i class="fas fa-map-marker-alt drop-shadow-md mr-1"></i> Saya Sudah di Outlet
                     </button>
                 </div>
             </div>
@@ -375,7 +400,7 @@
                         <img src="https://placehold.co/100x100/333/white?text=Profil" id="profDetailImage" class="w-20 h-20 rounded-full object-cover border-4 border-gray-50 shadow-md">
                         <!-- Input File Tersembunyi -->
                         <input type="file" id="driverImgInput" accept="image/*" class="hidden" onchange="uploadProfileImage(event)">
-                        <!-- Tombol Kamera (Label memicu Input) -->
+                        <!-- Tombol Kamera -->
                         <label for="driverImgInput" id="btnEditPhoto" class="btn-3d absolute bottom-0 right-[-5px] bg-shopee text-white w-8 h-8 rounded-full flex items-center justify-center cursor-pointer shadow-[0_2px_5px_rgba(0,0,0,0.2)] border-2 border-white hover:bg-shopeeHover" title="Ubah Foto Profil">
                             <i class="fas fa-camera text-xs"></i>
                         </label>
@@ -426,7 +451,7 @@
 
     </main>
 
-    <!-- BOTTOM NAVIGATION (3D FLOATING NAV) DENGAN EFEK WARNA ORANYE SAAT AKTIF -->
+    <!-- BOTTOM NAVIGATION (3D FLOATING NAV) -->
     <nav class="fixed bottom-4 left-1/2 transform -translate-x-1/2 w-[calc(100%-2rem)] md:max-w-[calc(28rem-2rem)] bg-white/90 backdrop-blur-xl border border-white flex justify-around items-end text-[10px] text-gray-500 pb-2 pt-2 shadow-[0_10px_30px_rgba(0,0,0,0.15)] rounded-3xl z-50 h-[70px]">
         <div class="absolute inset-0 bg-gradient-to-t from-transparent to-white/80 rounded-3xl pointer-events-none"></div>
 
@@ -460,11 +485,93 @@
         </div>
     </nav>
 
-    </div> <!-- END APP CONTAINER -->
-
     <!-- JAVASCRIPT LOGIC -->
     <script>
-        // --- CUSTOM MODAL SYSTEM (MENGATASI BLOKIR IFRAME & TAMPILAN MODERN) ---
+        // --- PWA SETUP (Single File) ---
+        const pwaManifest = {
+            "name": "FoodCourt Driver",
+            "short_name": "FC Driver",
+            "start_url": window.location.href,
+            "display": "standalone",
+            "background_color": "#f5f5f5",
+            "theme_color": "#ee4d2d",
+            "icons": [
+                {
+                    "src": "https://placehold.co/192x192/ee4d2d/white?text=FCD",
+                    "sizes": "192x192",
+                    "type": "image/png"
+                },
+                {
+                    "src": "https://placehold.co/512x512/ee4d2d/white?text=FCD",
+                    "sizes": "512x512",
+                    "type": "image/png"
+                }
+            ]
+        };
+        const manifestBlob = new Blob([JSON.stringify(pwaManifest)], {type: 'application/json'});
+        const linkManifest = document.createElement('link');
+        linkManifest.rel = 'manifest';
+        linkManifest.href = URL.createObjectURL(manifestBlob);
+        document.head.appendChild(linkManifest);
+
+        const swContent = `
+            self.addEventListener('install', e => self.skipWaiting());
+            self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
+            self.addEventListener('fetch', e => {}); 
+        `;
+        const swBlob = new Blob([swContent], {type: 'application/javascript'});
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(err => console.log('PWA SW err:', err));
+        }
+
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+        });
+
+        function checkAndShowInstallPrompt(forceNow = false) {
+            if (!deferredPrompt) return; 
+            if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) return;
+
+            const lastPrompt = localStorage.getItem('foodcourt_driver_pwa_time');
+            const now = new Date().getTime();
+            const interval = 86400000; // 24 hours
+
+            if (forceNow || !lastPrompt || (now - lastPrompt > interval)) {
+                const m = document.getElementById('pwa-install-modal');
+                m.classList.remove('hidden');
+                setTimeout(() => { 
+                    m.classList.remove('opacity-0'); 
+                    m.children[0].classList.remove('scale-95'); 
+                }, 10);
+            }
+        }
+
+        function dismissInstallPrompt() {
+            const m = document.getElementById('pwa-install-modal');
+            m.classList.add('opacity-0'); 
+            m.children[0].classList.add('scale-95');
+            setTimeout(() => { m.classList.add('hidden'); }, 300);
+            
+            localStorage.setItem('foodcourt_driver_pwa_time', new Date().getTime());
+        }
+
+        async function acceptInstallPrompt() {
+            dismissInstallPrompt();
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    localStorage.setItem('foodcourt_driver_pwa_time', new Date().getTime() + (365 * 24 * 60 * 60 * 1000)); 
+                } else {
+                    localStorage.setItem('foodcourt_driver_pwa_time', new Date().getTime());
+                }
+                deferredPrompt = null;
+            }
+        }
+
+        // --- CUSTOM MODAL SYSTEM ---
         function openModalAnim() {
             const m = document.getElementById('customModal');
             const c = document.getElementById('customModalContent');
@@ -511,14 +618,12 @@
             });
         }
 
-
         // --- VARIABEL GLOBAL ---
         let DRIVER_DATA = null; 
         let availableOrders = []; 
         let activeOrderData = null; 
         let syncInterval;
 
-        // Routing Variables
         let activeDeliveryMap = null;
         let routingControl = null;
         let driverCurrentLat = null;
@@ -526,7 +631,7 @@
         let currentTargetLat = null;
         let currentTargetLng = null;
 
-        // --- KONFIGURASI BACKEND ---
+        // URL Web App
         const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxepD3BGU993WBCuZjH2Wo4sDyUkwyp4SGE4_mZ6EbrzD_qCDGzkRIOnPqmcXVnKNM/exec"; 
 
         // --- BACKGROUND SYNC LOGIC ---
@@ -549,12 +654,10 @@
             if(syncIcon) syncIcon.classList.add('fa-spin');
 
             try {
-                // Fetch sentralisasi data untuk semua tab
                 const response = await fetch(`${GAS_WEB_APP_URL}?action=getData&type=orders`);
                 const res = await response.json();
                 
                 if (res.status === 'success' && res.data) {
-                    // Update Local Storage Cache
                     localStorage.setItem('foodcourt_driver_orders_cache', JSON.stringify(res.data));
                     
                     if (currentStep === 0 && !document.getElementById('section-new').classList.contains('hidden')) {
@@ -571,8 +674,6 @@
             }
         }
 
-
-        // --- FUNGSI KOMPRESI GAMBAR (CANVAS) ---
         function compressImage(file, maxWidth, maxHeight, quality) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -600,7 +701,6 @@
             });
         }
 
-        // --- FUNGSI UPLOAD GAMBAR KE GAS ---
         async function uploadImageToDrive(base64Data, filename) {
             const uploadPayload = {
                 action: 'uploadImage',
@@ -617,7 +717,42 @@
             return result.url; 
         }
 
-        // --- AUTHENTICATION LOGIC ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedDriver = localStorage.getItem('foodcourt_driver_login');
+            if (savedDriver) {
+                try {
+                    DRIVER_DATA = JSON.parse(savedDriver);
+                    
+                    document.getElementById('userProfileName').innerText = DRIVER_DATA.full_name;
+                    if(DRIVER_DATA.face_img) {
+                        document.getElementById('userProfileImage').src = DRIVER_DATA.face_img;
+                        document.getElementById('profDetailImage').src = DRIVER_DATA.face_img;
+                    }
+
+                    if(DRIVER_DATA.status === 'Offline') {
+                        document.getElementById('onlineToggle').checked = false;
+                        document.getElementById('statusText').innerText = "OFFLINE";
+                        document.getElementById('statusText').className = "text-[10px] font-black text-gray-400 mt-1.5 tracking-wider uppercase";
+                    } else {
+                        document.getElementById('onlineToggle').checked = true;
+                        document.getElementById('statusText').innerText = "ONLINE";
+                        document.getElementById('statusText').className = "text-[10px] font-black text-green-600 mt-1.5 tracking-wider uppercase";
+                    }
+
+                    document.getElementById('auth-container').classList.add('hidden');
+                    document.getElementById('app-container').classList.remove('hidden');
+                    document.getElementById('app-container').classList.add('flex');
+                    
+                    switchTab('new');
+                    startBackgroundSync();
+                    
+                    setTimeout(() => checkAndShowInstallPrompt(true), 1500);
+                } catch(e) {
+                    localStorage.removeItem('foodcourt_driver_login');
+                }
+            }
+        });
+
         function switchAuthView(viewId) {
             document.getElementById('view-login').classList.add('hidden');
             document.getElementById('view-login').classList.remove('flex');
@@ -649,11 +784,22 @@
                 
                 if(res.status === 'success') {
                     DRIVER_DATA = res.user;
+                    localStorage.setItem('foodcourt_driver_login', JSON.stringify(DRIVER_DATA));
 
                     document.getElementById('userProfileName').innerText = DRIVER_DATA.full_name;
                     if(DRIVER_DATA.face_img) {
                         document.getElementById('userProfileImage').src = DRIVER_DATA.face_img;
                         document.getElementById('profDetailImage').src = DRIVER_DATA.face_img;
+                    }
+
+                    if(DRIVER_DATA.status === 'Offline') {
+                        document.getElementById('onlineToggle').checked = false;
+                        document.getElementById('statusText').innerText = "OFFLINE";
+                        document.getElementById('statusText').className = "text-[10px] font-black text-gray-400 mt-1.5 tracking-wider uppercase";
+                    } else {
+                        document.getElementById('onlineToggle').checked = true;
+                        document.getElementById('statusText').innerText = "ONLINE";
+                        document.getElementById('statusText').className = "text-[10px] font-black text-green-600 mt-1.5 tracking-wider uppercase";
                     }
 
                     document.getElementById('auth-container').classList.add('hidden');
@@ -663,6 +809,9 @@
 
                     switchTab('new');
                     startBackgroundSync();
+                    
+                    setTimeout(() => checkAndShowInstallPrompt(true), 1500);
+
                 } else {
                     await showCustomAlert(res.message, "error");
                 }
@@ -683,6 +832,7 @@
             availableOrders = [];
             activeOrderData = null;
             if(syncInterval) clearInterval(syncInterval);
+            localStorage.removeItem('foodcourt_driver_login');
             
             document.getElementById('app-container').classList.add('hidden');
             document.getElementById('app-container').classList.remove('flex');
@@ -786,12 +936,10 @@
             }
         }
 
-
         // --- STATE MACHINE SEDERHANA UNTUK PESANAN AKTIF ---
         let currentStep = 0; 
         let activeOrderId = null; 
 
-        // Fungsi berpindah Menu Navigasi dengan Logika Cache & Efek Oranye
         function switchTab(tabId) {
             document.getElementById('section-new').classList.add('hidden');
             document.getElementById('section-active').classList.add('hidden');
@@ -824,25 +972,51 @@
             if(tabId === 'profile') loadProfile();
             if(tabId === 'new') refreshOrders();
             
-            // Fix map issue when unhidden
             if(tabId === 'active' && activeDeliveryMap) {
                 setTimeout(() => activeDeliveryMap.invalidateSize(), 300);
             }
         }
 
-        document.getElementById('onlineToggle').addEventListener('change', function() {
+        // LOGIKA STATUS ONLINE/OFFLINE (Dengan Update Server Silent)
+        document.getElementById('onlineToggle').addEventListener('change', async function() {
             const statusText = document.getElementById('statusText');
-            if(this.checked) {
+            const isOnline = this.checked;
+            
+            if(isOnline) {
                 statusText.innerText = "ONLINE";
                 statusText.className = "text-[10px] font-black text-green-600 mt-1.5 tracking-wider uppercase";
                 refreshOrders();
             } else {
                 statusText.innerText = "OFFLINE";
                 statusText.className = "text-[10px] font-black text-gray-400 mt-1.5 tracking-wider uppercase";
+                
+                // Segera kosongkan container tugas jika Offline
+                document.getElementById('new-orders-container').innerHTML = `
+                    <div class="text-center py-16 text-gray-400 font-bold bg-white rounded-2xl border border-gray-100 shadow-sm">
+                        <i class="fas fa-power-off text-5xl mb-3 opacity-30 drop-shadow"></i>
+                        <p>Anda sedang Offline. Aktifkan tombol di sudut kanan atas untuk menerima tugas baru.</p>
+                    </div>`;
+            }
+
+            if (DRIVER_DATA) {
+                try {
+                    DRIVER_DATA.status = isOnline ? 'Online' : 'Offline';
+                    localStorage.setItem('foodcourt_driver_login', JSON.stringify(DRIVER_DATA));
+
+                    fetch(GAS_WEB_APP_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            action: 'updateDriverStatus', 
+                            type: 'users_drivers',
+                            driverId: DRIVER_DATA.driver_id,
+                            status: isOnline ? 'Online' : 'Offline'
+                        })
+                    });
+                } catch(e) {}
             }
         });
 
-        // 1. TARIK DATA PESANAN BARU DARI DATABASE (Dengan Caching Local Storage)
+        // 1. TARIK DATA PESANAN BARU DARI DATABASE
         async function refreshOrders(isBackground = false) {
             if(currentStep !== 0) return; 
 
@@ -854,7 +1028,7 @@
                     container.innerHTML = `
                     <div class="text-center py-16 text-gray-400 font-bold bg-white rounded-2xl border border-gray-100 shadow-sm">
                         <i class="fas fa-power-off text-5xl mb-3 opacity-30 drop-shadow"></i>
-                        <p>Anda sedang Offline. Aktifkan tombol di sudut kanan atas.</p>
+                        <p>Anda sedang Offline. Aktifkan tombol di sudut kanan atas untuk menerima tugas baru.</p>
                     </div>`;
                 }
                 return;
@@ -890,6 +1064,9 @@
 
         function processNewOrders(allOrders, isBackground) {
             const container = document.getElementById('new-orders-container');
+            
+            if(!document.getElementById('onlineToggle').checked) return;
+
             availableOrders = allOrders.filter(order => order.status === 'Menunggu Kurir');
             
             if(availableOrders.length === 0) {
@@ -978,6 +1155,8 @@
                         const badge = document.getElementById('order-status-badge');
                         badge.innerText = "Menuju Outlet";
                         badge.className = "bg-gradient-to-r from-orange-100 to-orange-50 border border-orange-200 text-shopee px-3 py-1 text-[10px] font-black tracking-widest uppercase rounded-full shadow-inner";
+                        
+                        actionBtn.disabled = false;
                         actionBtn.innerHTML = '<i class="fas fa-map-marker-alt drop-shadow-md mr-1"></i> Saya Sudah di Outlet';
                         actionBtn.className = "btn-3d w-full bg-gradient-to-b from-[#f36b4e] to-[#ee4d2d] text-white py-4 rounded-xl font-black text-lg hover:from-[#f05c3d] hover:to-[#d73211] shadow-[0_5px_0_0_#be3118] tracking-wide";
                         
@@ -996,7 +1175,7 @@
             }
         }
 
-        // --- FUNGSI MENGGAMBAR RUTE PETA DENGAN LEAFLET ROUTING MACHINE ---
+        // --- FUNGSI MENGGAMBAR RUTE PETA ---
         function drawDeliveryRoute(startLat, startLng, endLat, endLng) {
             if (!activeDeliveryMap) {
                 activeDeliveryMap = L.map('live-map-leaflet', { zoomControl: false }).setView([startLat, startLng], 14);
@@ -1017,7 +1196,7 @@
                 routeWhileDragging: false,
                 addWaypoints: false,
                 fitSelectedRoutes: true,
-                show: false, // Sembunyikan panel instruksi teks (karena jelek)
+                show: false, 
                 lineOptions: {
                     styles: [{color: '#3b82f6', opacity: 0.9, weight: 5, className: 'animate-pulse'}] 
                 },
@@ -1044,8 +1223,8 @@
             }).on('routesfound', function(e) {
                 let routes = e.routes;
                 let summary = routes[0].summary;
-                let distance = (summary.totalDistance / 1000).toFixed(1); // km
-                let time = Math.round(summary.totalTime / 60); // minutes
+                let distance = (summary.totalDistance / 1000).toFixed(1); 
+                let time = Math.round(summary.totalTime / 60); 
                 
                 document.getElementById('route-info').innerHTML = `${distance} <span class="text-[10px] text-gray-500 font-bold">km</span> • ~${time} <span class="text-[10px] text-gray-500 font-bold">mnt</span>`;
             }).on('routingerror', function() {
@@ -1053,18 +1232,15 @@
             }).addTo(activeDeliveryMap);
         }
 
-        // FUNGSI NAVIGASI GOOGLE MAPS
         function openGoogleMapsNav() {
             if (driverCurrentLat && currentTargetLat) {
                 const url = `https://www.google.com/maps/dir/?api=1&origin=${driverCurrentLat},${driverCurrentLng}&destination=${currentTargetLat},${currentTargetLng}&travelmode=driving`;
                 window.open(url, '_blank');
             } else {
-                openGoogleMaps(); // Fallback teks jika GPS tidak merespon
+                openGoogleMaps(); 
             }
         }
 
-
-        // FUNGSI RENDER DETAIL PESANAN AKTIF
         async function renderActiveOrder() {
             if(!activeOrderData) return;
             
@@ -1110,16 +1286,15 @@
                     }
                 }
 
-                // Kalkulasi Rute Otomatis
                 if (navigator.geolocation) {
                     navigator.geolocation.getCurrentPosition(position => {
                         driverCurrentLat = position.coords.latitude;
                         driverCurrentLng = position.coords.longitude;
 
-                        if (currentStep === 1) { // Menuju Toko
+                        if (currentStep === 1) { 
                             currentTargetLat = sellerLat;
                             currentTargetLng = sellerLng;
-                        } else if (currentStep === 2) { // Menuju Pembeli
+                        } else if (currentStep === 2) { 
                             currentTargetLat = buyerLat;
                             currentTargetLng = buyerLng;
                         }
@@ -1139,8 +1314,6 @@
             }
         }
 
-
-        // Fallback jika tidak ada koordinat GPS
         function openGoogleMaps() {
             if (!activeOrderData) return;
             let targetLocation = "";
@@ -1154,7 +1327,6 @@
             const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(targetLocation)}`;
             window.open(mapsUrl, '_blank');
         }
-
 
         // 3. POST UPDATE STATUS PERJALANAN (ACTIVE DELIVERY)
         async function updateOrderStatus() {
@@ -1185,7 +1357,6 @@
                         btn.innerHTML = '<i class="fas fa-box-open drop-shadow-md mr-1"></i> Pesanan Sudah Diambil';
                         btn.className = "btn-3d w-full bg-gradient-to-b from-[#4299e1] to-[#2b6cb0] text-white py-4 rounded-xl font-black text-lg hover:from-[#3182ce] hover:to-[#2c5282] shadow-[0_5px_0_0_#1e3a8a] tracking-wide";
                         
-                        // Perbarui Peta Untuk Route ke Pembeli
                         renderActiveOrder();
 
                     } else if (currentStep === 2) {
@@ -1196,15 +1367,30 @@
                         btn.className = "btn-3d w-full bg-gradient-to-b from-[#4ade80] to-[#16a34a] text-white py-4 rounded-xl font-black text-lg hover:from-[#22c55e] hover:to-[#15803d] shadow-[0_5px_0_0_#166534] tracking-wide";
                     } else if (currentStep === 3) {
                         await showCustomAlert("Antaran Selesai! Pesanan berhasil diserahkan ke pembeli.", "success");
+                        
                         currentStep = 0;
                         activeOrderId = null;
                         activeOrderData = null;
                         document.getElementById('activeBadge').classList.add('hidden');
                         
-                        if (routingControl) {
+                        if (routingControl && activeDeliveryMap) {
                             activeDeliveryMap.removeControl(routingControl);
-                            document.getElementById('route-info').innerText = "-";
                         }
+                        
+                        document.getElementById('route-info').innerText = "Standby...";
+                        document.getElementById('active-outlet-name').innerText = "Memuat...";
+                        document.getElementById('active-outlet-address').innerText = "Menunggu lokasi outlet...";
+                        document.getElementById('active-product-details').innerHTML = `<i class="fas fa-shopping-bag text-shopee mr-1"></i> Pesanan: -`;
+                        document.getElementById('active-customer-name').innerText = "Memuat...";
+                        document.getElementById('active-customer-address').innerText = "Menunggu alamat tujuan...";
+                        document.getElementById('active-total-price').innerText = "Rp 0";
+                        
+                        badge.innerText = "Menunggu Tugas";
+                        badge.className = "bg-gradient-to-r from-gray-100 to-gray-50 border border-gray-200 text-gray-500 px-3 py-1 text-[10px] font-black tracking-widest uppercase rounded-full shadow-inner";
+                        
+                        btn.innerHTML = '<i class="fas fa-map-marker-alt drop-shadow-md mr-1"></i> Saya Sudah di Outlet';
+                        btn.className = "btn-3d w-full bg-gray-300 text-white py-4 rounded-xl font-black text-lg shadow-sm tracking-wide transition-all";
+                        btn.disabled = true;
 
                         switchTab('new');
                     }
@@ -1214,16 +1400,16 @@
             } catch (error) {
                 await showCustomAlert("Koneksi gagal.", "error");
             } finally {
-                btn.disabled = false;
                 if (currentStep !== 0) {
-                   if (currentStep === 1) btn.innerHTML = '<i class="fas fa-map-marker-alt drop-shadow-md mr-1"></i> Saya Sudah di Outlet';
-                   else if (currentStep === 2) btn.innerHTML = '<i class="fas fa-box-open drop-shadow-md mr-1"></i> Pesanan Sudah Diambil';
-                   else if (currentStep === 3) btn.innerHTML = '<i class="fas fa-flag-checkered drop-shadow-md mr-1"></i> Selesaikan Antaran';
+                    btn.disabled = false;
+                    if (currentStep === 1) btn.innerHTML = '<i class="fas fa-map-marker-alt drop-shadow-md mr-1"></i> Saya Sudah di Outlet';
+                    else if (currentStep === 2) btn.innerHTML = '<i class="fas fa-box-open drop-shadow-md mr-1"></i> Pesanan Sudah Diambil';
+                    else if (currentStep === 3) btn.innerHTML = '<i class="fas fa-flag-checkered drop-shadow-md mr-1"></i> Selesaikan Antaran';
                 }
             }
         }
 
-        // 4. FUNGSI TARIK DATA RIWAYAT (HISTORY) Dengan Caching Local Storage
+        // 4. FUNGSI TARIK DATA RIWAYAT (HISTORY)
         async function loadHistory(isBackground = false) {
             const container = document.getElementById('history-container');
             
