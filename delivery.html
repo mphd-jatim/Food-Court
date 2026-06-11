@@ -8,6 +8,14 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Leaflet CSS & JS untuk Interactive Maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <!-- Leaflet Routing Machine (Untuk Garis Rute Biru) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+
     <script>
         tailwind.config = {
             theme: {
@@ -28,43 +36,70 @@
         .toggle-checkbox:checked { right: 0; border-color: #68D391; }
         .toggle-checkbox:checked + .toggle-label { background-color: #68D391; }
         .toggle-checkbox:checked + .toggle-label:after { transform: translateX(100%); border-color: white; }
+        
+        /* Animasi Kustom 3D */
+        .btn-3d { transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1); }
+        .btn-3d:active { transform: translateY(3px); box-shadow: 0 0px 0 0 transparent !important; }
+        .nav-3d-pop { transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        
+        /* Map Customization */
+        .leaflet-container { z-index: 0 !important; }
+        .leaflet-routing-container { display: none !important; } /* Sembunyikan panel teks instruksi bawaan */
     </style>
 </head>
-<body class="bg-bgMain font-sans text-gray-800 h-screen flex flex-col md:max-w-md md:mx-auto md:border-x md:shadow-lg relative overflow-hidden">
+<body class="bg-bgMain font-sans text-gray-800 h-screen flex flex-col md:max-w-md md:mx-auto md:border-x md:shadow-2xl relative overflow-hidden selection:bg-orange-200">
+
+    <!-- ================= CUSTOM MODAL NOTIFICATION ================= -->
+    <div id="customModal" class="hidden fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 transition-opacity duration-300 md:max-w-md md:mx-auto">
+        <div class="bg-white rounded-3xl shadow-[0_15px_50px_rgba(0,0,0,0.3)] w-full max-w-sm overflow-hidden flex flex-col transform scale-95 transition-transform duration-300 border border-white/20" id="customModalContent">
+            <div id="modalHeader" class="bg-gradient-to-r from-shopee to-[#ff7337] text-white p-5 font-black text-lg flex items-center gap-3">
+                <i id="modalIcon" class="fas fa-info-circle text-2xl drop-shadow-md"></i> <span id="modalTitle" class="drop-shadow-md">Informasi</span>
+            </div>
+            <div class="p-6 bg-gray-50 flex flex-col items-center text-center">
+                <p id="modalMessage" class="text-gray-700 text-sm font-semibold mb-6 leading-relaxed whitespace-pre-line w-full"></p>
+                <div class="flex justify-center gap-3 w-full mt-2">
+                    <button id="modalBtnCancel" class="btn-3d hidden flex-1 py-3 bg-white border-2 border-gray-200 text-gray-600 rounded-xl font-bold hover:bg-gray-100 shadow-[0_3px_0_0_#e5e7eb] transition">Batal</button>
+                    <button id="modalBtnConfirm" class="btn-3d flex-1 py-3 bg-gradient-to-b from-[#f36b4e] to-[#ee4d2d] text-white rounded-xl font-bold hover:from-[#f05c3d] hover:to-[#d73211] shadow-[0_4px_0_0_#be3118] transition">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- ================= AUTHENTICATION VIEWS ================= -->
     <div id="auth-container" class="absolute inset-0 bg-white z-[100] flex flex-col w-full h-full overflow-y-auto">
         
         <!-- LOGIN VIEW -->
         <div id="view-login" class="flex flex-col h-full px-8 justify-center pb-10">
-            <div class="text-center mb-8 mt-10">
-                <i class="fas fa-motorcycle text-shopee text-5xl mb-3"></i>
-                <h1 class="text-2xl font-bold text-gray-800">FoodCourt Driver</h1>
-                <p class="text-sm text-gray-500">Aplikasi Mitra Pengemudi</p>
+            <div class="text-center mb-8 mt-10 animate-bounce">
+                <div class="w-24 h-24 bg-orange-50 rounded-full mx-auto flex justify-center items-center shadow-inner border border-orange-100 mb-4">
+                    <i class="fas fa-motorcycle text-shopee text-5xl drop-shadow-md"></i>
+                </div>
+                <h1 class="text-2xl font-extrabold text-gray-800 tracking-tight">FoodCourt Driver</h1>
+                <p class="text-sm text-gray-500 font-semibold mt-1">Aplikasi Mitra Pengemudi</p>
             </div>
             
             <form onsubmit="handleLogin(event)" class="flex flex-col gap-4">
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">Nomor HP</label>
-                    <input type="tel" id="loginPhone" required placeholder="0812..." class="w-full px-4 py-3 border rounded-lg outline-none focus:border-shopee bg-gray-50">
+                    <label class="block text-xs font-bold text-gray-500 mb-1 uppercase tracking-wider">Nomor HP</label>
+                    <input type="tel" id="loginPhone" required placeholder="0812..." class="w-full px-4 py-3.5 border-2 border-gray-100 rounded-xl outline-none focus:border-shopee bg-gray-50 font-bold shadow-inner transition text-sm">
                 </div>
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">Password</label>
-                    <input type="password" id="loginPass" required placeholder="Masukkan password" class="w-full px-4 py-3 border rounded-lg outline-none focus:border-shopee bg-gray-50">
+                    <label class="block text-xs font-bold text-gray-500 mb-1 uppercase tracking-wider">Password</label>
+                    <input type="password" id="loginPass" required placeholder="Masukkan password" class="w-full px-4 py-3.5 border-2 border-gray-100 rounded-xl outline-none focus:border-shopee bg-gray-50 font-bold shadow-inner transition text-sm">
                 </div>
                 
                 <div class="text-right">
-                    <button type="button" onclick="switchAuthView('forgot')" class="text-sm text-shopee font-bold hover:underline">Lupa Password?</button>
+                    <button type="button" onclick="switchAuthView('forgot')" class="text-xs text-blue-500 font-bold hover:text-blue-700 transition">Lupa Password?</button>
                 </div>
                 
-                <button type="submit" id="btnLogin" class="w-full bg-shopee text-white py-3 rounded-lg font-bold text-lg hover:bg-shopeeHover shadow-md transition mt-2">
-                    Masuk
+                <button type="submit" id="btnLogin" class="btn-3d w-full bg-gradient-to-b from-[#f36b4e] to-[#ee4d2d] text-white py-3.5 rounded-xl font-bold text-lg hover:from-[#f05c3d] hover:to-[#d73211] shadow-[0_5px_0_0_#be3118] transition mt-2 tracking-wider">
+                    LOG IN
                 </button>
             </form>
 
-            <div class="mt-8 pt-6 border-t border-gray-200 text-center">
-                <p class="text-sm text-gray-600 mb-3">Belum menjadi mitra?</p>
-                <button type="button" onclick="switchAuthView('register')" class="w-full border-2 border-shopee text-shopee py-3 rounded-lg font-bold text-lg hover:bg-orange-50 transition">
+            <div class="mt-8 pt-6 border-t-2 border-gray-50 text-center">
+                <p class="text-sm text-gray-600 mb-3 font-semibold">Belum menjadi mitra?</p>
+                <button type="button" onclick="switchAuthView('register')" class="btn-3d w-full bg-white border-2 border-shopee text-shopee py-3.5 rounded-xl font-bold text-base hover:bg-orange-50 shadow-[0_4px_0_0_#ee4d2d] transition">
                     Daftar Mitra Pengemudi
                 </button>
             </div>
@@ -72,67 +107,79 @@
 
         <!-- REGISTER VIEW -->
         <div id="view-register" class="hidden flex-col min-h-full px-6 py-8">
-            <button type="button" onclick="switchAuthView('login')" class="text-gray-500 mb-6 flex items-center gap-2 hover:text-shopee w-fit">
+            <button type="button" onclick="switchAuthView('login')" class="text-gray-500 mb-6 flex items-center gap-2 hover:text-shopee w-fit font-bold bg-gray-100 px-4 py-2 rounded-full">
                 <i class="fas fa-arrow-left"></i> Kembali
             </button>
             
-            <h1 class="text-2xl font-bold text-gray-800 mb-2">Registrasi Mitra</h1>
-            <p class="text-sm text-gray-500 mb-6">Lengkapi data diri & kendaraan Anda di bawah ini.</p>
+            <h1 class="text-2xl font-extrabold text-gray-800 mb-2 tracking-tight">Registrasi Mitra</h1>
+            <p class="text-sm text-gray-500 mb-6 font-medium">Lengkapi data diri & kendaraan Anda di bawah ini.</p>
             
-            <form onsubmit="handleRegister(event)" class="flex flex-col gap-4 pb-10">
+            <form onsubmit="handleRegister(event)" class="flex flex-col gap-5 pb-10">
                 <!-- Data Diri -->
-                <h2 class="font-bold text-shopee border-b pb-1 mt-2">Data Diri</h2>
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">Nama Lengkap Sesuai KTP</label>
-                    <input type="text" id="regName" required placeholder="Contoh: Budi Santoso" class="w-full px-4 py-2 border rounded-lg outline-none focus:border-shopee bg-gray-50">
-                </div>
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">NIK (Nomor KTP)</label>
-                    <input type="number" id="regNik" required placeholder="16 Digit NIK" class="w-full px-4 py-2 border rounded-lg outline-none focus:border-shopee bg-gray-50">
-                </div>
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">Nomor HP Aktif</label>
-                    <input type="tel" id="regPhone" required placeholder="0812..." class="w-full px-4 py-2 border rounded-lg outline-none focus:border-shopee bg-gray-50">
-                </div>
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">Email Aktif</label>
-                    <input type="email" id="regEmail" required placeholder="email@contoh.com" class="w-full px-4 py-2 border rounded-lg outline-none focus:border-shopee bg-gray-50">
-                </div>
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">Buat Password</label>
-                    <input type="password" id="regPass" required placeholder="Minimal 6 karakter" class="w-full px-4 py-2 border rounded-lg outline-none focus:border-shopee bg-gray-50">
+                <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 shadow-sm">
+                    <h2 class="font-black text-shopee border-b border-gray-200 pb-2 mb-3"><i class="fas fa-user-circle mr-2"></i>Data Diri</h2>
+                    <div class="flex flex-col gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">Nama Lengkap Sesuai KTP</label>
+                            <input type="text" id="regName" required placeholder="Contoh: Budi Santoso" class="w-full px-3 py-2.5 border-2 border-white rounded-xl outline-none focus:border-shopee bg-white shadow-inner text-sm font-semibold">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">NIK (Nomor KTP)</label>
+                            <input type="number" id="regNik" required placeholder="16 Digit NIK" class="w-full px-3 py-2.5 border-2 border-white rounded-xl outline-none focus:border-shopee bg-white shadow-inner text-sm font-semibold">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">Nomor HP Aktif</label>
+                            <input type="tel" id="regPhone" required placeholder="0812..." class="w-full px-3 py-2.5 border-2 border-white rounded-xl outline-none focus:border-shopee bg-white shadow-inner text-sm font-semibold">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">Email Aktif</label>
+                            <input type="email" id="regEmail" required placeholder="email@contoh.com" class="w-full px-3 py-2.5 border-2 border-white rounded-xl outline-none focus:border-shopee bg-white shadow-inner text-sm font-semibold">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">Buat Password</label>
+                            <input type="password" id="regPass" required placeholder="Minimal 6 karakter" class="w-full px-3 py-2.5 border-2 border-white rounded-xl outline-none focus:border-shopee bg-white shadow-inner text-sm font-semibold">
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Data Kendaraan -->
-                <h2 class="font-bold text-shopee border-b pb-1 mt-4">Data Kendaraan</h2>
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">Jenis Kendaraan</label>
-                    <select id="regVehicle" required class="w-full px-4 py-2 border rounded-lg outline-none focus:border-shopee bg-gray-50">
-                        <option value="Motor">Motor</option>
-                        <option value="Mobil">Mobil (Gocar/Food)</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">Plat Nomor Kendaraan</label>
-                    <input type="text" id="regPlate" required placeholder="Contoh: B 1234 ABC" class="w-full px-4 py-2 border rounded-lg outline-none focus:border-shopee bg-gray-50 uppercase">
+                <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 shadow-sm">
+                    <h2 class="font-black text-shopee border-b border-gray-200 pb-2 mb-3"><i class="fas fa-motorcycle mr-2"></i>Data Kendaraan</h2>
+                    <div class="flex flex-col gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">Jenis Kendaraan</label>
+                            <select id="regVehicle" required class="w-full px-3 py-2.5 border-2 border-white rounded-xl outline-none focus:border-shopee bg-white shadow-inner text-sm font-semibold cursor-pointer">
+                                <option value="Motor">Motor</option>
+                                <option value="Mobil">Mobil (Gocar/Food)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">Plat Nomor Kendaraan</label>
+                            <input type="text" id="regPlate" required placeholder="Contoh: B 1234 ABC" class="w-full px-3 py-2.5 border-2 border-white rounded-xl outline-none focus:border-shopee bg-white shadow-inner text-sm font-bold uppercase tracking-wider">
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Dokumen Foto -->
-                <h2 class="font-bold text-shopee border-b pb-1 mt-4">Unggah Dokumen</h2>
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">Foto KTP Asli</label>
-                    <input type="file" id="regKtpImg" accept="image/*" required class="w-full px-3 py-2 border rounded-lg outline-none focus:border-shopee bg-white text-sm">
-                    <p class="text-[10px] text-gray-500 mt-1"><i class="fas fa-info-circle"></i> Pastikan foto terang, tulisan KTP terbaca jelas, dan tidak terpotong.</p>
-                </div>
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">Foto Wajah (Selfie/Profil)</label>
-                    <input type="file" id="regFaceImg" accept="image/*" required class="w-full px-3 py-2 border rounded-lg outline-none focus:border-shopee bg-white text-sm">
-                    <p class="text-[10px] text-gray-500 mt-1"><i class="fas fa-info-circle"></i> Gunakan pakaian rapi, wajah terlihat jelas, tanpa kacamata hitam atau masker.</p>
+                <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 shadow-sm">
+                    <h2 class="font-black text-shopee border-b border-gray-200 pb-2 mb-3"><i class="fas fa-id-card mr-2"></i>Unggah Dokumen</h2>
+                    <div class="flex flex-col gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">Foto KTP Asli</label>
+                            <input type="file" id="regKtpImg" accept="image/*" required class="w-full px-3 py-2 border-2 border-white rounded-xl outline-none focus:border-shopee bg-white text-xs font-medium cursor-pointer">
+                            <p class="text-[9px] text-gray-500 mt-1.5"><i class="fas fa-info-circle text-blue-400"></i> Pastikan foto terang, tulisan KTP terbaca jelas, dan tidak terpotong.</p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">Foto Wajah (Selfie/Profil)</label>
+                            <input type="file" id="regFaceImg" accept="image/*" required class="w-full px-3 py-2 border-2 border-white rounded-xl outline-none focus:border-shopee bg-white text-xs font-medium cursor-pointer">
+                            <p class="text-[9px] text-gray-500 mt-1.5"><i class="fas fa-info-circle text-blue-400"></i> Gunakan pakaian rapi, wajah terlihat jelas, tanpa kacamata hitam/masker.</p>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="mt-6">
-                    <button type="submit" id="btnRegister" class="w-full bg-shopee text-white py-3 rounded-lg font-bold text-lg hover:bg-shopeeHover shadow-md transition">
-                        Kirim Pendaftaran
+                <div class="mt-4">
+                    <button type="submit" id="btnRegister" class="btn-3d w-full bg-gradient-to-b from-[#f36b4e] to-[#ee4d2d] text-white py-3.5 rounded-xl font-bold text-lg hover:from-[#f05c3d] hover:to-[#d73211] shadow-[0_5px_0_0_#be3118] transition flex items-center justify-center gap-2">
+                        <i class="fas fa-paper-plane drop-shadow-md"></i> Kirim Pendaftaran
                     </button>
                 </div>
             </form>
@@ -140,21 +187,23 @@
 
         <!-- FORGOT PASSWORD VIEW -->
         <div id="view-forgot" class="hidden flex-col h-full px-8 justify-center pb-20">
-            <button type="button" onclick="switchAuthView('login')" class="text-gray-500 mb-6 flex items-center gap-2 hover:text-shopee w-fit">
+            <button type="button" onclick="switchAuthView('login')" class="text-gray-500 mb-6 flex items-center gap-2 hover:text-shopee w-fit font-bold bg-gray-100 px-4 py-2 rounded-full">
                 <i class="fas fa-arrow-left"></i> Kembali ke Login
             </button>
             
-            <i class="fas fa-unlock-alt text-shopee text-5xl mb-4 text-center"></i>
-            <h1 class="text-2xl font-bold text-gray-800 text-center mb-2">Lupa Password?</h1>
-            <p class="text-sm text-gray-500 text-center mb-8">Masukkan email yang terdaftar pada akun Anda. Kami akan mengirimkan password baru ke email tersebut.</p>
+            <div class="w-20 h-20 bg-blue-50 rounded-full mx-auto flex justify-center items-center mb-4">
+                <i class="fas fa-unlock-alt text-blue-500 text-4xl drop-shadow-sm"></i>
+            </div>
+            <h1 class="text-2xl font-extrabold text-gray-800 text-center mb-2 tracking-tight">Lupa Password?</h1>
+            <p class="text-sm text-gray-500 text-center mb-8 font-medium">Masukkan email yang terdaftar. Kami akan mengirimkan password baru ke email tersebut.</p>
             
             <form onsubmit="handleForgot(event)" class="flex flex-col gap-4">
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">Email</label>
-                    <input type="email" id="forgotEmail" required placeholder="email@contoh.com" class="w-full px-4 py-3 border rounded-lg outline-none focus:border-shopee bg-gray-50">
+                    <label class="block text-xs font-bold text-gray-500 mb-1 uppercase tracking-wider">Alamat Email</label>
+                    <input type="email" id="forgotEmail" required placeholder="email@contoh.com" class="w-full px-4 py-3.5 border-2 border-gray-100 rounded-xl outline-none focus:border-blue-500 bg-gray-50 font-bold shadow-inner transition text-sm">
                 </div>
                 
-                <button type="submit" id="btnForgot" class="w-full bg-shopee text-white py-3 rounded-lg font-bold text-lg hover:bg-shopeeHover shadow-md transition mt-4">
+                <button type="submit" id="btnForgot" class="btn-3d w-full bg-gradient-to-b from-[#4299e1] to-[#2b6cb0] text-white py-3.5 rounded-xl font-bold text-lg hover:from-[#3182ce] hover:to-[#2c5282] shadow-[0_5px_0_0_#1e3a8a] transition mt-2">
                     Kirim Password Baru
                 </button>
             </form>
@@ -162,16 +211,19 @@
     </div>
 
     <!-- ================= MAIN APP VIEW ================= -->
-    <div id="app-container" class="hidden flex-col h-full w-full relative pb-16">
+    <div id="app-container" class="hidden flex-col h-full w-full relative pb-28"> <!-- pb-28 untuk ruang floating nav -->
 
     <!-- HEADER DRIVER -->
-    <header class="bg-white shadow-sm z-50 sticky top-0">
-        <div class="flex justify-between items-center px-4 py-3 border-b">
+    <header class="bg-gradient-to-r from-white to-gray-50 shadow-md z-40 sticky top-0 border-b border-gray-200">
+        <div class="flex justify-between items-center px-4 py-3">
             <div class="flex items-center gap-3">
-                <img src="https://placehold.co/100x100/333/white?text=Driver" alt="Profile" class="w-10 h-10 rounded-full object-cover border-2 border-shopee" id="userProfileImage">
+                <div class="relative">
+                    <img src="https://placehold.co/100x100/333/white?text=Driver" alt="Profile" class="w-12 h-12 rounded-full object-cover border-2 border-white shadow-md" id="userProfileImage">
+                    <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+                </div>
                 <div>
-                    <div class="font-bold text-sm" id="userProfileName">Mitra Kurir</div>
-                    <div class="text-xs text-gray-500 flex items-center gap-1">
+                    <div class="font-extrabold text-gray-800 tracking-tight" id="userProfileName">Mitra Kurir</div>
+                    <div class="text-[10px] text-gray-500 flex items-center gap-1 font-semibold bg-white px-2 py-0.5 rounded-full border border-gray-100 shadow-sm w-fit mt-0.5">
                         <i class="fas fa-star text-yellow-400"></i> Baru (0 Antaran)
                     </div>
                 </div>
@@ -179,23 +231,23 @@
             
             <!-- Toggle Online/Offline -->
             <div class="flex flex-col items-end">
-                <div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
-                    <input type="checkbox" name="toggle" id="onlineToggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer z-10 transition-transform duration-200 ease-in-out" checked/>
-                    <label for="onlineToggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-green-400 cursor-pointer transition-colors duration-200 ease-in-out"></label>
+                <div class="relative inline-block w-12 align-middle select-none transition duration-200 ease-in mt-1">
+                    <input type="checkbox" name="toggle" id="onlineToggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer z-10 transition-transform duration-200 ease-in-out shadow-sm" checked/>
+                    <label for="onlineToggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-green-400 cursor-pointer transition-colors duration-200 ease-in-out shadow-inner"></label>
                 </div>
-                <span id="statusText" class="text-[10px] font-bold text-green-600 mt-1 mr-2 uppercase">Online</span>
+                <span id="statusText" class="text-[10px] font-black text-green-600 mt-1.5 tracking-wider uppercase">ONLINE</span>
             </div>
         </div>
 
         <!-- Earning Dashboard -->
-        <div class="bg-shopee text-white p-4 flex justify-between items-center">
+        <div class="bg-gradient-to-r from-shopee to-[#ff7337] text-white p-4 flex justify-between items-center shadow-inner">
             <div>
-                <div class="text-xs opacity-80 mb-1">Pendapatan Hari Ini</div>
-                <div class="text-xl font-bold">Rp 0</div>
+                <div class="text-[10px] font-bold opacity-90 mb-0.5 uppercase tracking-wider">Pendapatan Hari Ini</div>
+                <div class="text-2xl font-black drop-shadow-md">Rp 0</div>
             </div>
-            <div class="text-right">
-                <div class="text-xs opacity-80 mb-1">Total Antaran</div>
-                <div class="text-xl font-bold">0</div>
+            <div class="text-right border-l border-white/30 pl-4">
+                <div class="text-[10px] font-bold opacity-90 mb-0.5 uppercase tracking-wider">Total Antaran</div>
+                <div class="text-2xl font-black drop-shadow-md">0</div>
             </div>
         </div>
     </header>
@@ -205,68 +257,95 @@
         
         <!-- SECTION: TUGAS BARU (New Orders) -->
         <section id="section-new" class="p-4 block">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="font-bold text-gray-700">Tugas Masuk</h2>
-                <button class="text-shopee text-xs font-bold" onclick="refreshOrders()"><i class="fas fa-sync-alt mr-1"></i> Perbarui</button>
+            <div class="flex justify-between items-center mb-4 bg-white p-3 rounded-xl shadow-sm border border-gray-100">
+                <h2 class="font-black text-gray-800 text-lg flex items-center gap-2"><i class="fas fa-bolt text-yellow-400"></i> Tugas Masuk</h2>
+                <!-- Sync Indicator -->
+                <div class="flex items-center gap-2 bg-orange-50 px-3 py-1.5 rounded-full border border-orange-100 shadow-inner font-bold text-shopee text-[10px]">
+                    <i class="fas fa-sync-alt" id="sync-icon"></i>
+                    <span id="sync-time">Live Sync Aktif</span>
+                </div>
             </div>
 
             <!-- Kontainer Dinamis untuk Pesanan Asli -->
-            <div id="new-orders-container">
-                <div class="text-center py-10 text-gray-400 text-sm">
-                    <i class="fas fa-motorcycle text-4xl mb-3 opacity-50"></i>
-                    <p>Mencari tugas baru... Tekan 'Perbarui'.</p>
+            <div id="new-orders-container" class="flex flex-col gap-4">
+                <div class="text-center py-16 text-gray-400 font-bold bg-white rounded-2xl border border-gray-100 shadow-sm">
+                    <i class="fas fa-spinner fa-spin text-4xl mb-3 text-shopee"></i>
+                    <p>Mencari tugas baru...</p>
                 </div>
             </div>
         </section>
 
         <!-- SECTION: AKTIF (Active Delivery) -->
-        <section id="section-active" class="hidden h-full flex flex-col bg-white">
+        <section id="section-active" class="hidden h-full flex flex-col bg-[#f9f9f9]">
             
-            <!-- Map Live Terkoneksi Database -->
-            <div class="w-full h-48 bg-gray-300 relative border-b">
-                <iframe id="live-map-iframe" width="100%" height="100%" frameborder="0" style="border:0;" src="" allowfullscreen></iframe>
-                <div onclick="openGoogleMaps()" class="absolute top-2 right-2 bg-white px-3 py-1.5 rounded-full shadow text-xs font-bold flex items-center gap-2 cursor-pointer hover:bg-gray-50 z-10">
-                    <i class="fas fa-location-arrow text-blue-500"></i> Buka Maps
+            <!-- Map Routing Interaktif (Leaflet Routing Machine) -->
+            <div class="w-full h-64 relative border-b-4 border-shopee shadow-sm shrink-0 bg-gray-200">
+                <div id="live-map-leaflet" class="w-full h-full z-0"></div>
+                
+                <!-- Indikator Estimasi Jarak & Waktu -->
+                <div class="absolute top-3 left-3 bg-white/95 backdrop-blur-sm px-4 py-2 rounded-xl shadow-[0_5px_15px_rgba(0,0,0,0.15)] z-[10] border border-gray-200 flex flex-col">
+                    <span class="text-[10px] font-extrabold text-gray-500 uppercase tracking-wider mb-0.5">Estimasi Perjalanan</span>
+                    <span class="text-shopee font-black text-base drop-shadow-sm flex items-center gap-1" id="route-info">
+                        <i class="fas fa-spinner fa-spin text-sm"></i> Menghitung...
+                    </span>
                 </div>
+
+                <!-- Tombol Buka Navigasi Google Maps -->
+                <button onclick="openGoogleMapsNav()" class="btn-3d absolute bottom-4 right-4 bg-gradient-to-b from-[#4299e1] to-[#2b6cb0] text-white px-5 py-3 rounded-2xl shadow-[0_5px_0_0_#1e3a8a] text-xs font-extrabold flex items-center gap-2 hover:from-[#3182ce] hover:to-[#2c5282] z-[10]">
+                    <i class="fas fa-location-arrow text-white text-lg drop-shadow-md"></i> Buka Navigasi
+                </button>
             </div>
 
             <!-- Active Order Details -->
-            <div class="p-4 flex-1 overflow-y-auto">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="font-bold text-lg">Detail Antaran</h2>
-                    <span class="bg-orange-100 text-shopee px-2 py-1 text-xs font-bold rounded" id="order-status-badge">Menuju Outlet</span>
+            <div class="p-4 flex-1 overflow-y-auto flex flex-col">
+                <div class="flex justify-between items-center mb-4 bg-white p-3 rounded-xl shadow-sm border border-gray-100">
+                    <h2 class="font-black text-gray-800 text-lg"><i class="fas fa-motorcycle text-shopee mr-1"></i> Detail Antaran</h2>
+                    <span class="bg-gradient-to-r from-orange-100 to-orange-50 border border-orange-200 text-shopee px-3 py-1 text-[10px] font-black tracking-widest uppercase rounded-full shadow-inner" id="order-status-badge">Menuju Outlet</span>
                 </div>
 
                 <!-- Info Resto -->
-                <div class="border rounded-lg p-3 mb-3 bg-gray-50">
-                    <div class="flex justify-between items-center mb-2">
-                        <div class="font-bold text-sm flex items-center gap-2">
-                            <i class="fas fa-store text-shopee"></i> <span id="active-outlet-name">Memuat...</span>
+                <div class="bg-white rounded-2xl p-4 mb-3 border border-gray-100 shadow-sm relative overflow-hidden">
+                    <div class="absolute -right-2 -top-2 text-orange-50 opacity-50"><i class="fas fa-store text-6xl"></i></div>
+                    <div class="flex justify-between items-start mb-2 relative z-10">
+                        <div>
+                            <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Lokasi Penjemputan</div>
+                            <div class="font-extrabold text-base flex items-center gap-2 text-gray-800">
+                                <span id="active-outlet-name">Memuat...</span>
+                            </div>
+                            <div class="text-xs font-medium text-gray-600 mt-1 leading-tight pr-10" id="active-outlet-address">Menunggu lokasi outlet...</div>
                         </div>
-                        <a href="#" id="btn-call-seller" class="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center"><i class="fas fa-phone-alt"></i></a>
+                        <a href="#" id="btn-call-seller" class="btn-3d w-10 h-10 shrink-0 rounded-full bg-green-50 text-green-500 flex items-center justify-center border border-green-100 shadow-sm hover:bg-green-100"><i class="fas fa-phone-alt"></i></a>
                     </div>
-                    <div class="text-xs text-gray-600 mb-2" id="active-outlet-address">Menunggu lokasi outlet...</div>
-                    <div class="text-xs font-bold text-gray-800 border-t pt-2" id="active-product-details">Pesanan: -</div>
+                    <div class="text-sm font-bold text-gray-800 border-t border-dashed border-gray-200 mt-3 pt-3 relative z-10" id="active-product-details">
+                        <i class="fas fa-shopping-bag text-shopee mr-1"></i> Pesanan: -
+                    </div>
                 </div>
 
                 <!-- Info Customer -->
-                <div class="border rounded-lg p-3 mb-6 bg-gray-50">
-                    <div class="flex justify-between items-center mb-2">
-                        <div class="font-bold text-sm flex items-center gap-2">
-                            <i class="fas fa-user text-blue-500"></i> <span id="active-customer-name">Memuat...</span>
+                <div class="bg-white rounded-2xl p-4 mb-6 border border-gray-100 shadow-sm relative overflow-hidden">
+                    <div class="absolute -right-2 -top-2 text-blue-50 opacity-50"><i class="fas fa-user-circle text-6xl"></i></div>
+                    <div class="flex justify-between items-start mb-2 relative z-10">
+                        <div>
+                            <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Lokasi Pengantaran</div>
+                            <div class="font-extrabold text-base flex items-center gap-2 text-gray-800">
+                                <span id="active-customer-name">Memuat...</span>
+                            </div>
+                            <div class="text-xs font-medium text-gray-600 mt-1 leading-tight pr-10" id="active-customer-address">Menunggu alamat tujuan...</div>
                         </div>
-                        <div class="flex gap-2">
-                            <a href="#" id="btn-chat-buyer" class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center"><i class="fas fa-comment-alt"></i></a>
-                            <a href="#" id="btn-call-buyer" class="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center"><i class="fas fa-phone-alt"></i></a>
+                        <div class="flex gap-2 shrink-0">
+                            <a href="#" id="btn-chat-buyer" class="btn-3d w-10 h-10 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center border border-blue-100 shadow-sm hover:bg-blue-100"><i class="fas fa-comment-alt"></i></a>
+                            <a href="#" id="btn-call-buyer" class="btn-3d w-10 h-10 rounded-full bg-green-50 text-green-500 flex items-center justify-center border border-green-100 shadow-sm hover:bg-green-100"><i class="fas fa-phone-alt"></i></a>
                         </div>
                     </div>
-                    <div class="text-xs text-gray-600 mb-1" id="active-customer-address">Menunggu alamat tujuan...</div>
-                    <div class="text-xs text-gray-800 font-bold mt-2 pt-2 border-t" id="active-total-price">Total Tagihan: Rp 0</div>
+                    <div class="flex justify-between items-center border-t border-dashed border-gray-200 mt-3 pt-3 relative z-10">
+                        <span class="text-xs font-bold text-gray-500">Tagihan Pembeli:</span>
+                        <span class="text-base font-black text-shopee" id="active-total-price">Rp 0</span>
+                    </div>
                 </div>
 
                 <!-- Action Button -->
-                <div id="action-container" class="mt-auto">
-                    <button id="btnAction" onclick="updateOrderStatus()" class="w-full bg-shopee text-white py-3.5 rounded-lg font-bold text-lg hover:bg-shopeeHover shadow-md transition active:scale-95">
+                <div id="action-container" class="mt-auto pt-2">
+                    <button id="btnAction" onclick="updateOrderStatus()" class="btn-3d w-full bg-gradient-to-b from-[#f36b4e] to-[#ee4d2d] text-white py-4 rounded-xl font-black text-lg hover:from-[#f05c3d] hover:to-[#d73211] shadow-[0_5px_0_0_#be3118] tracking-wide">
                         Saya Sudah di Outlet
                     </button>
                 </div>
@@ -275,70 +354,109 @@
 
         <!-- SECTION: RIWAYAT (History) -->
         <section id="section-history" class="hidden p-4">
-            <h2 class="font-bold text-gray-700 mb-4">Riwayat Antaran</h2>
-            <div id="history-container">
+            <div class="flex justify-between items-center mb-4 bg-white p-3 rounded-xl shadow-sm border border-gray-100">
+                <h2 class="font-black text-gray-800 text-lg"><i class="fas fa-clipboard-check text-blue-500 mr-1"></i> Riwayat Antaran</h2>
+            </div>
+            <div id="history-container" class="flex flex-col gap-3">
                 <!-- Riwayat dinamis akan muncul di sini -->
             </div>
         </section>
 
         <!-- SECTION: PROFIL (Profile) -->
         <section id="section-profile" class="hidden p-4">
-            <h2 class="font-bold text-gray-700 mb-4">Profil Mitra Kurir</h2>
+            <div class="flex justify-between items-center mb-4 bg-white p-3 rounded-xl shadow-sm border border-gray-100">
+                <h2 class="font-black text-gray-800 text-lg"><i class="fas fa-id-card text-shopee mr-1"></i> Profil Mitra</h2>
+            </div>
             
-            <div class="bg-white rounded-lg shadow-sm border p-4 mb-6">
-                <div class="flex items-center gap-4 mb-4 border-b pb-4">
-                    <img src="https://placehold.co/100x100/333/white?text=Profil" id="profDetailImage" class="w-16 h-16 rounded-full object-cover border-2 border-gray-200">
-                    <div>
-                        <div id="profDetailName" class="font-bold text-lg text-gray-800">Nama Kurir</div>
-                        <div id="profDetailPhone" class="text-gray-500 text-sm">08xxxxxx</div>
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-6">
+                <div class="flex items-center gap-5 mb-5 border-b border-gray-100 pb-5">
+                    <!-- FOTO PROFIL DENGAN FITUR EDIT -->
+                    <div class="relative inline-block shrink-0">
+                        <img src="https://placehold.co/100x100/333/white?text=Profil" id="profDetailImage" class="w-20 h-20 rounded-full object-cover border-4 border-gray-50 shadow-md">
+                        <!-- Input File Tersembunyi -->
+                        <input type="file" id="driverImgInput" accept="image/*" class="hidden" onchange="uploadProfileImage(event)">
+                        <!-- Tombol Kamera (Label memicu Input) -->
+                        <label for="driverImgInput" id="btnEditPhoto" class="btn-3d absolute bottom-0 right-[-5px] bg-shopee text-white w-8 h-8 rounded-full flex items-center justify-center cursor-pointer shadow-[0_2px_5px_rgba(0,0,0,0.2)] border-2 border-white hover:bg-shopeeHover" title="Ubah Foto Profil">
+                            <i class="fas fa-camera text-xs"></i>
+                        </label>
+                    </div>
+                    <div class="w-full">
+                        <div id="profDetailName" class="font-black text-xl text-gray-800 tracking-tight leading-tight mb-1">Nama Kurir</div>
+                        <div class="text-[10px] font-bold text-shopee bg-orange-50 px-2 py-0.5 rounded border border-orange-100 inline-block mb-1">Mitra Aktif</div>
+                        <div id="profDetailPhone" class="text-gray-500 text-xs font-semibold"><i class="fas fa-phone-alt text-[10px] mr-1"></i> 08xxxxxx</div>
                     </div>
                 </div>
                 
-                <div class="grid grid-cols-2 gap-y-4 gap-x-2 text-sm">
-                    <div>
-                        <span class="text-gray-500 block text-xs">ID Mitra</span>
-                        <span id="profDetailId" class="font-semibold text-gray-800">-</span>
+                <div class="grid grid-cols-1 gap-3">
+                    <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-gray-400 shadow-sm"><i class="fas fa-fingerprint"></i></div>
+                            <div>
+                                <span class="text-gray-400 block text-[10px] font-bold uppercase tracking-wider">ID Mitra</span>
+                                <span id="profDetailId" class="font-extrabold text-gray-800 text-sm">-</span>
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <span class="text-gray-500 block text-xs">Email</span>
-                        <span id="profDetailEmail" class="font-semibold text-gray-800 line-clamp-1">-</span>
+                    <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-gray-400 shadow-sm"><i class="fas fa-envelope"></i></div>
+                            <div class="overflow-hidden">
+                                <span class="text-gray-400 block text-[10px] font-bold uppercase tracking-wider">Email Terdaftar</span>
+                                <span id="profDetailEmail" class="font-extrabold text-gray-800 text-sm truncate block">-</span>
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <span class="text-gray-500 block text-xs">Jenis Kendaraan</span>
-                        <span id="profDetailVehicle" class="font-semibold text-gray-800">-</span>
-                    </div>
-                    <div>
-                        <span class="text-gray-500 block text-xs">Plat Nomor</span>
-                        <span id="profDetailPlate" class="font-semibold text-gray-800 uppercase">-</span>
+                    <div class="flex gap-3">
+                        <div class="bg-blue-50 p-3 rounded-xl border border-blue-100 flex-1">
+                            <span class="text-blue-400 block text-[10px] font-bold uppercase tracking-wider mb-1"><i class="fas fa-motorcycle mr-1"></i>Kendaraan</span>
+                            <span id="profDetailVehicle" class="font-extrabold text-blue-800 text-sm">-</span>
+                        </div>
+                        <div class="bg-yellow-50 p-3 rounded-xl border border-yellow-100 flex-1">
+                            <span class="text-yellow-500 block text-[10px] font-bold uppercase tracking-wider mb-1"><i class="fas fa-id-card mr-1"></i>Plat Nomor</span>
+                            <span id="profDetailPlate" class="font-extrabold text-yellow-800 text-sm uppercase tracking-widest">-</span>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <button onclick="handleLogout()" class="w-full bg-red-100 text-red-600 py-3 rounded-lg font-bold text-base hover:bg-red-200 transition flex justify-center items-center gap-2">
-                <i class="fas fa-sign-out-alt"></i> Keluar / Log Out
+            <button onclick="handleLogout()" class="btn-3d w-full bg-red-50 text-red-600 border-2 border-red-200 py-3.5 rounded-xl font-black text-base hover:bg-red-100 shadow-[0_4px_0_0_#fca5a5] flex justify-center items-center gap-2">
+                <i class="fas fa-sign-out-alt"></i> KELUAR AKUN
             </button>
         </section>
 
     </main>
 
-    <!-- BOTTOM NAVIGATION -->
-    <nav class="fixed bottom-0 w-full md:max-w-md bg-white border-t flex justify-around text-[10px] text-gray-500 pb-3 pt-2 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-50">
-        <div onclick="switchTab('new')" class="flex flex-col items-center cursor-pointer py-1 mobile-nav-item text-shopee w-1/4" data-target="new">
-            <i class="fas fa-motorcycle text-xl mb-1"></i>
-            <span>Tugas Baru</span>
+    <!-- BOTTOM NAVIGATION (3D FLOATING NAV) DENGAN EFEK WARNA ORANYE SAAT AKTIF -->
+    <nav class="fixed bottom-4 left-1/2 transform -translate-x-1/2 w-[calc(100%-2rem)] md:max-w-[calc(28rem-2rem)] bg-white/90 backdrop-blur-xl border border-white flex justify-around items-end text-[10px] text-gray-500 pb-2 pt-2 shadow-[0_10px_30px_rgba(0,0,0,0.15)] rounded-3xl z-50 h-[70px]">
+        <div class="absolute inset-0 bg-gradient-to-t from-transparent to-white/80 rounded-3xl pointer-events-none"></div>
+
+        <div onclick="switchTab('new')" class="flex flex-col items-center cursor-pointer w-1/4 relative z-10 group transition-all mobile-nav-item" data-target="new">
+            <div class="nav-icon-container w-12 h-12 flex items-center justify-center transform group-hover:-translate-y-6 group-hover:shadow-[0_8px_15px_rgba(238,77,45,0.2)] group-hover:border-[3px] border-white rounded-full transition-all duration-300 relative group-active:scale-90 bg-white">
+                <i class="nav-icon fas fa-motorcycle text-2xl drop-shadow-sm text-gray-400 transition-colors"></i>
+            </div>
+            <span class="nav-text font-bold mt-1 group-hover:opacity-0 transition-opacity duration-300">Tugas Baru</span>
         </div>
-        <div onclick="switchTab('active')" class="flex flex-col items-center cursor-pointer py-1 mobile-nav-item hover:text-shopee w-1/4 relative" data-target="active">
-            <i class="fas fa-map-marked-alt text-xl mb-1"></i>
-            <span id="activeBadge" class="hidden absolute top-0 right-3 bg-shopee text-white text-[8px] px-1.5 rounded-full border border-white">1</span>
-            <span>Aktif</span>
+        
+        <div onclick="switchTab('active')" class="flex flex-col items-center cursor-pointer w-1/4 relative z-10 group transition-all mobile-nav-item" data-target="active">
+            <div class="nav-icon-container w-12 h-12 flex items-center justify-center transform group-hover:-translate-y-6 group-hover:shadow-[0_8px_15px_rgba(238,77,45,0.2)] group-hover:border-[3px] border-white rounded-full transition-all duration-300 relative group-active:scale-90 bg-white">
+                <i class="nav-icon fas fa-map-marked-alt text-2xl drop-shadow-sm text-gray-400 transition-colors"></i>
+                <span id="activeBadge" class="hidden absolute -top-1 -right-1 bg-shopee text-white text-[9px] font-black px-1.5 py-0.5 rounded-full shadow-[0_2px_5px_rgba(238,77,45,0.5)] border border-white">1</span>
+            </div>
+            <span class="nav-text font-bold mt-1 group-hover:opacity-0 transition-opacity duration-300">Aktif</span>
         </div>
-        <div onclick="switchTab('history')" class="flex flex-col items-center cursor-pointer py-1 mobile-nav-item hover:text-shopee w-1/4" data-target="history">
-            <i class="fas fa-clipboard-check text-xl mb-1"></i>
-            <span>Riwayat</span>
+
+        <div onclick="switchTab('history')" class="flex flex-col items-center cursor-pointer w-1/4 relative z-10 group transition-all mobile-nav-item" data-target="history">
+            <div class="nav-icon-container w-12 h-12 flex items-center justify-center transform group-hover:-translate-y-6 group-hover:shadow-[0_8px_15px_rgba(238,77,45,0.2)] group-hover:border-[3px] border-white rounded-full transition-all duration-300 relative group-active:scale-90 bg-white">
+                <i class="nav-icon fas fa-clipboard-check text-2xl drop-shadow-sm text-gray-400 transition-colors"></i>
+            </div>
+            <span class="nav-text font-bold mt-1 group-hover:opacity-0 transition-opacity duration-300">Riwayat</span>
         </div>
-        <div onclick="switchTab('profile')" class="flex flex-col items-center cursor-pointer py-1 mobile-nav-item hover:text-shopee w-1/4" data-target="profile">
-            <i class="fas fa-user-circle text-xl mb-1"></i>
-            <span>Profil</span>
+
+        <div onclick="switchTab('profile')" class="flex flex-col items-center cursor-pointer w-1/4 relative z-10 group transition-all mobile-nav-item" data-target="profile">
+            <div class="nav-icon-container w-12 h-12 flex items-center justify-center transform group-hover:-translate-y-6 group-hover:shadow-[0_8px_15px_rgba(238,77,45,0.2)] group-hover:border-[3px] border-white rounded-full transition-all duration-300 relative group-active:scale-90 bg-white">
+                <i class="nav-icon fas fa-user-circle text-2xl drop-shadow-sm text-gray-400 transition-colors"></i>
+            </div>
+            <span class="nav-text font-bold mt-1 group-hover:opacity-0 transition-opacity duration-300">Profil</span>
         </div>
     </nav>
 
@@ -346,17 +464,115 @@
 
     <!-- JAVASCRIPT LOGIC -->
     <script>
+        // --- CUSTOM MODAL SYSTEM (MENGATASI BLOKIR IFRAME & TAMPILAN MODERN) ---
+        function openModalAnim() {
+            const m = document.getElementById('customModal');
+            const c = document.getElementById('customModalContent');
+            m.classList.remove('hidden');
+            setTimeout(() => { m.classList.remove('opacity-0'); c.classList.remove('scale-95'); }, 10);
+        }
+        function closeModalAnim() {
+            const m = document.getElementById('customModal');
+            const c = document.getElementById('customModalContent');
+            m.classList.add('opacity-0'); c.classList.add('scale-95');
+            setTimeout(() => { m.classList.add('hidden'); }, 300);
+        }
+
+        window.alert = function(message) {
+            showCustomAlert(message);
+        };
+
+        function showCustomAlert(message, type = "info") {
+            return new Promise((resolve) => {
+                const header = document.getElementById('modalHeader');
+                const icon = document.getElementById('modalIcon');
+                const title = document.getElementById('modalTitle');
+                
+                if (type === 'success') {
+                    header.className = "bg-gradient-to-r from-green-500 to-green-400 text-white p-5 font-black text-lg flex items-center gap-3";
+                    icon.className = "fas fa-check-circle text-2xl drop-shadow-sm";
+                    title.innerText = "Berhasil";
+                } else if (type === 'error') {
+                    header.className = "bg-gradient-to-r from-red-600 to-red-500 text-white p-5 font-black text-lg flex items-center gap-3";
+                    icon.className = "fas fa-exclamation-circle text-2xl drop-shadow-sm";
+                    title.innerText = "Gagal";
+                } else {
+                    header.className = "bg-gradient-to-r from-shopee to-[#ff7337] text-white p-5 font-black text-lg flex items-center gap-3";
+                    icon.className = "fas fa-info-circle text-2xl drop-shadow-sm";
+                    title.innerText = "Informasi";
+                }
+
+                document.getElementById('modalMessage').innerText = message;
+                document.getElementById('modalBtnCancel').classList.add('hidden');
+                document.getElementById('modalBtnConfirm').innerText = "OK";
+                
+                openModalAnim();
+                document.getElementById('modalBtnConfirm').onclick = () => { closeModalAnim(); resolve(true); };
+            });
+        }
+
+
         // --- VARIABEL GLOBAL ---
-        let DRIVER_DATA = null; // Menyimpan data profil Kurir
-        let availableOrders = []; // Menyimpan list pesanan yang masuk
-        let activeOrderData = null; // Menyimpan detail pesanan yang sedang diantar
+        let DRIVER_DATA = null; 
+        let availableOrders = []; 
+        let activeOrderData = null; 
+        let syncInterval;
+
+        // Routing Variables
+        let activeDeliveryMap = null;
+        let routingControl = null;
+        let driverCurrentLat = null;
+        let driverCurrentLng = null;
+        let currentTargetLat = null;
+        let currentTargetLng = null;
 
         // --- KONFIGURASI BACKEND ---
-        // Ganti dengan URL web app GAS yang sama dengan index.html dan seller.html
         const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxepD3BGU993WBCuZjH2Wo4sDyUkwyp4SGE4_mZ6EbrzD_qCDGzkRIOnPqmcXVnKNM/exec"; 
 
+        // --- BACKGROUND SYNC LOGIC ---
+        function startBackgroundSync() {
+            if(syncInterval) clearInterval(syncInterval);
+            syncInterval = setInterval(syncDataBackground, 10000); 
+        }
+
+        async function syncDataBackground() {
+            if(!DRIVER_DATA) return;
+            
+            const isOnline = document.getElementById('onlineToggle').checked;
+            if(!isOnline) {
+                const syncIcon = document.getElementById('sync-icon');
+                if(syncIcon) syncIcon.classList.remove('fa-spin');
+                return;
+            }
+
+            const syncIcon = document.getElementById('sync-icon');
+            if(syncIcon) syncIcon.classList.add('fa-spin');
+
+            try {
+                // Fetch sentralisasi data untuk semua tab
+                const response = await fetch(`${GAS_WEB_APP_URL}?action=getData&type=orders`);
+                const res = await response.json();
+                
+                if (res.status === 'success' && res.data) {
+                    // Update Local Storage Cache
+                    localStorage.setItem('foodcourt_driver_orders_cache', JSON.stringify(res.data));
+                    
+                    if (currentStep === 0 && !document.getElementById('section-new').classList.contains('hidden')) {
+                        processNewOrders(res.data, true);
+                    }
+                    if (!document.getElementById('section-history').classList.contains('hidden')) {
+                        processHistoryOrders(res.data, true);
+                    }
+                }
+            } catch(e) {
+                console.error("Sinkronisasi gagal: ", e);
+            } finally {
+                if(syncIcon) syncIcon.classList.remove('fa-spin');
+            }
+        }
+
+
         // --- FUNGSI KOMPRESI GAMBAR (CANVAS) ---
-        // Fungsi ini sangat penting agar foto KTP dan Wajah menjadi kecil (< 150KB) sebelum masuk ke Google Drive
         function compressImage(file, maxWidth, maxHeight, quality) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -398,9 +614,8 @@
             });
             const result = await uploadResponse.json();
             if(result.status !== 'success') throw new Error(result.message);
-            return result.url; // mengembalikan URL "lh3.googleusercontent.com"
+            return result.url; 
         }
-
 
         // --- AUTHENTICATION LOGIC ---
         function switchAuthView(viewId) {
@@ -422,7 +637,7 @@
             const pass = document.getElementById('loginPass').value;
             const btn = document.getElementById('btnLogin');
             
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin drop-shadow-md"></i> Memproses...';
             btn.disabled = true;
 
             try {
@@ -433,56 +648,62 @@
                 const res = await response.json();
                 
                 if(res.status === 'success') {
-                    // Simpan data kurir ke variabel global
                     DRIVER_DATA = res.user;
 
-                    // Update profil dari database ke header aplikasi kurir
                     document.getElementById('userProfileName').innerText = DRIVER_DATA.full_name;
-                    if(DRIVER_DATA.face_img) document.getElementById('userProfileImage').src = DRIVER_DATA.face_img;
+                    if(DRIVER_DATA.face_img) {
+                        document.getElementById('userProfileImage').src = DRIVER_DATA.face_img;
+                        document.getElementById('profDetailImage').src = DRIVER_DATA.face_img;
+                    }
 
                     document.getElementById('auth-container').classList.add('hidden');
                     document.getElementById('app-container').classList.remove('hidden');
                     document.getElementById('app-container').classList.add('flex');
                     e.target.reset();
 
-                    // Panggil data awal (Tugas Baru)
-                    refreshOrders();
+                    switchTab('new');
+                    startBackgroundSync();
                 } else {
-                    alert(res.message);
+                    await showCustomAlert(res.message, "error");
                 }
             } catch (error) {
-                alert("Koneksi gagal.");
+                await showCustomAlert("Koneksi gagal. Pastikan internet stabil.", "error");
             } finally {
-                btn.innerHTML = 'Masuk';
+                btn.innerHTML = 'LOG IN';
                 btn.disabled = false;
             }
         }
 
-        // --- FUNGSI KELUAR / LOGOUT ---
         function handleLogout() {
             if(currentStep !== 0) {
-                alert("Harap selesaikan pesanan aktif Anda terlebih dahulu sebelum logout!");
+                showCustomAlert("Harap selesaikan pesanan aktif Anda terlebih dahulu sebelum keluar!", "error");
                 return;
             }
-            // Hapus data sesi lokal
             DRIVER_DATA = null;
             availableOrders = [];
             activeOrderData = null;
+            if(syncInterval) clearInterval(syncInterval);
             
-            // Kembalikan ke layar login
             document.getElementById('app-container').classList.add('hidden');
             document.getElementById('app-container').classList.remove('flex');
             document.getElementById('auth-container').classList.remove('hidden');
             
-            // Pindahkan navigasi ke Tugas Baru
-            switchTab('new');
+            document.querySelectorAll('.mobile-nav-item').forEach(el => {
+                const iconContainer = el.querySelector('.nav-icon-container');
+                const icon = el.querySelector('.nav-icon');
+                const text = el.querySelector('.nav-text');
+                iconContainer.classList.remove('-translate-y-6', 'shadow-[0_8px_15px_rgba(238,77,45,0.2)]', 'border-[3px]', 'border-orange-100');
+                iconContainer.classList.add('border-white');
+                icon.classList.add('text-gray-400');
+                icon.classList.remove('text-shopee');
+                text.classList.remove('text-shopee');
+            });
         }
 
         async function handleRegister(e) {
             e.preventDefault();
             const btn = document.getElementById('btnRegister');
             
-            // Ambil Nilai dari Input yang sudah diberi ID
             const name = document.getElementById('regName').value;
             const nik = document.getElementById('regNik').value;
             const phone = document.getElementById('regPhone').value;
@@ -495,31 +716,26 @@
             const faceFile = document.getElementById('regFaceImg').files[0];
 
             if(!ktpFile || !faceFile) {
-                alert("Pendaftaran gagal: Silakan unggah foto KTP dan Wajah terlebih dahulu.");
+                await showCustomAlert("Pendaftaran gagal: Silakan unggah foto KTP dan Wajah terlebih dahulu.", "error");
                 return;
             }
             
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyiapkan Foto...';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin drop-shadow-md"></i> Menyiapkan Foto...';
             btn.disabled = true;
 
             try {
-                // 1. Kompresi kedua gambar secara lokal di perangkat kurir
                 const ktpBase64 = await compressImage(ktpFile, 800, 800, 0.7);
                 const faceBase64 = await compressImage(faceFile, 800, 800, 0.7);
 
-                // 2. Upload foto KTP ke Google Drive
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengunggah KTP...';
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin drop-shadow-md"></i> Mengunggah KTP...';
                 const urlKtp = await uploadImageToDrive(ktpBase64, `KTP_${nik}.jpg`);
 
-                // 3. Upload foto Wajah ke Google Drive
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengunggah Foto Wajah...';
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin drop-shadow-md"></i> Mengunggah Wajah...';
                 const urlFace = await uploadImageToDrive(faceBase64, `FACE_${nik}.jpg`);
 
-                // 4. Proses Pendaftaran Data ke Spreadsheet (beserta URL foto tadi)
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan Data...';
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin drop-shadow-md"></i> Menyimpan Data...';
                 const newId = "DRV-" + Math.floor(Math.random() * 100000);
                 
-                // Header Database Kurir: ['driver_id', 'full_name', 'nik', 'phone', 'email', 'password', 'vehicle_type', 'plate_number', 'ktp_img', 'face_img']
                 const rowData = [
                     newId, name, nik, phone, email, pass, vehicle, plate, urlKtp, urlFace
                 ];
@@ -531,17 +747,17 @@
                 const res = await response.json();
                 
                 if(res.status === 'success') {
-                    alert("Registrasi Berhasil! Data KTP & Foto Profil Anda telah tersimpan. Akun sedang direview, silakan login nanti.");
+                    await showCustomAlert("Registrasi Berhasil! Akun sedang direview, silakan login.", "success");
                     switchAuthView('login');
                     e.target.reset();
                 } else {
-                    alert("Pendaftaran ditolak: " + res.message);
+                    await showCustomAlert("Pendaftaran ditolak: " + res.message, "error");
                 }
             } catch (error) {
                 console.error(error);
-                alert("Gagal koneksi atau unggah data. Pastikan internet stabil.");
+                await showCustomAlert("Gagal koneksi atau unggah data. Pastikan internet stabil.", "error");
             } finally {
-                btn.innerHTML = 'Kirim Pendaftaran';
+                btn.innerHTML = '<i class="fas fa-paper-plane drop-shadow-md"></i> Kirim Pendaftaran';
                 btn.disabled = false;
             }
         }
@@ -551,7 +767,7 @@
             const email = document.getElementById('forgotEmail').value;
             const btn = document.getElementById('btnForgot');
             
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengirim...';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin drop-shadow-md"></i> Mengirim...';
             btn.disabled = true;
             
             try {
@@ -560,10 +776,10 @@
                     body: JSON.stringify({ action: 'forgotPassword', type: 'users_drivers', email: email })
                 });
                 const res = await response.json();
-                alert(res.message);
+                await showCustomAlert(res.message, res.status === 'success' ? 'success' : 'error');
                 if(res.status === 'success') switchAuthView('login');
             } catch (error) {
-                alert("Gagal koneksi.");
+                await showCustomAlert("Gagal koneksi.", "error");
             } finally {
                 btn.innerHTML = 'Kirim Password Baru';
                 btn.disabled = false;
@@ -573,9 +789,9 @@
 
         // --- STATE MACHINE SEDERHANA UNTUK PESANAN AKTIF ---
         let currentStep = 0; 
-        let activeOrderId = null; // Menyimpan ID pesanan dari Database
-        // 0: Belum ada order, 1: Menuju Outlet, 2: Pesanan Diambil, 3: Menuju Customer
+        let activeOrderId = null; 
 
+        // Fungsi berpindah Menu Navigasi dengan Logika Cache & Efek Oranye
         function switchTab(tabId) {
             document.getElementById('section-new').classList.add('hidden');
             document.getElementById('section-active').classList.add('hidden');
@@ -585,90 +801,148 @@
             document.getElementById('section-' + tabId).classList.remove('hidden');
 
             document.querySelectorAll('.mobile-nav-item').forEach(el => {
-                el.classList.remove('text-shopee');
-                if(el.dataset.target === tabId) el.classList.add('text-shopee');
+                const iconContainer = el.querySelector('.nav-icon-container');
+                const icon = el.querySelector('.nav-icon');
+                const text = el.querySelector('.nav-text');
+                
+                if (el.dataset.target === tabId) {
+                    iconContainer.classList.add('-translate-y-6', 'shadow-[0_8px_15px_rgba(238,77,45,0.2)]', 'border-[3px]', 'border-orange-100');
+                    iconContainer.classList.remove('border-white');
+                    icon.classList.remove('text-gray-400');
+                    icon.classList.add('text-shopee'); 
+                    text.classList.add('text-shopee'); 
+                } else {
+                    iconContainer.classList.remove('-translate-y-6', 'shadow-[0_8px_15px_rgba(238,77,45,0.2)]', 'border-[3px]', 'border-orange-100');
+                    iconContainer.classList.add('border-white');
+                    icon.classList.add('text-gray-400');
+                    icon.classList.remove('text-shopee');
+                    text.classList.remove('text-shopee');
+                }
             });
 
-            // Trigger fetch data berdasarkan tab
             if(tabId === 'history') loadHistory();
             if(tabId === 'profile') loadProfile();
             if(tabId === 'new') refreshOrders();
+            
+            // Fix map issue when unhidden
+            if(tabId === 'active' && activeDeliveryMap) {
+                setTimeout(() => activeDeliveryMap.invalidateSize(), 300);
+            }
         }
 
         document.getElementById('onlineToggle').addEventListener('change', function() {
             const statusText = document.getElementById('statusText');
             if(this.checked) {
                 statusText.innerText = "ONLINE";
-                statusText.className = "text-[10px] font-bold text-green-600 mt-1 mr-2 uppercase";
+                statusText.className = "text-[10px] font-black text-green-600 mt-1.5 tracking-wider uppercase";
+                refreshOrders();
             } else {
                 statusText.innerText = "OFFLINE";
-                statusText.className = "text-[10px] font-bold text-gray-500 mt-1 mr-2 uppercase";
+                statusText.className = "text-[10px] font-black text-gray-400 mt-1.5 tracking-wider uppercase";
             }
         });
 
-        // 1. TARIK DATA PESANAN BARU DARI DATABASE
-        async function refreshOrders() {
-            if(currentStep !== 0) return; // Jangan tarik order kalau lagi ada antaran aktif
+        // 1. TARIK DATA PESANAN BARU DARI DATABASE (Dengan Caching Local Storage)
+        async function refreshOrders(isBackground = false) {
+            if(currentStep !== 0) return; 
 
+            const isOnline = document.getElementById('onlineToggle').checked;
             const container = document.getElementById('new-orders-container');
-            container.innerHTML = '<div class="text-center py-10 text-gray-500"><i class="fas fa-spinner fa-spin text-3xl mb-2"></i><br>Mencari pesanan...</div>';
+            
+            if(!isOnline) {
+                if(!isBackground) {
+                    container.innerHTML = `
+                    <div class="text-center py-16 text-gray-400 font-bold bg-white rounded-2xl border border-gray-100 shadow-sm">
+                        <i class="fas fa-power-off text-5xl mb-3 opacity-30 drop-shadow"></i>
+                        <p>Anda sedang Offline. Aktifkan tombol di sudut kanan atas.</p>
+                    </div>`;
+                }
+                return;
+            }
+
+            const cachedData = localStorage.getItem('foodcourt_driver_orders_cache');
+            if (!isBackground) {
+                if (cachedData) {
+                    processNewOrders(JSON.parse(cachedData), true); 
+                } else {
+                    container.innerHTML = `
+                    <div class="text-center py-16 text-gray-400 font-bold bg-white rounded-2xl border border-gray-100 shadow-sm">
+                        <i class="fas fa-spinner fa-spin text-4xl mb-3 text-shopee"></i>
+                        <p>Mencari tugas baru...</p>
+                    </div>`;
+                }
+            }
             
             try {
                 const response = await fetch(`${GAS_WEB_APP_URL}?action=getData&type=orders`);
                 const res = await response.json();
                 
                 if (res.status === 'success' && res.data) {
-                    // Saring hanya pesanan yang sedang butuh kurir
-                    availableOrders = res.data.filter(order => order.status === 'Menunggu Kurir');
-                    
-                    if(availableOrders.length === 0) {
-                        container.innerHTML = `
-                            <div class="text-center py-10 text-gray-400 text-sm">
-                                <i class="fas fa-motorcycle text-4xl mb-3 opacity-50"></i>
-                                <p>Belum ada tugas baru di sekitar Anda.</p>
-                            </div>`;
-                        return;
-                    }
-
-                    container.innerHTML = '';
-                    availableOrders.forEach(order => {
-                        const card = `
-                        <div class="bg-white rounded-lg shadow-sm border p-4 mb-4" id="order-card-${order.order_id}">
-                            <div class="flex justify-between items-start border-b pb-3 mb-3">
-                                <div class="bg-orange-100 text-shopee text-xs font-bold px-2 py-1 rounded">Delivery</div>
-                                <div class="text-right">
-                                    <div class="text-lg font-bold text-gray-800">Rp ${Number(order.total_price).toLocaleString('id-ID')}</div>
-                                </div>
-                            </div>
-                            
-                            <div class="flex gap-3 mb-4 relative">
-                                <div class="absolute left-[9px] top-[14px] bottom-[14px] w-[2px] bg-gray-200"></div>
-                                <div class="flex flex-col gap-4 w-full">
-                                    <div class="flex gap-3 items-start z-10">
-                                        <div class="w-5 h-5 rounded-full bg-shopee text-white flex items-center justify-center flex-shrink-0 mt-0.5"><i class="fas fa-store text-[10px]"></i></div>
-                                        <div>
-                                            <div class="font-bold text-sm">${order.outlet}</div>
-                                            <div class="text-xs text-gray-500">Barang: ${order.qty}x ${order.product_name}</div>
-                                        </div>
-                                    </div>
-                                    <div class="flex gap-3 items-start z-10">
-                                        <div class="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center flex-shrink-0 mt-0.5"><i class="fas fa-map-marker-alt text-[10px]"></i></div>
-                                        <div>
-                                            <div class="font-bold text-sm">Pembeli ID: ${order.user_id}</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <button onclick="acceptOrder('${order.order_id}')" class="w-full bg-shopee text-white py-2.5 rounded font-bold hover:bg-shopeeHover transition active:scale-95">Terima Pesanan</button>
-                        </div>`;
-                        container.insertAdjacentHTML('beforeend', card);
-                    });
+                    localStorage.setItem('foodcourt_driver_orders_cache', JSON.stringify(res.data));
+                    processNewOrders(res.data, isBackground);
                 } else {
-                    container.innerHTML = '<div class="text-center py-5 text-red-500">Belum ada data pesanan.</div>';
+                    if(!isBackground && !cachedData) container.innerHTML = '<div class="text-center py-5 text-red-500 font-bold">Belum ada data pesanan.</div>';
                 }
             } catch (error) {
-                container.innerHTML = '<div class="text-center py-5 text-red-500">Koneksi terputus.</div>';
+                if(!isBackground && !cachedData) container.innerHTML = '<div class="text-center py-5 text-red-500 font-bold">Koneksi terputus.</div>';
             }
+        }
+
+        function processNewOrders(allOrders, isBackground) {
+            const container = document.getElementById('new-orders-container');
+            availableOrders = allOrders.filter(order => order.status === 'Menunggu Kurir');
+            
+            if(availableOrders.length === 0) {
+                if(!isBackground || container.innerHTML.includes('order-card')) {
+                    container.innerHTML = `
+                        <div class="text-center py-16 text-gray-400 font-bold bg-white rounded-2xl border border-gray-100 shadow-sm">
+                            <i class="fas fa-motorcycle text-5xl mb-3 opacity-30 drop-shadow"></i>
+                            <p>Belum ada tugas baru di sekitar Anda.</p>
+                        </div>`;
+                }
+                return;
+            }
+
+            const newIds = availableOrders.map(o => o.order_id).join(',');
+            if (isBackground && container.dataset.lastIds === newIds) return;
+            container.dataset.lastIds = newIds;
+
+            let html = '';
+            availableOrders.forEach(order => {
+                html += `
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-4 transform hover:-translate-y-1 hover:shadow-md transition-all duration-300 order-card" id="order-card-${order.order_id}">
+                    <div class="flex justify-between items-start border-b border-dashed border-gray-200 pb-3 mb-4">
+                        <div class="bg-gradient-to-r from-orange-100 to-orange-50 border border-orange-200 text-shopee text-[10px] font-black tracking-widest px-2 py-1 rounded shadow-inner uppercase">Delivery</div>
+                        <div class="text-right">
+                            <div class="text-xl font-black text-gray-800 drop-shadow-sm">Rp ${Number(order.total_price).toLocaleString('id-ID')}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-4 mb-5 relative">
+                        <div class="absolute left-[11px] top-[20px] bottom-[20px] w-[2px] bg-gray-200"></div>
+                        <div class="flex flex-col gap-5 w-full">
+                            <div class="flex gap-4 items-start z-10">
+                                <div class="w-6 h-6 rounded-full bg-shopee text-white flex items-center justify-center flex-shrink-0 shadow-md border border-white"><i class="fas fa-store text-[10px]"></i></div>
+                                <div>
+                                    <div class="font-extrabold text-sm text-gray-800 leading-tight">${order.outlet}</div>
+                                    <div class="text-[11px] font-semibold text-gray-500 mt-0.5">Barang: ${order.qty || 1}x ${order.product_name}</div>
+                                </div>
+                            </div>
+                            <div class="flex gap-4 items-start z-10">
+                                <div class="w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center flex-shrink-0 shadow-md border border-white"><i class="fas fa-map-marker-alt text-[10px]"></i></div>
+                                <div>
+                                    <div class="font-extrabold text-sm text-gray-800 leading-tight">Pengantaran Customer</div>
+                                    <div class="text-[11px] font-semibold text-gray-500 mt-0.5">ID: ${order.user_id}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="acceptOrder('${order.order_id}')" class="btn-3d w-full bg-gradient-to-b from-[#f36b4e] to-[#ee4d2d] text-white py-3.5 rounded-xl font-bold text-base hover:from-[#f05c3d] hover:to-[#d73211] shadow-[0_5px_0_0_#be3118] transition flex justify-center items-center gap-2">
+                        <i class="fas fa-check-circle drop-shadow-md"></i> Terima Pesanan
+                    </button>
+                </div>`;
+            });
+            container.innerHTML = html;
         }
 
         // 2. POST UPDATE STATUS KE DATABASE SAAT PESANAN DITERIMA
@@ -676,11 +950,10 @@
             const card = document.getElementById('order-card-' + orderId);
             if(card) {
                 const btn = card.querySelector('button');
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengkonfirmasi...';
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin drop-shadow-md"></i> Mengkonfirmasi...';
                 btn.disabled = true;
 
                 try {
-                    // Simpan detail pesanan yang dipilih dari array availableOrders
                     activeOrderData = availableOrders.find(o => o.order_id === orderId);
 
                     const response = await fetch(GAS_WEB_APP_URL, {
@@ -699,50 +972,114 @@
                         currentStep = 1; 
                         activeOrderId = orderId; 
                         
-                        // Render data aktif ke Tab "Aktif"
                         renderActiveOrder();
                         
-                        // Reset Tombol State
                         const actionBtn = document.getElementById('btnAction');
                         const badge = document.getElementById('order-status-badge');
                         badge.innerText = "Menuju Outlet";
-                        badge.className = "bg-orange-100 text-shopee px-2 py-1 text-xs font-bold rounded";
-                        actionBtn.innerText = "Saya Sudah di Outlet";
-                        actionBtn.className = "w-full bg-shopee text-white py-3.5 rounded-lg font-bold text-lg hover:bg-shopeeHover shadow-md transition active:scale-95";
+                        badge.className = "bg-gradient-to-r from-orange-100 to-orange-50 border border-orange-200 text-shopee px-3 py-1 text-[10px] font-black tracking-widest uppercase rounded-full shadow-inner";
+                        actionBtn.innerHTML = '<i class="fas fa-map-marker-alt drop-shadow-md mr-1"></i> Saya Sudah di Outlet';
+                        actionBtn.className = "btn-3d w-full bg-gradient-to-b from-[#f36b4e] to-[#ee4d2d] text-white py-4 rounded-xl font-black text-lg hover:from-[#f05c3d] hover:to-[#d73211] shadow-[0_5px_0_0_#be3118] tracking-wide";
                         
                         document.getElementById('activeBadge').classList.remove('hidden');
                         switchTab('active');
                     } else {
-                        alert(res.message);
-                        btn.innerHTML = 'Terima Pesanan';
+                        await showCustomAlert(res.message, "error");
+                        btn.innerHTML = '<i class="fas fa-check-circle drop-shadow-md"></i> Terima Pesanan';
                         btn.disabled = false;
                     }
                 } catch (error) {
-                    alert("Gagal koneksi ke server.");
-                    btn.innerHTML = 'Terima Pesanan';
+                    await showCustomAlert("Gagal koneksi ke server.", "error");
+                    btn.innerHTML = '<i class="fas fa-check-circle drop-shadow-md"></i> Terima Pesanan';
                     btn.disabled = false;
                 }
             }
         }
 
+        // --- FUNGSI MENGGAMBAR RUTE PETA DENGAN LEAFLET ROUTING MACHINE ---
+        function drawDeliveryRoute(startLat, startLng, endLat, endLng) {
+            if (!activeDeliveryMap) {
+                activeDeliveryMap = L.map('live-map-leaflet', { zoomControl: false }).setView([startLat, startLng], 14);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(activeDeliveryMap);
+            }
+
+            if (routingControl) {
+                activeDeliveryMap.removeControl(routingControl);
+            }
+
+            document.getElementById('route-info').innerHTML = '<i class="fas fa-spinner fa-spin text-sm"></i> Menghitung...';
+
+            routingControl = L.Routing.control({
+                waypoints: [
+                    L.latLng(startLat, startLng),
+                    L.latLng(endLat, endLng)
+                ],
+                routeWhileDragging: false,
+                addWaypoints: false,
+                fitSelectedRoutes: true,
+                show: false, // Sembunyikan panel instruksi teks (karena jelek)
+                lineOptions: {
+                    styles: [{color: '#3b82f6', opacity: 0.9, weight: 5, className: 'animate-pulse'}] 
+                },
+                createMarker: function(i, wp, nWps) {
+                    let iconHtml = '';
+                    if (i === 0) {
+                        iconHtml = '<i class="fas fa-motorcycle text-shopee text-2xl drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)] bg-white p-1.5 rounded-full border-2 border-shopee"></i>';
+                    } else {
+                        if (currentStep === 1) {
+                            iconHtml = '<i class="fas fa-store text-orange-500 text-2xl drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)] bg-white p-1.5 rounded-full border-2 border-orange-500"></i>';
+                        } else {
+                            iconHtml = '<i class="fas fa-user-circle text-blue-500 text-2xl drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)] bg-white p-1.5 rounded-full border-2 border-blue-500"></i>';
+                        }
+                    }
+                    return L.marker(wp.latLng, {
+                        icon: L.divIcon({
+                            html: iconHtml,
+                            className: 'custom-div-icon',
+                            iconSize: [40, 40],
+                            iconAnchor: [20, 20]
+                        })
+                    });
+                }
+            }).on('routesfound', function(e) {
+                let routes = e.routes;
+                let summary = routes[0].summary;
+                let distance = (summary.totalDistance / 1000).toFixed(1); // km
+                let time = Math.round(summary.totalTime / 60); // minutes
+                
+                document.getElementById('route-info').innerHTML = `${distance} <span class="text-[10px] text-gray-500 font-bold">km</span> • ~${time} <span class="text-[10px] text-gray-500 font-bold">mnt</span>`;
+            }).on('routingerror', function() {
+                 document.getElementById('route-info').innerHTML = `<span class="text-xs text-red-500">Gagal kalkulasi rute</span>`;
+            }).addTo(activeDeliveryMap);
+        }
+
+        // FUNGSI NAVIGASI GOOGLE MAPS
+        function openGoogleMapsNav() {
+            if (driverCurrentLat && currentTargetLat) {
+                const url = `https://www.google.com/maps/dir/?api=1&origin=${driverCurrentLat},${driverCurrentLng}&destination=${currentTargetLat},${currentTargetLng}&travelmode=driving`;
+                window.open(url, '_blank');
+            } else {
+                openGoogleMaps(); // Fallback teks jika GPS tidak merespon
+            }
+        }
+
+
         // FUNGSI RENDER DETAIL PESANAN AKTIF
         async function renderActiveOrder() {
             if(!activeOrderData) return;
             
-            // Render Data Sementara (Fallback)
             document.getElementById('active-outlet-name').innerText = activeOrderData.outlet;
             document.getElementById('active-outlet-address').innerText = `Mencari alamat toko...`; 
-            document.getElementById('active-product-details').innerText = `Pesanan: ${activeOrderData.qty}x ${activeOrderData.product_name}`;
-            document.getElementById('active-customer-name').innerText = `Mencari nama pelanggan...`;
+            document.getElementById('active-product-details').innerHTML = `<i class="fas fa-shopping-bag text-shopee mr-1"></i> Pesanan: ${activeOrderData.qty || 1}x ${activeOrderData.product_name}`;
+            document.getElementById('active-customer-name').innerText = `Mencari nama...`;
             document.getElementById('active-customer-address').innerText = `Mencari alamat tujuan...`; 
-            document.getElementById('active-total-price').innerText = `Total Tagihan: Rp ${Number(activeOrderData.total_price).toLocaleString('id-ID')}`;
+            document.getElementById('active-total-price').innerText = `Rp ${Number(activeOrderData.total_price).toLocaleString('id-ID')}`;
 
-            // Render Peta Sementara (Menuju Outlet)
-            updateMapLocation(activeOrderData.outlet);
+            let sellerLat = null, sellerLng = null;
+            let buyerLat = activeOrderData.lat; 
+            let buyerLng = activeOrderData.lng; 
 
-            // --- TARIK DATA ASLI PEMBELI DAN PENJUAL DARI DATABASE ---
             try {
-                // Fetch Data Pembeli (users_buyers)
                 const resBuyer = await fetch(`${GAS_WEB_APP_URL}?action=getData&type=users_buyers`);
                 const jsonBuyer = await resBuyer.json();
                 if(jsonBuyer.status === 'success' && jsonBuyer.data) {
@@ -753,12 +1090,11 @@
                         document.getElementById('btn-call-buyer').href = `tel:${buyer.phone}`;
                         document.getElementById('btn-chat-buyer').href = `sms:${buyer.phone}`;
                     } else {
-                        document.getElementById('active-customer-name').innerText = `Pembeli ID: ${activeOrderData.user_id}`;
+                        document.getElementById('active-customer-name').innerText = `ID: ${activeOrderData.user_id}`;
                         document.getElementById('active-customer-address').innerText = `Alamat tidak ditemukan`;
                     }
                 }
 
-                // Fetch Data Outlet/Penjual (users_sellers)
                 const resSeller = await fetch(`${GAS_WEB_APP_URL}?action=getData&type=users_sellers`);
                 const jsonSeller = await resSeller.json();
                 if(jsonSeller.status === 'success' && jsonSeller.data) {
@@ -767,42 +1103,58 @@
                         document.getElementById('active-outlet-address').innerText = seller.store_address || "Alamat detail tidak tersedia";
                         document.getElementById('btn-call-seller').href = `tel:${seller.phone}`;
                         
-                        // Update lokasi peta ke alamat yang lebih akurat
-                        updateMapLocation(seller.store_address + " " + seller.store_name);
+                        sellerLat = seller.lat;
+                        sellerLng = seller.lng;
                     } else {
                         document.getElementById('active-outlet-address').innerText = `Lokasi Penjemputan: ${activeOrderData.outlet}`;
                     }
                 }
+
+                // Kalkulasi Rute Otomatis
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(position => {
+                        driverCurrentLat = position.coords.latitude;
+                        driverCurrentLng = position.coords.longitude;
+
+                        if (currentStep === 1) { // Menuju Toko
+                            currentTargetLat = sellerLat;
+                            currentTargetLng = sellerLng;
+                        } else if (currentStep === 2) { // Menuju Pembeli
+                            currentTargetLat = buyerLat;
+                            currentTargetLng = buyerLng;
+                        }
+
+                        if(driverCurrentLat && currentTargetLat) {
+                            drawDeliveryRoute(driverCurrentLat, driverCurrentLng, currentTargetLat, currentTargetLng);
+                        } else {
+                            document.getElementById('route-info').innerHTML = `<span class="text-xs text-red-500">Titik tujuan tidak ditemukan</span>`;
+                        }
+                    }, error => {
+                        document.getElementById('route-info').innerHTML = `<span class="text-xs text-red-500">Izin GPS Driver ditolak</span>`;
+                    });
+                }
+
             } catch (error) {
-                console.error("Gagal menarik detail data pembeli/penjual", error);
+                console.error("Gagal menarik detail data", error);
             }
         }
 
-        // FUNGSI UPDATE LOKASI PETA DINAMIS (GOOGLE MAPS EMBED)
-        function updateMapLocation(searchQuery) {
-            const iframe = document.getElementById('live-map-iframe');
-            if (iframe) {
-                const urlSafeQuery = encodeURIComponent(searchQuery);
-                iframe.src = `https://maps.google.com/maps?q=${urlSafeQuery}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
-            }
-        }
 
-        // FUNGSI MEMBUKA APLIKASI GOOGLE MAPS EXTERNAL DI HP
+        // Fallback jika tidak ada koordinat GPS
         function openGoogleMaps() {
             if (!activeOrderData) return;
             let targetLocation = "";
 
             if (currentStep === 1) {
-                // Menuju Outlet
                 targetLocation = document.getElementById('active-outlet-address').innerText + " " + activeOrderData.outlet;
             } else if (currentStep === 2) {
-                // Menuju Pelanggan
                 targetLocation = document.getElementById('active-customer-address').innerText; 
             }
 
             const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(targetLocation)}`;
             window.open(mapsUrl, '_blank');
         }
+
 
         // 3. POST UPDATE STATUS PERJALANAN (ACTIVE DELIVERY)
         async function updateOrderStatus() {
@@ -812,10 +1164,10 @@
             let nextStatus = '';
 
             if (currentStep === 1) nextStatus = 'Pesanan Diambil (Menuju Tujuan)';
-            else if (currentStep === 2) nextStatus = `Selesai (Diantar oleh ${DRIVER_DATA.full_name})`; // Tandai selesai & nama driver
+            else if (currentStep === 2) nextStatus = `Selesai (Diantar oleh ${DRIVER_DATA.full_name})`; 
             else if (currentStep === 3) return;
 
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin drop-shadow-md"></i> Memproses...';
             btn.disabled = true;
 
             try {
@@ -829,99 +1181,184 @@
                     if (currentStep === 1) {
                         currentStep = 2;
                         badge.innerText = "Di Outlet";
-                        badge.className = "bg-yellow-100 text-yellow-700 px-2 py-1 text-xs font-bold rounded";
-                        btn.innerText = "Pesanan Sudah Diambil";
-                        btn.className = "w-full bg-blue-500 text-white py-3.5 rounded-lg font-bold text-lg hover:bg-blue-600 shadow-md transition active:scale-95";
+                        badge.className = "bg-gradient-to-r from-yellow-100 to-yellow-50 border border-yellow-200 text-yellow-700 px-3 py-1 text-[10px] font-black tracking-widest uppercase rounded-full shadow-inner";
+                        btn.innerHTML = '<i class="fas fa-box-open drop-shadow-md mr-1"></i> Pesanan Sudah Diambil';
+                        btn.className = "btn-3d w-full bg-gradient-to-b from-[#4299e1] to-[#2b6cb0] text-white py-4 rounded-xl font-black text-lg hover:from-[#3182ce] hover:to-[#2c5282] shadow-[0_5px_0_0_#1e3a8a] tracking-wide";
                         
-                        // Peta otomatis berganti titik ke arah alamat asli Pembeli
-                        let buyerAddress = document.getElementById('active-customer-address').innerText;
-                        updateMapLocation(buyerAddress);
+                        // Perbarui Peta Untuk Route ke Pembeli
+                        renderActiveOrder();
 
                     } else if (currentStep === 2) {
                         currentStep = 3;
                         badge.innerText = "Menuju Tujuan";
-                        badge.className = "bg-blue-100 text-blue-600 px-2 py-1 text-xs font-bold rounded";
-                        btn.innerText = "Selesaikan Antaran";
-                        btn.className = "w-full bg-green-500 text-white py-3.5 rounded-lg font-bold text-lg hover:bg-green-600 shadow-md transition active:scale-95";
+                        badge.className = "bg-gradient-to-r from-blue-100 to-blue-50 border border-blue-200 text-blue-600 px-3 py-1 text-[10px] font-black tracking-widest uppercase rounded-full shadow-inner";
+                        btn.innerHTML = '<i class="fas fa-flag-checkered drop-shadow-md mr-1"></i> Selesaikan Antaran';
+                        btn.className = "btn-3d w-full bg-gradient-to-b from-[#4ade80] to-[#16a34a] text-white py-4 rounded-xl font-black text-lg hover:from-[#22c55e] hover:to-[#15803d] shadow-[0_5px_0_0_#166534] tracking-wide";
                     } else if (currentStep === 3) {
-                        alert("Antaran Selesai! Pesanan berhasil diserahkan ke pembeli.");
+                        await showCustomAlert("Antaran Selesai! Pesanan berhasil diserahkan ke pembeli.", "success");
                         currentStep = 0;
                         activeOrderId = null;
                         activeOrderData = null;
                         document.getElementById('activeBadge').classList.add('hidden');
                         
-                        // Kosongkan map iframe
-                        const iframe = document.getElementById('live-map-iframe');
-                        if (iframe) iframe.src = "";
+                        if (routingControl) {
+                            activeDeliveryMap.removeControl(routingControl);
+                            document.getElementById('route-info').innerText = "-";
+                        }
 
                         switchTab('new');
                     }
                 } else {
-                    alert(res.message);
+                    await showCustomAlert(res.message, "error");
                 }
             } catch (error) {
-                alert("Koneksi gagal.");
+                await showCustomAlert("Koneksi gagal.", "error");
             } finally {
                 btn.disabled = false;
                 if (currentStep !== 0) {
-                   if (currentStep === 1) btn.innerText = "Saya Sudah di Outlet";
-                   else if (currentStep === 2) btn.innerText = "Pesanan Sudah Diambil";
-                   else if (currentStep === 3) btn.innerText = "Selesaikan Antaran";
+                   if (currentStep === 1) btn.innerHTML = '<i class="fas fa-map-marker-alt drop-shadow-md mr-1"></i> Saya Sudah di Outlet';
+                   else if (currentStep === 2) btn.innerHTML = '<i class="fas fa-box-open drop-shadow-md mr-1"></i> Pesanan Sudah Diambil';
+                   else if (currentStep === 3) btn.innerHTML = '<i class="fas fa-flag-checkered drop-shadow-md mr-1"></i> Selesaikan Antaran';
                 }
             }
         }
 
-        // 4. FUNGSI TARIK DATA RIWAYAT (HISTORY)
-        async function loadHistory() {
+        // 4. FUNGSI TARIK DATA RIWAYAT (HISTORY) Dengan Caching Local Storage
+        async function loadHistory(isBackground = false) {
             const container = document.getElementById('history-container');
-            container.innerHTML = '<div class="text-center py-6 text-gray-500"><i class="fas fa-spinner fa-spin text-xl mb-2"></i><br>Memuat riwayat...</div>';
+            
+            const cachedData = localStorage.getItem('foodcourt_driver_orders_cache');
+            if (!isBackground) {
+                if (cachedData) {
+                    processHistoryOrders(JSON.parse(cachedData), true);
+                } else {
+                    container.innerHTML = '<div class="text-center py-10 text-gray-500 font-bold"><i class="fas fa-spinner fa-spin text-4xl mb-3 text-shopee"></i><br>Memuat riwayat...</div>';
+                }
+            }
 
             try {
                 const response = await fetch(`${GAS_WEB_APP_URL}?action=getData&type=orders`);
                 const res = await response.json();
                 
                 if (res.status === 'success' && res.data) {
-                    // Cari pesanan yang statusnya "Selesai" dan diantar oleh nama kurir yang login ini
-                    const myHistory = res.data.filter(order => order.status.includes('Selesai') && order.status.includes(DRIVER_DATA.full_name));
-                    
-                    container.innerHTML = '';
-                    if(myHistory.length === 0) {
-                        container.innerHTML = '<div class="text-center py-6 text-gray-400">Belum ada riwayat antaran yang diselesaikan.</div>';
-                        return;
-                    }
-
-                    myHistory.forEach(order => {
-                        container.insertAdjacentHTML('beforeend', `
-                            <div class="bg-white rounded p-3 mb-2 border shadow-sm flex justify-between items-center opacity-90">
-                                <div class="flex items-center gap-3 w-3/4">
-                                    <div class="w-10 h-10 rounded bg-green-100 text-green-600 flex items-center justify-center flex-shrink-0"><i class="fas fa-check"></i></div>
-                                    <div class="truncate w-full">
-                                        <div class="font-bold text-sm truncate">${order.outlet}</div>
-                                        <div class="text-xs text-gray-500 truncate">ID: ${order.order_id}</div>
-                                    </div>
-                                </div>
-                                <div class="font-bold text-shopee text-sm">+ Rp 12.000</div>
-                            </div>
-                        `);
-                    });
+                    localStorage.setItem('foodcourt_driver_orders_cache', JSON.stringify(res.data));
+                    processHistoryOrders(res.data, isBackground);
                 } else {
-                    container.innerHTML = '<div class="text-center py-6 text-gray-400">Gagal memuat riwayat.</div>';
+                    if(!isBackground && !cachedData) container.innerHTML = '<div class="text-center py-6 text-gray-400 font-bold">Gagal memuat riwayat.</div>';
                 }
             } catch (error) {
-                container.innerHTML = '<div class="text-center py-6 text-red-500">Koneksi terputus.</div>';
+                if(!isBackground && !cachedData) container.innerHTML = '<div class="text-center py-6 text-red-500 font-bold">Koneksi terputus.</div>';
             }
+        }
+
+        function processHistoryOrders(allOrders, isBackground) {
+            const container = document.getElementById('history-container');
+            const myHistory = allOrders.filter(order => order.status.includes('Selesai') && order.status.includes(DRIVER_DATA.full_name));
+            
+            if(myHistory.length === 0) {
+                if(!isBackground || container.innerHTML.includes('order-id')) {
+                    container.innerHTML = '<div class="text-center py-16 text-gray-400 font-bold bg-white rounded-2xl border border-gray-100 shadow-sm"><i class="fas fa-clipboard-list text-5xl mb-3 opacity-30 drop-shadow"></i><br>Belum ada riwayat antaran.</div>';
+                }
+                return;
+            }
+
+            const newIds = myHistory.map(o => o.order_id).join(',');
+            if (isBackground && container.dataset.lastIds === newIds) return;
+            container.dataset.lastIds = newIds;
+
+            let html = '';
+            myHistory.reverse().forEach(order => {
+                html += `
+                    <div class="bg-white rounded-2xl p-4 mb-3 border border-gray-100 shadow-sm flex justify-between items-center transition hover:shadow-md">
+                        <div class="flex items-center gap-4 w-3/4">
+                            <div class="w-10 h-10 rounded-full bg-green-50 border border-green-100 text-green-500 flex items-center justify-center flex-shrink-0 shadow-inner"><i class="fas fa-check drop-shadow-sm"></i></div>
+                            <div class="truncate w-full">
+                                <div class="font-extrabold text-sm truncate text-gray-800">${order.outlet}</div>
+                                <div class="text-[10px] font-semibold text-gray-500 truncate mt-0.5"><span class="order-id">ID: ${order.order_id}</span> • Selesai</div>
+                            </div>
+                        </div>
+                        <div class="font-black text-shopee text-sm bg-orange-50 px-2 py-1 rounded border border-orange-100">+ Rp 12.000</div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
         }
 
         // 5. FUNGSI RENDER DATA PROFIL
         function loadProfile() {
             if(!DRIVER_DATA) return;
             document.getElementById('profDetailName').innerText = DRIVER_DATA.full_name || '-';
-            document.getElementById('profDetailPhone').innerText = DRIVER_DATA.phone || '-';
+            document.getElementById('profDetailPhone').innerHTML = `<i class="fas fa-phone-alt text-[10px] mr-1"></i> ${DRIVER_DATA.phone || '-'}`;
             document.getElementById('profDetailId').innerText = DRIVER_DATA.driver_id || '-';
             document.getElementById('profDetailEmail').innerText = DRIVER_DATA.email || '-';
             document.getElementById('profDetailVehicle').innerText = DRIVER_DATA.vehicle_type || '-';
             document.getElementById('profDetailPlate').innerText = DRIVER_DATA.plate_number || '-';
             if(DRIVER_DATA.face_img) document.getElementById('profDetailImage').src = DRIVER_DATA.face_img;
+        }
+
+        // --- FUNGSI UPLOAD & UPDATE FOTO PROFIL ---
+        async function uploadProfileImage(e) {
+            const fileInput = e.target.files[0];
+            if (!fileInput || !DRIVER_DATA) return;
+
+            const btnLabel = document.getElementById('btnEditPhoto');
+            const originalIcon = btnLabel.innerHTML;
+            
+            btnLabel.innerHTML = '<i class="fas fa-spinner fa-spin text-[10px]"></i>';
+            btnLabel.classList.add('opacity-50', 'pointer-events-none');
+
+            try {
+                const compressedBase64 = await compressImage(fileInput, 500, 500, 0.7);
+
+                const uploadPayload = {
+                    action: 'uploadImage',
+                    base64: compressedBase64,
+                    mimeType: 'image/jpeg',
+                    filename: 'DRIVER_FACE_' + DRIVER_DATA.driver_id + '_' + new Date().getTime() + '.jpg'
+                };
+
+                const uploadResponse = await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(uploadPayload)
+                });
+                
+                const uploadResult = await uploadResponse.json();
+                
+                if (uploadResult.status !== 'success') {
+                    throw new Error("Gagal mengunggah foto ke server");
+                }
+
+                const imageUrl = uploadResult.url; 
+
+                // Mengirim command updateDriverImage ke Backend
+                const updateResponse = await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'updateDriverImage',
+                        type: 'users_drivers',
+                        driverId: DRIVER_DATA.driver_id,
+                        imageUrl: imageUrl
+                    })
+                });
+                
+                const updateResult = await updateResponse.json();
+
+                if (updateResult.status === 'success') {
+                    DRIVER_DATA.face_img = imageUrl;
+                    document.getElementById('profDetailImage').src = imageUrl;
+                    document.getElementById('userProfileImage').src = imageUrl;
+                    await showCustomAlert("Foto profil berhasil diperbarui!", "success");
+                } else {
+                    await showCustomAlert("Gagal memperbarui database: " + updateResult.message, "error");
+                }
+
+            } catch (error) {
+                await showCustomAlert("Terjadi kesalahan: " + error.message, "error");
+            } finally {
+                btnLabel.innerHTML = originalIcon;
+                btnLabel.classList.remove('opacity-50', 'pointer-events-none');
+                e.target.value = ''; 
+            }
         }
 
     </script>
