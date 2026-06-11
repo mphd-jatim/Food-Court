@@ -831,12 +831,18 @@
                     loadSellerOrders();
                     loadProfileData();
 
-                    // Memulai sinkronisasi background 10 detik
                     startBackgroundSync();
                     return; 
                 } catch (e) {
                     localStorage.removeItem('foodcourt_seller_login');
                 }
+            }
+
+            // Membaca sinyal apakah harus otomatis membuka halaman registrasi
+            let isForceRegister = false;
+            if (localStorage.getItem('foodcourt_force_register') === 'true') {
+                isForceRegister = true;
+                localStorage.removeItem('foodcourt_force_register');
             }
 
             const prefillData = localStorage.getItem('foodcourt_prefill_seller_reg');
@@ -849,7 +855,12 @@
                     document.getElementById('regPhone').value = buyer.phone || '';
                     localStorage.removeItem('foodcourt_prefill_seller_reg');
                     showCustomAlert("Sesi Tersambung! Kami telah mengisi data pendaftaran sesuai dengan profil pembeli Anda.");
+                    return;
                 } catch (e) { }
+            }
+
+            if (isForceRegister) {
+                switchAuthView('register');
             }
         }
 
