@@ -44,6 +44,22 @@
 </head>
 <body class="bg-[#f5f5f5] font-sans pb-28 md:pb-0 relative selection:bg-orange-200">
 
+    <!-- ================= CUSTOM MODAL NOTIFICATION ================= -->
+    <div id="customModal" class="hidden fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-3xl shadow-[0_15px_50px_rgba(0,0,0,0.3)] w-full max-w-sm overflow-hidden flex flex-col transform scale-95 transition-transform duration-300 border border-white/20" id="customModalContent">
+            <div id="modalHeader" class="bg-gradient-to-r from-shopee to-[#ff7337] text-white p-5 font-black text-lg flex items-center gap-3">
+                <i id="modalIcon" class="fas fa-info-circle text-2xl drop-shadow-md"></i> <span id="modalTitle" class="drop-shadow-md">Informasi</span>
+            </div>
+            <div class="p-6 bg-gray-50 flex flex-col items-center text-center">
+                <p id="modalMessage" class="text-gray-700 text-sm font-semibold mb-6 leading-relaxed whitespace-pre-line w-full"></p>
+                <div class="flex justify-center gap-3 w-full mt-2">
+                    <button id="modalBtnCancel" class="btn-3d hidden flex-1 py-3 bg-white border-2 border-gray-200 text-gray-600 rounded-xl font-bold hover:bg-gray-100 shadow-[0_3px_0_0_#e5e7eb] transition">Batal</button>
+                    <button id="modalBtnConfirm" class="btn-3d flex-1 py-3 bg-gradient-to-b from-[#f36b4e] to-[#ee4d2d] text-white rounded-xl font-bold hover:from-[#f05c3d] hover:to-[#d73211] shadow-[0_4px_0_0_#be3118] transition">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- ================= KERANJANG (CART) OVERLAY ================= -->
     <div id="cart-overlay" class="hidden fixed inset-0 z-[115] bg-black/50 backdrop-blur-sm overflow-y-auto flex-col justify-center items-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-0 relative mt-10 md:mt-0 flex flex-col max-h-[90vh] overflow-hidden">
@@ -70,13 +86,12 @@
                         
                         <div id="cart-map" class="w-full h-40 bg-gray-200 rounded-lg mb-3 border-2 border-white shadow-sm z-0"></div>
                         
-                        <div class="flex flex-col sm:flex-row gap-2">
-                            <input type="text" id="cartLat" required placeholder="Latitude" class="w-full sm:w-1/2 px-3 py-2 border rounded-lg outline-none text-xs bg-white text-gray-800 font-bold" readonly>
-                            <input type="text" id="cartLng" required placeholder="Longitude" class="w-full sm:w-1/2 px-3 py-2 border rounded-lg outline-none text-xs bg-white text-gray-800 font-bold" readonly>
-                            <button type="button" onclick="getLocationBuyer('cartLat', 'cartLng', 'cart-map', 'cartAddress')" class="btn-3d w-full sm:w-auto bg-gradient-to-b from-[#4299e1] to-[#2b6cb0] text-white px-3 py-2 rounded-lg hover:from-[#3182ce] hover:to-[#2c5282] transition flex items-center justify-center gap-2 whitespace-nowrap text-xs font-bold shadow-[0_3px_0_0_#1e3a8a]">
-                                <i class="fas fa-crosshairs drop-shadow-md"></i> Lacak GPS
-                            </button>
-                        </div>
+                        <input type="hidden" id="cartLat" required>
+                        <input type="hidden" id="cartLng" required>
+                        
+                        <button type="button" onclick="getLocationBuyer('cartLat', 'cartLng', 'cart-map', 'cartAddress')" class="btn-3d w-full bg-gradient-to-b from-[#4299e1] to-[#2b6cb0] text-white px-4 py-3 rounded-xl hover:from-[#3182ce] hover:to-[#2c5282] transition flex items-center justify-center gap-2 text-sm font-bold shadow-[0_4px_0_0_#1e3a8a] mt-2">
+                            <i class="fas fa-crosshairs drop-shadow-md text-lg"></i> Deteksi Ulang GPS
+                        </button>
                     </div>
                 </form>
             </div>
@@ -127,54 +142,58 @@
 
     <!-- ================= CHECKOUT / PESAN (SINGLE) OVERLAY ================= -->
     <div id="checkout-overlay" class="hidden fixed inset-0 z-[120] bg-black/50 backdrop-blur-sm overflow-y-auto flex-col justify-center items-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 relative mt-32 md:mt-0">
-            <div class="flex justify-between items-center mb-4 border-b pb-3">
-                <h2 class="text-xl font-bold"><i class="fas fa-motorcycle text-shopee mr-2 drop-shadow-md"></i> Buat Pesanan</h2>
-                <button onclick="hideCheckout()" class="bg-gray-100 text-gray-500 hover:bg-gray-200 w-8 h-8 rounded-full flex justify-center items-center transition"><i class="fas fa-times"></i></button>
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-0 relative mt-10 md:mt-0 flex flex-col max-h-[90vh] overflow-hidden">
+            <div class="p-4 border-b flex justify-between items-center bg-gray-50 shrink-0">
+                <h2 class="text-lg font-bold text-gray-800"><i class="fas fa-motorcycle text-shopee mr-2 drop-shadow-md"></i> Buat Pesanan</h2>
+                <button onclick="hideCheckout()" class="text-gray-500 hover:text-red-500 bg-white w-8 h-8 rounded-full shadow flex justify-center items-center transition"><i class="fas fa-times"></i></button>
             </div>
-            <form onsubmit="submitSingleOrder(event)" class="flex flex-col gap-4">
-                <div class="bg-gray-50 p-3 rounded-xl border border-gray-100">
-                    <label class="block text-xs font-bold text-gray-500 mb-1 uppercase tracking-wider">Produk Dipesan</label>
-                    <input type="text" id="checkoutProduct" class="w-full bg-transparent text-gray-800 text-sm font-extrabold outline-none" readonly>
-                </div>
-                <div class="flex items-center justify-between border-2 border-gray-100 rounded-xl p-3 bg-white shadow-sm">
-                    <label class="text-sm font-bold text-gray-700">Jumlah (Qty)</label>
-                    <div class="flex items-center bg-gray-100 rounded-lg p-1">
-                        <button type="button" onclick="changeSingleCheckoutQty(-1)" class="w-8 h-8 flex items-center justify-center bg-white rounded-md text-gray-600 hover:text-shopee font-bold shadow-sm">-</button>
-                        <input type="number" id="checkoutQty" value="1" min="1" class="w-12 text-center text-sm font-extrabold outline-none bg-transparent" readonly>
-                        <button type="button" onclick="changeSingleCheckoutQty(1)" class="w-8 h-8 flex items-center justify-center bg-white rounded-md text-gray-600 hover:text-shopee font-bold shadow-sm">+</button>
+            
+            <div class="p-4 flex-1 overflow-y-auto flex flex-col gap-4 bg-gray-50">
+                <form id="singleCheckoutForm" onsubmit="submitSingleOrder(event)" class="flex flex-col gap-4">
+                    <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-100">
+                        <label class="block text-xs font-bold text-gray-500 mb-1 uppercase tracking-wider">Produk Dipesan</label>
+                        <input type="text" id="checkoutProduct" class="w-full bg-transparent text-gray-800 text-sm font-extrabold outline-none" readonly>
                     </div>
-                </div>
-                <div class="flex justify-between items-center text-lg font-bold text-gray-800 mt-1 mb-2 px-1">
-                    <span>Total Tagihan:</span>
-                    <span id="checkoutTotalDisplay" class="text-shopee text-xl drop-shadow-sm">Rp 0</span>
-                </div>
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">Alamat Lengkap Pengiriman *</label>
-                    <textarea id="checkoutAddress" required placeholder="Contoh: Jalan Melati No 12, RT 01/RW 02. Patokan: Pagar Hitam." class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:border-shopee outline-none h-20 resize-none text-sm text-gray-800 font-medium"></textarea>
-                </div>
-                
-                <!-- PETA INTERAKTIF AREA -->
-                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 shadow-inner">
-                    <label class="block text-sm font-bold text-gray-700 mb-1"><i class="fas fa-map-marked-alt text-blue-500 mr-1"></i> Titik Lokasi Peta (GPS) *</label>
-                    <p class="text-[10px] text-gray-500 mb-3">Geser pin merah di peta untuk menyesuaikan titik antar secara akurat.</p>
-                        <div id="checkout-map" class="w-full h-40 bg-gray-200 rounded-lg mb-3 border-2 border-white shadow-sm z-0"></div>
-                        
-                        <div class="flex flex-col sm:flex-row gap-2">
-                            <input type="text" id="checkoutLat" required placeholder="Latitude" class="w-full sm:w-1/2 px-3 py-2 border rounded-lg outline-none text-xs bg-white text-gray-800 font-bold" readonly>
-                            <input type="text" id="checkoutLng" required placeholder="Longitude" class="w-full sm:w-1/2 px-3 py-2 border rounded-lg outline-none text-xs bg-white text-gray-800 font-bold" readonly>
-                            <button type="button" onclick="getLocationBuyer('checkoutLat', 'checkoutLng', 'checkout-map', 'checkoutAddress')" class="btn-3d w-full sm:w-auto bg-gradient-to-b from-[#4299e1] to-[#2b6cb0] text-white px-4 py-2 rounded-lg hover:from-[#3182ce] hover:to-[#2c5282] transition flex items-center justify-center gap-2 whitespace-nowrap text-xs font-bold shadow-[0_3px_0_0_#1e3a8a]">
-                                <i class="fas fa-crosshairs drop-shadow-md"></i> Lacak GPS
-                            </button>
+                    
+                    <div class="flex items-center justify-between border border-gray-100 rounded-xl p-3 bg-white shadow-sm">
+                        <label class="text-sm font-bold text-gray-700">Jumlah (Qty)</label>
+                        <div class="flex items-center bg-gray-100 rounded-lg p-1">
+                            <button type="button" onclick="changeSingleCheckoutQty(-1)" class="w-8 h-8 flex items-center justify-center bg-white rounded-md text-gray-600 hover:text-shopee font-bold shadow-sm">-</button>
+                            <input type="number" id="checkoutQty" value="1" min="1" class="w-12 text-center text-sm font-extrabold outline-none bg-transparent" readonly>
+                            <button type="button" onclick="changeSingleCheckoutQty(1)" class="w-8 h-8 flex items-center justify-center bg-white rounded-md text-gray-600 hover:text-shopee font-bold shadow-sm">+</button>
                         </div>
                     </div>
 
-                <div class="mt-4 pt-4 border-t border-gray-100">
-                    <button type="submit" id="btnSubmitOrder" class="btn-3d w-full bg-gradient-to-b from-[#f36b4e] to-[#ee4d2d] text-white py-3.5 rounded-xl font-bold text-lg hover:from-[#f05c3d] hover:to-[#d73211] shadow-[0_5px_0_0_#be3118] flex items-center justify-center gap-2">
-                        <i class="fas fa-paper-plane drop-shadow-md"></i> Pesan Sekarang
-                    </button>
+                    <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-100">
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Alamat Lengkap Pengiriman *</label>
+                        <textarea id="checkoutAddress" required placeholder="Contoh: Jalan Melati No 12, RT 01/RW 02. Patokan: Pagar Hitam." class="w-full px-3 py-2 border rounded-lg focus:border-shopee outline-none h-16 resize-none text-sm text-gray-800 font-medium"></textarea>
+                    </div>
+                    
+                    <!-- PETA INTERAKTIF AREA -->
+                    <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 shadow-inner">
+                        <label class="block text-sm font-bold text-gray-700 mb-1"><i class="fas fa-map-marked-alt text-blue-500 mr-1"></i> Titik Lokasi Peta (GPS) *</label>
+                        <p class="text-[10px] text-gray-500 mb-3">Geser pin merah di peta untuk menyesuaikan titik antar secara akurat.</p>
+                        <div id="checkout-map" class="w-full h-40 bg-gray-200 rounded-lg mb-3 border-2 border-white shadow-sm z-0"></div>
+                        
+                        <input type="hidden" id="checkoutLat" required>
+                        <input type="hidden" id="checkoutLng" required>
+                        
+                        <button type="button" onclick="getLocationBuyer('checkoutLat', 'checkoutLng', 'checkout-map', 'checkoutAddress')" class="btn-3d w-full bg-gradient-to-b from-[#4299e1] to-[#2b6cb0] text-white px-4 py-3 rounded-xl hover:from-[#3182ce] hover:to-[#2c5282] transition flex items-center justify-center gap-2 text-sm font-bold shadow-[0_4px_0_0_#1e3a8a] mt-2">
+                            <i class="fas fa-crosshairs drop-shadow-md text-lg"></i> Deteksi Ulang GPS
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="p-4 border-t bg-white shrink-0 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]">
+                <div class="flex justify-between font-bold text-gray-800 mb-3 px-2">
+                    <span>Total Tagihan:</span>
+                    <span id="checkoutTotalDisplay" class="text-shopee text-xl drop-shadow-sm">Rp 0</span>
                 </div>
-            </form>
+                <button type="submit" form="singleCheckoutForm" id="btnSubmitOrder" class="btn-3d w-full bg-gradient-to-b from-[#f36b4e] to-[#ee4d2d] text-white py-3.5 rounded-xl font-bold text-lg hover:from-[#f05c3d] hover:to-[#d73211] shadow-[0_5px_0_0_#be3118] flex items-center justify-center gap-2">
+                    <i class="fas fa-paper-plane drop-shadow-md"></i> Pesan Sekarang
+                </button>
+            </div>
         </div>
     </div>
 
@@ -576,6 +595,55 @@
 
     <!-- JAVASCRIPT LOGIC -->
     <script>
+        // --- CUSTOM MODAL SYSTEM (MENGATASI BLOKIR IFRAME & TAMPILAN MODERN) ---
+        function openModalAnim() {
+            const m = document.getElementById('customModal');
+            const c = document.getElementById('customModalContent');
+            m.classList.remove('hidden');
+            setTimeout(() => { m.classList.remove('opacity-0'); c.classList.remove('scale-95'); }, 10);
+        }
+        function closeModalAnim() {
+            const m = document.getElementById('customModal');
+            const c = document.getElementById('customModalContent');
+            m.classList.add('opacity-0'); c.classList.add('scale-95');
+            setTimeout(() => { m.classList.add('hidden'); }, 300);
+        }
+
+        // Override fungsi alert bawaan (Hanya untuk pesan Gagal/Berhasil dari server jika diperlukan)
+        window.alert = function(message) {
+            showCustomAlert(message);
+        };
+
+        function showCustomAlert(message, type = "info") {
+            return new Promise((resolve) => {
+                const header = document.getElementById('modalHeader');
+                const icon = document.getElementById('modalIcon');
+                const title = document.getElementById('modalTitle');
+                
+                if (type === 'success') {
+                    header.className = "bg-gradient-to-r from-green-500 to-green-400 text-white p-5 font-black text-lg flex items-center gap-3";
+                    icon.className = "fas fa-check-circle text-2xl drop-shadow-sm";
+                    title.innerText = "Berhasil";
+                } else if (type === 'error') {
+                    header.className = "bg-gradient-to-r from-red-600 to-red-500 text-white p-5 font-black text-lg flex items-center gap-3";
+                    icon.className = "fas fa-exclamation-circle text-2xl drop-shadow-sm";
+                    title.innerText = "Gagal";
+                } else {
+                    header.className = "bg-gradient-to-r from-shopee to-[#ff7337] text-white p-5 font-black text-lg flex items-center gap-3";
+                    icon.className = "fas fa-info-circle text-2xl drop-shadow-sm";
+                    title.innerText = "Informasi";
+                }
+
+                document.getElementById('modalMessage').innerText = message;
+                document.getElementById('modalBtnCancel').classList.add('hidden');
+                document.getElementById('modalBtnConfirm').innerText = "OK";
+                
+                openModalAnim();
+                document.getElementById('modalBtnConfirm').onclick = () => { closeModalAnim(); resolve(true); };
+            });
+        }
+
+
         // URL Web App Google Apps Script Anda
         const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxepD3BGU993WBCuZjH2Wo4sDyUkwyp4SGE4_mZ6EbrzD_qCDGzkRIOnPqmcXVnKNM/exec"; 
 
@@ -624,9 +692,9 @@
             });
         }
 
-        function addToCart(productName, price, sellerName) {
+        async function addToCart(productName, price, sellerName) {
             if (!loggedInUser) {
-                alert("Silakan Log In terlebih dahulu untuk menambahkan produk ke keranjang.");
+                await showCustomAlert("Silakan Log In terlebih dahulu untuk menambahkan produk ke keranjang.", "error");
                 return showAuth('login');
             }
             
@@ -644,7 +712,7 @@
             cartIcon.classList.add('text-yellow-300', 'scale-125');
             setTimeout(() => { cartIcon.classList.remove('text-yellow-300', 'scale-125'); }, 300);
             
-            alert(`${productName} ditambahkan ke keranjang!`);
+            // ALERT BERHASIL TAMBAH KERANJANG DIHILANGKAN AGAR SENYAP DAN CEPAT
         }
 
         function showCart() {
@@ -737,7 +805,7 @@
 
         async function submitCartOrder(e) {
             e.preventDefault();
-            if (cartItems.length === 0) return alert("Keranjang kosong!");
+            if (cartItems.length === 0) return showCustomAlert("Keranjang kosong!", "error");
             
             const btn = document.getElementById('btnSubmitCart');
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
@@ -770,17 +838,17 @@
                 const res = await response.json();
                 
                 if(res.status === 'success') {
-                    alert("Semua pesanan di keranjang berhasil dibuat!\nToko akan segera mengonfirmasi pesanan Anda.");
+                    await showCustomAlert("Semua pesanan di keranjang berhasil dibuat!\nToko akan segera mengonfirmasi pesanan Anda.", "success");
                     hideCart();
                     cartItems = [];
                     localStorage.removeItem('foodcourt_cart');
                     updateCartCount();
                     syncOrdersSilently();
                 } else {
-                    alert("Gagal membuat pesanan.");
+                    await showCustomAlert("Gagal membuat pesanan.", "error");
                 }
             } catch(error) {
-                alert("Koneksi gagal. Pastikan internet Anda stabil.");
+                await showCustomAlert("Koneksi gagal. Pastikan internet Anda stabil.", "error");
             } finally {
                 btn.innerHTML = '<i class="fas fa-paper-plane drop-shadow-md"></i> Pesan Semua Sekarang';
                 btn.disabled = false;
@@ -1056,16 +1124,16 @@
                     reverseGeocode(lat, lng, addressInputId);
 
                 }, function(error) {
-                    alert("Gagal mendeteksi lokasi. Pastikan izin GPS (Lokasi) pada browser atau HP Anda sudah diaktifkan.");
+                    showCustomAlert("Gagal mendeteksi lokasi. Pastikan izin GPS (Lokasi) pada browser atau HP Anda sudah diaktifkan.", "error");
                 }, { timeout: 10000, enableHighAccuracy: true });
             } else {
-                alert("Browser tidak mendukung pencarian lokasi.");
+                showCustomAlert("Browser tidak mendukung pencarian lokasi.", "error");
             }
         }
 
-        function showCheckout(productName, price, sellerName) {
+        async function showCheckout(productName, price, sellerName) {
             if (!loggedInUser) {
-                alert("Silakan Log In terlebih dahulu untuk melakukan pesanan.");
+                await showCustomAlert("Silakan Log In terlebih dahulu untuk melakukan pesanan.", "error");
                 showAuth('login');
                 return;
             }
@@ -1148,14 +1216,14 @@
                 const res = await response.json();
                 
                 if(res.status === 'success') {
-                    alert("Pesanan Berhasil Dibuat!\nToko akan segera mengonfirmasi pesanan Anda.");
+                    await showCustomAlert("Pesanan Berhasil Dibuat!\nToko akan segera mengonfirmasi pesanan Anda.", "success");
                     hideCheckout();
                     syncOrdersSilently(); 
                 } else {
-                    alert("Gagal membuat pesanan.");
+                    await showCustomAlert("Gagal membuat pesanan.", "error");
                 }
             } catch(error) {
-                alert("Koneksi gagal. Pastikan internet Anda stabil.");
+                await showCustomAlert("Koneksi gagal. Pastikan internet Anda stabil.", "error");
             } finally {
                 btn.innerHTML = '<i class="fas fa-paper-plane drop-shadow-md"></i> Pesan Sekarang';
                 btn.disabled = false;
@@ -1493,7 +1561,7 @@
                 const res = await response.json();
                 
                 if(res.status === 'success') {
-                    alert('Profil berhasil diperbarui!');
+                    await showCustomAlert('Profil berhasil diperbarui!', 'success');
                     loggedInUser.username = updatedData.username;
                     loggedInUser.email = updatedData.email;
                     loggedInUser.address = updatedData.address;
@@ -1502,10 +1570,10 @@
                     updateAuthUI();
                     showProfile(); 
                 } else {
-                    alert('Gagal: ' + res.message);
+                    await showCustomAlert('Gagal: ' + res.message, 'error');
                 }
             } catch(e) {
-                alert('Koneksi gagal. Pastikan internet Anda stabil.');
+                await showCustomAlert('Koneksi gagal. Pastikan internet Anda stabil.', 'error');
             } finally {
                 btn.innerHTML = '<i class="fas fa-save"></i> Simpan';
                 btn.disabled = false;
@@ -1533,13 +1601,12 @@
             }
         }
 
-        function handleLogout() {
+        async function handleLogout() {
             loggedInUser = null;
             if(syncInterval) clearInterval(syncInterval);
             localStorage.removeItem('foodcourt_buyer_login');
             updateAuthUI();
             hideProfile();
-            alert("Anda telah berhasil Log Out.");
         }
 
         function handleMobileProfileClick() {
@@ -1550,29 +1617,16 @@
             }
         }
 
-        function goToSellerPage(forceRegister = false) {
+        async function goToSellerPage(forceRegister = false) {
             if (forceRegister) {
                 localStorage.setItem('foodcourt_force_register', 'true');
-            }
-            try {
-                if (window.self !== window.top) {
-                    alert("[Mode Preview] Di lingkungan nyata, Anda akan otomatis dialihkan ke halaman 'seller.html'. Silakan download dan buka file secara lokal di komputer Anda untuk melihat perpindahannya.");
-                    return;
-                }
-            } catch (e) {
-                alert("[Mode Preview] Anda akan dialihkan ke halaman 'seller.html' jika dijalankan di komputer.");
-                return;
             }
             window.location.href = 'seller.html';
         }
 
         async function handleSellerCentreClick() {
             if (!loggedInUser) {
-                if (confirm("Anda belum Log In. Jika belum memiliki Toko, klik 'OK' untuk Mendaftar sebagai Penjual. Jika sudah punya akun, klik 'Batal' untuk Log In.")) {
-                    goToSellerPage(true); 
-                } else {
-                    goToSellerPage(false); 
-                }
+                goToSellerPage(false); 
                 return;
             }
 
@@ -1592,11 +1646,9 @@
 
                     if (matchedSeller) {
                         localStorage.setItem('foodcourt_seller_login', JSON.stringify(matchedSeller));
-                        alert(`Toko '${matchedSeller.store_name}' terdeteksi! Mengalihkan Anda secara otomatis ke dasbor penjual...`);
                         goToSellerPage(false);
                     } else {
                         localStorage.setItem('foodcourt_prefill_seller_reg', JSON.stringify(loggedInUser));
-                        alert("Anda belum memiliki Toko. Mengalihkan ke formulir pendaftaran toko...");
                         goToSellerPage(true); 
                     }
                 } else {
@@ -1668,17 +1720,16 @@
                     localStorage.setItem('foodcourt_buyer_login', JSON.stringify(loggedInUser));
                     updateAuthUI(); 
                     
-                    alert("Selamat datang, " + res.user.username);
                     hideAuth();
                     e.target.reset();
                     
                     syncOrdersSilently();
                 } else {
-                    alert(res.message);
+                    await showCustomAlert(res.message, "error");
                 }
             } catch (error) {
                 console.error("Error Login:", error);
-                alert("Gagal koneksi ke server. Pastikan URL GAS benar dan Anda terhubung internet.");
+                await showCustomAlert("Gagal koneksi ke server. Pastikan URL GAS benar dan Anda terhubung internet.", "error");
             } finally {
                 btn.innerHTML = 'LOG IN';
                 btn.disabled = false;
@@ -1707,15 +1758,15 @@
                 const res = await response.json();
                 
                 if(res.status === 'success') {
-                    alert("Registrasi Berhasil! Silakan Log In.");
+                    await showCustomAlert("Registrasi Berhasil! Silakan Log In.", "success");
                     showAuth('login');
                     e.target.reset();
                 } else {
-                    alert(res.message);
+                    await showCustomAlert(res.message, "error");
                 }
             } catch (error) {
                 console.error("Error Registrasi:", error);
-                alert("Gagal koneksi. Pastikan URL GAS benar dan Anda terhubung internet.");
+                await showCustomAlert("Gagal koneksi. Pastikan URL GAS benar dan Anda terhubung internet.", "error");
             } finally {
                 btn.innerHTML = 'BUAT AKUN';
                 btn.disabled = false;
@@ -1736,11 +1787,16 @@
                     body: JSON.stringify({ action: 'forgotPassword', type: 'users_buyers', email: email })
                 });
                 const res = await response.json();
-                alert(res.message);
-                if(res.status === 'success') showAuth('login');
+                
+                if(res.status === 'success') {
+                    await showCustomAlert(res.message, "success");
+                    showAuth('login');
+                } else {
+                    await showCustomAlert(res.message, "error");
+                }
             } catch (error) {
                 console.error("Error Lupa Password:", error);
-                alert("Gagal koneksi ke server.");
+                await showCustomAlert("Gagal koneksi ke server.", "error");
             } finally {
                 btn.innerHTML = 'KIRIM PASSWORD BARU';
                 btn.disabled = false;
