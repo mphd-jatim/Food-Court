@@ -10,13 +10,16 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Tambahan: Library Chart.js untuk Grafik Interaktif -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Tambahan: Library Leaflet untuk Peta Interaktif -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        shopee: '#ee4d2d',
-                        shopeeHover: '#d73211',
+                        brandPrimary: '#ee4d2d',
+                        brandPrimaryHover: '#d73211',
                         sidebar: '#ffffff',
                         bgMain: '#f6f6f6'
                     }
@@ -38,15 +41,15 @@
     <!-- ================= CUSTOM MODAL (MENGATASI ERROR IFRAME) ================= -->
     <div id="customModal" class="hidden fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col transform scale-95 transition-transform duration-300" id="customModalContent">
-            <div id="modalHeader" class="bg-shopee text-white p-4 font-extrabold text-lg flex items-center gap-2">
+            <div id="modalHeader" class="bg-brandPrimary text-white p-4 font-extrabold text-lg flex items-center gap-2">
                 <i class="fas fa-info-circle"></i> <span>Informasi</span>
             </div>
             <div class="p-6">
                 <p id="modalMessage" class="text-gray-700 text-sm md:text-base mb-5 leading-relaxed whitespace-pre-line"></p>
-                <input type="number" id="modalInput" class="hidden w-full px-4 py-3 border-2 border-gray-200 rounded-xl outline-none focus:border-shopee bg-gray-50 text-gray-800 font-bold mb-5 shadow-inner" placeholder="Ketik angka di sini...">
+                <input type="number" id="modalInput" class="hidden w-full px-4 py-3 border-2 border-gray-200 rounded-xl outline-none focus:border-brandPrimary bg-gray-50 text-gray-800 font-bold mb-5 shadow-inner" placeholder="Ketik angka di sini...">
                 <div class="flex justify-end gap-3 mt-2">
                     <button id="modalBtnCancel" class="btn-3d hidden px-5 py-2.5 bg-white border-2 border-gray-200 text-gray-600 rounded-xl font-bold hover:bg-gray-50 shadow-[0_3px_0_0_#e5e7eb]">Batal</button>
-                    <button id="modalBtnConfirm" class="btn-3d px-5 py-2.5 bg-shopee text-white rounded-xl font-bold hover:bg-shopeeHover shadow-[0_4px_0_0_#be3118]">OK</button>
+                    <button id="modalBtnConfirm" class="btn-3d px-5 py-2.5 bg-brandPrimary text-white rounded-xl font-bold hover:bg-brandPrimaryHover shadow-[0_4px_0_0_#be3118]">OK</button>
                 </div>
             </div>
         </div>
@@ -55,7 +58,7 @@
     <!-- ================= ORDER DETAIL (RINCIAN PESANAN) OVERLAY ================= -->
     <div id="order-detail-overlay" class="hidden fixed inset-0 z-[150] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
-            <div class="bg-shopee text-white p-4 font-extrabold text-lg flex justify-between items-center shrink-0">
+            <div class="bg-brandPrimary text-white p-4 font-extrabold text-lg flex justify-between items-center shrink-0">
                 <div class="flex items-center gap-2"><i class="fas fa-receipt"></i> Rincian Pesanan</div>
                 <button onclick="hideOrderDetails()" class="text-white hover:text-gray-200 transition"><i class="fas fa-times text-xl"></i></button>
             </div>
@@ -72,16 +75,16 @@
                     </div>
                     <div class="flex justify-between items-center pt-2 border-t border-gray-100 mt-2">
                         <span class="text-xs font-bold text-gray-400">Status Saat Ini</span>
-                        <span class="text-xs font-bold text-shopee bg-orange-50 px-2 py-1 rounded border border-orange-100" id="detail-order-status">Status</span>
+                        <span class="text-xs font-bold text-brandPrimary bg-orange-50 px-2 py-1 rounded border border-orange-100" id="detail-order-status">Status</span>
                     </div>
                 </div>
 
                 <!-- Info Produk -->
                 <div class="bg-white p-4 rounded-xl shadow-sm border-2 border-gray-100 mb-4">
-                    <h3 class="font-bold text-sm text-gray-800 border-b border-gray-100 pb-2 mb-2"><i class="fas fa-shopping-bag text-shopee mr-1"></i> Produk Dipesan</h3>
+                    <h3 class="font-bold text-sm text-gray-800 border-b border-gray-100 pb-2 mb-2"><i class="fas fa-shopping-bag text-brandPrimary mr-1"></i> Produk Dipesan</h3>
                     <div class="flex justify-between items-center mt-3">
                         <span class="font-bold text-gray-700 text-sm" id="detail-product">1x Produk</span>
-                        <span class="font-extrabold text-shopee text-base" id="detail-price">Rp 0</span>
+                        <span class="font-extrabold text-brandPrimary text-base" id="detail-price">Rp 0</span>
                     </div>
                 </div>
 
@@ -126,7 +129,7 @@
         <!-- LOGIN VIEW -->
         <div id="view-login" class="flex flex-col h-full max-w-md mx-auto w-full px-8 justify-center pb-10">
             <div class="text-center mb-8 mt-10 animate-bounce">
-                <i class="fas fa-store text-shopee text-6xl mb-3 drop-shadow-md"></i>
+                <i class="fas fa-store text-brandPrimary text-6xl mb-3 drop-shadow-md"></i>
                 <h1 class="text-2xl font-bold text-gray-800">Seller Centre</h1>
                 <p class="text-sm text-gray-500">Kelola Toko FoodCourt Anda</p>
             </div>
@@ -134,25 +137,30 @@
             <form onsubmit="handleLogin(event)" class="flex flex-col gap-4">
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-1">Email / Nomor HP</label>
-                    <input type="text" id="loginId" required placeholder="Masukkan email / no HP" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl outline-none focus:border-shopee bg-gray-50 text-gray-800 transition-all shadow-inner">
+                    <input type="text" id="loginId" required placeholder="Masukkan email / no HP" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl outline-none focus:border-brandPrimary bg-gray-50 text-gray-800 transition-all shadow-inner">
                 </div>
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-1">Password</label>
-                    <input type="password" id="loginPass" required placeholder="Masukkan password" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl outline-none focus:border-shopee bg-gray-50 text-gray-800 transition-all shadow-inner">
+                    <div class="relative">
+                        <input type="password" id="loginPass" required placeholder="Masukkan password" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl outline-none focus:border-brandPrimary bg-gray-50 text-gray-800 transition-all shadow-inner">
+                        <button type="button" onclick="togglePasswordVisibility('loginPass', this)" class="absolute right-4 top-3.5 text-gray-400 hover:text-brandPrimary transition">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
                 </div>
                 
                 <div class="text-right">
-                    <button type="button" onclick="switchAuthView('forgot')" class="text-sm text-shopee font-bold hover:underline">Lupa Password?</button>
+                    <button type="button" onclick="switchAuthView('forgot')" class="text-sm text-brandPrimary font-bold hover:underline">Lupa Password?</button>
                 </div>
                 
-                <button type="submit" id="btnLogin" class="btn-3d w-full bg-shopee text-white py-3 rounded-xl font-bold text-lg hover:bg-shopeeHover shadow-[0_5px_0_0_#be3118] mt-2 flex items-center justify-center gap-2">
+                <button type="submit" id="btnLogin" class="btn-3d w-full bg-brandPrimary text-white py-3 rounded-xl font-bold text-lg hover:bg-brandPrimaryHover shadow-[0_5px_0_0_#be3118] mt-2 flex items-center justify-center gap-2">
                     <i class="fas fa-sign-in-alt"></i> Masuk
                 </button>
             </form>
 
             <div class="mt-8 pt-6 border-t border-gray-200 text-center">
                 <p class="text-sm text-gray-600 mb-3">Belum memiliki toko di FoodCourt?</p>
-                <button type="button" onclick="switchAuthView('register')" class="btn-3d w-full border-2 border-shopee text-shopee py-3 rounded-xl font-bold text-lg hover:bg-orange-50 shadow-[0_4px_0_0_#ee4d2d] bg-white transition flex items-center justify-center gap-2">
+                <button type="button" onclick="switchAuthView('register')" class="btn-3d w-full border-2 border-brandPrimary text-brandPrimary py-3 rounded-xl font-bold text-lg hover:bg-orange-50 shadow-[0_4px_0_0_#ee4d2d] bg-white transition flex items-center justify-center gap-2">
                     <i class="fas fa-user-plus"></i> Daftar Sebagai Penjual
                 </button>
             </div>
@@ -160,7 +168,7 @@
 
         <!-- REGISTER VIEW -->
         <div id="view-register" class="hidden flex-col min-h-full max-w-xl mx-auto w-full px-6 py-8">
-            <button type="button" onclick="switchAuthView('login')" class="text-gray-500 mb-6 flex items-center gap-2 hover:text-shopee w-fit font-bold btn-3d bg-gray-100 px-4 py-2 rounded-lg shadow-[0_3px_0_0_#d1d5db]">
+            <button type="button" onclick="switchAuthView('login')" class="text-gray-500 mb-6 flex items-center gap-2 hover:text-brandPrimary w-fit font-bold btn-3d bg-gray-100 px-4 py-2 rounded-lg shadow-[0_3px_0_0_#d1d5db]">
                 <i class="fas fa-arrow-left"></i> Kembali
             </button>
             
@@ -171,56 +179,47 @@
                 <!-- Info Toko -->
                 <div class="bg-gray-50 p-5 rounded-2xl border-2 border-gray-200 shadow-sm relative overflow-hidden">
                     <div class="absolute -right-4 -top-4 text-gray-200 opacity-50"><i class="fas fa-store text-8xl"></i></div>
-                    <h2 class="font-bold text-shopee mb-4 relative z-10 text-lg"><i class="fas fa-store mr-2"></i>Informasi Toko</h2>
+                    <h2 class="font-bold text-brandPrimary mb-4 relative z-10 text-lg"><i class="fas fa-store mr-2"></i>Informasi Toko</h2>
                     <div class="mb-3 relative z-10">
                         <label class="block text-xs font-bold text-gray-700 mb-1">Nama Toko *</label>
-                        <input type="text" id="regStoreName" required placeholder="Contoh: Ayam Geprek Juara" class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg outline-none focus:border-shopee bg-white text-sm text-gray-800">
+                        <input type="text" id="regStoreName" required placeholder="Contoh: Ayam Geprek Juara" class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg outline-none focus:border-brandPrimary bg-white text-sm text-gray-800">
+                    </div>
+                    <div class="mb-3 relative z-10">
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Titik Lokasi Peta (GPS) *</label>
+                        <div id="regMap" class="w-full h-48 rounded-lg border-2 border-gray-200 mb-2" style="z-index: 10;"></div>
+                        <button type="button" onclick="getRegLocation()" class="btn-3d w-full bg-blue-500 text-white px-3 py-2 rounded-lg hover:bg-blue-600 shadow-[0_3px_0_0_#1e40af] flex items-center justify-center gap-2 font-bold text-xs mb-2">
+                            <i class="fas fa-crosshairs"></i> Gunakan Lokasi Saat Ini
+                        </button>
+                        <input type="hidden" id="regLat" required>
+                        <input type="hidden" id="regLng" required>
                     </div>
                     <div class="relative z-10">
                         <label class="block text-xs font-bold text-gray-700 mb-1">Alamat Lengkap Toko *</label>
-                        <textarea id="regStoreAddress" required placeholder="Alamat detail untuk penjemputan kurir..." class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg outline-none focus:border-shopee bg-white text-sm h-20 resize-none text-gray-800"></textarea>
+                        <textarea id="regStoreAddress" required placeholder="Klik peta, tombol lokasi, atau geser pin merah untuk mengisi otomatis..." class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg outline-none focus:border-brandPrimary bg-white text-sm h-20 resize-none text-gray-800"></textarea>
+                        <p class="text-[10px] text-gray-500 mt-1">Anda dapat <b>menggeser pin merah di peta</b> agar lebih presisi. Alamat akan terisi otomatis, namun Anda dapat mengeditnya jika kurang detail (seperti menambahkan nomor ruko).</p>
                     </div>
                 </div>
 
                 <!-- Info Pemilik -->
                 <div class="bg-gray-50 p-5 rounded-2xl border-2 border-gray-200 shadow-sm">
-                    <h2 class="font-bold text-shopee mb-4 text-lg"><i class="fas fa-user-tie mr-2"></i>Data Pemilik</h2>
+                    <h2 class="font-bold text-brandPrimary mb-4 text-lg"><i class="fas fa-user-tie mr-2"></i>Data Pemilik</h2>
                     <div class="mb-3">
                         <label class="block text-xs font-bold text-gray-700 mb-1">Nama Lengkap (Sesuai KTP) *</label>
-                        <input type="text" id="regOwnerName" required placeholder="Sesuai identitas resmi" class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg outline-none focus:border-shopee bg-white text-sm text-gray-800">
+                        <input type="text" id="regOwnerName" required placeholder="Sesuai identitas resmi" class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg outline-none focus:border-brandPrimary bg-white text-sm text-gray-800">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-700 mb-1">Nomor Induk Kependudukan (NIK) *</label>
-                        <input type="number" id="regNik" required placeholder="16 Digit NIK" class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg outline-none focus:border-shopee bg-white text-sm text-gray-800">
+                        <input type="number" id="regNik" required placeholder="16 Digit NIK" class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg outline-none focus:border-brandPrimary bg-white text-sm text-gray-800">
                     </div>
                 </div>
 
-                <!-- Kontak & Akun -->
-                <div class="bg-gray-50 p-5 rounded-2xl border-2 border-gray-200 shadow-sm">
-                    <h2 class="font-bold text-shopee mb-4 text-lg"><i class="fas fa-lock mr-2"></i>Kontak & Keamanan</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-                        <div>
-                            <label class="block text-xs font-bold text-gray-700 mb-1">Email Aktif *</label>
-                            <input type="email" id="regEmail" required placeholder="email@contoh.com" class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg outline-none focus:border-shopee bg-white text-sm text-gray-800">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-700 mb-1">Nomor Handphone *</label>
-                            <input type="tel" id="regPhone" required placeholder="0812..." class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg outline-none focus:border-shopee bg-white text-sm text-gray-800">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-700 mb-1">Buat Password *</label>
-                        <input type="password" id="regPass" required placeholder="Minimal 6 karakter" class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg outline-none focus:border-shopee bg-white text-sm text-gray-800">
-                    </div>
-                </div>
-
-                <!-- Finansial -->
-                <div class="bg-gray-50 p-5 rounded-2xl border-2 border-gray-200 shadow-sm">
-                    <h2 class="font-bold text-shopee mb-1 text-lg"><i class="fas fa-money-check-alt mr-2"></i>Informasi Rekening Bank</h2>
+                <!-- Finansial (DISEMBUNYIKAN) -->
+                <div class="hidden bg-gray-50 p-5 rounded-2xl border-2 border-gray-200 shadow-sm">
+                    <h2 class="font-bold text-brandPrimary mb-1 text-lg"><i class="fas fa-money-check-alt mr-2"></i>Informasi Rekening Bank</h2>
                     <p class="text-[10px] text-gray-500 mb-4">Digunakan untuk penarikan saldo penghasilan toko Anda.</p>
                     <div class="mb-3">
                         <label class="block text-xs font-bold text-gray-700 mb-1">Nama Bank *</label>
-                        <select id="regBankName" required class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg outline-none focus:border-shopee bg-white text-sm text-gray-800">
+                        <select id="regBankName" class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg outline-none focus:border-brandPrimary bg-white text-sm text-gray-800">
                             <option value="">Pilih Bank</option>
                             <option value="BCA">BCA</option>
                             <option value="Mandiri">Bank Mandiri</option>
@@ -231,22 +230,22 @@
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-700 mb-1">Nomor Rekening *</label>
-                        <input type="number" id="regBankAccount" required placeholder="Pastikan sesuai dengan buku tabungan" class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg outline-none focus:border-shopee bg-white text-sm text-gray-800">
+                        <input type="number" id="regBankAccount" placeholder="Pastikan sesuai dengan buku tabungan" class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg outline-none focus:border-brandPrimary bg-white text-sm text-gray-800">
                     </div>
                 </div>
 
                 <!-- Dokumen Verifikasi -->
                 <div class="bg-gray-50 p-5 rounded-2xl border-2 border-gray-200 shadow-sm">
-                    <h2 class="font-bold text-shopee mb-4 text-lg"><i class="fas fa-id-card mr-2"></i>Dokumen Verifikasi</h2>
+                    <h2 class="font-bold text-brandPrimary mb-4 text-lg"><i class="fas fa-id-card mr-2"></i>Dokumen Verifikasi</h2>
                     <div>
                         <label class="block text-xs font-bold text-gray-700 mb-1">Unggah Foto KTP Asli *</label>
-                        <input type="file" id="regKtpImg" accept="image/*" required class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg outline-none focus:border-shopee bg-white text-sm">
+                        <input type="file" id="regKtpImg" accept="image/*" required class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg outline-none focus:border-brandPrimary bg-white text-sm">
                         <p class="text-[10px] text-gray-500 mt-1">Format JPG/PNG. Pastikan foto terang dan teks terbaca jelas.</p>
                     </div>
                 </div>
 
                 <div class="mt-4">
-                    <button type="submit" id="btnRegister" class="btn-3d w-full bg-shopee text-white py-3 rounded-xl font-bold text-lg hover:bg-shopeeHover shadow-[0_5px_0_0_#be3118] flex items-center justify-center gap-2">
+                    <button type="submit" id="btnRegister" class="btn-3d w-full bg-brandPrimary text-white py-3 rounded-xl font-bold text-lg hover:bg-brandPrimaryHover shadow-[0_5px_0_0_#be3118] flex items-center justify-center gap-2">
                         <i class="fas fa-paper-plane"></i> Ajukan Pendaftaran Toko
                     </button>
                     <p class="text-center text-[10px] text-gray-500 mt-3 font-semibold">Dengan mendaftar, Anda menyetujui Syarat & Ketentuan FoodCourt.</p>
@@ -256,21 +255,21 @@
 
         <!-- FORGOT PASSWORD VIEW -->
         <div id="view-forgot" class="hidden flex-col h-full max-w-md mx-auto w-full px-8 justify-center pb-20">
-            <button type="button" onclick="switchAuthView('login')" class="text-gray-500 mb-6 flex items-center gap-2 hover:text-shopee w-fit font-bold btn-3d bg-gray-100 px-4 py-2 rounded-lg shadow-[0_3px_0_0_#d1d5db]">
+            <button type="button" onclick="switchAuthView('login')" class="text-gray-500 mb-6 flex items-center gap-2 hover:text-brandPrimary w-fit font-bold btn-3d bg-gray-100 px-4 py-2 rounded-lg shadow-[0_3px_0_0_#d1d5db]">
                 <i class="fas fa-arrow-left"></i> Kembali ke Login
             </button>
             
-            <i class="fas fa-key text-shopee text-5xl mb-4 text-center animate-pulse"></i>
+            <i class="fas fa-key text-brandPrimary text-5xl mb-4 text-center animate-pulse"></i>
             <h1 class="text-2xl font-bold text-gray-800 text-center mb-2">Lupa Password?</h1>
             <p class="text-sm text-gray-500 text-center mb-8">Masukkan alamat email toko Anda. Kami akan mengirimkan tautan untuk membuat password baru.</p>
             
             <form onsubmit="handleForgot(event)" class="flex flex-col gap-4">
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-1">Email Terdaftar</label>
-                    <input type="email" id="forgotEmail" required placeholder="email@contoh.com" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl outline-none focus:border-shopee bg-gray-50 text-gray-800">
+                    <input type="email" id="forgotEmail" required placeholder="email@contoh.com" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl outline-none focus:border-brandPrimary bg-gray-50 text-gray-800">
                 </div>
                 
-                <button type="submit" id="btnForgot" class="btn-3d w-full bg-shopee text-white py-3 rounded-xl font-bold text-lg hover:bg-shopeeHover shadow-[0_5px_0_0_#be3118] mt-4 flex items-center justify-center gap-2">
+                <button type="submit" id="btnForgot" class="btn-3d w-full bg-brandPrimary text-white py-3 rounded-xl font-bold text-lg hover:bg-brandPrimaryHover shadow-[0_5px_0_0_#be3118] mt-4 flex items-center justify-center gap-2">
                     <i class="fas fa-paper-plane"></i> Kirim Reset Password
                 </button>
             </form>
@@ -284,8 +283,8 @@
     <header class="bg-white z-50 flex-shrink-0 shadow-[0_2px_10px_rgba(0,0,0,0.05)] border-b">
         <div class="flex justify-between items-center px-4 md:px-8 py-3">
             <div class="flex items-center gap-3">
-                <div class="text-shopee text-2xl font-bold flex items-center gap-2 drop-shadow-sm">
-                    <i class="fas fa-store"></i> <span class="hidden md:inline">FoodCourt Seller Centre</span>
+                <div class="text-brandPrimary text-2xl font-bold flex items-center gap-2 drop-shadow-sm">
+                    <i class="fas fa-store"></i> <span class="hidden md:inline">Seller Centre</span>
                 </div>
             </div>
             <div class="flex items-center gap-4 text-sm">
@@ -299,9 +298,9 @@
                     <img src="https://placehold.co/100x100/ee4d2d/white?text=Toko" alt="Logo Outlet" class="w-7 h-7 rounded-full object-cover border-2 border-white shadow-sm">
                     <span id="header-store-name">Toko Saya</span>
                 </div>
-                <button onclick="switchTab('orders'); filterOrders('Menunggu Konfirmasi', document.querySelectorAll('#order-tabs div')[1])" class="btn-3d relative w-9 h-9 rounded-full bg-gray-100 text-gray-600 hover:text-shopee hover:bg-orange-50 flex items-center justify-center shadow-[0_2px_0_0_#d1d5db]">
+                <button onclick="switchTab('orders'); filterOrders('Menunggu Konfirmasi', document.querySelectorAll('#order-tabs div')[1])" class="btn-3d relative w-9 h-9 rounded-full bg-gray-100 text-gray-600 hover:text-brandPrimary hover:bg-orange-50 flex items-center justify-center shadow-[0_2px_0_0_#d1d5db]">
                     <i class="far fa-bell text-lg"></i>
-                    <span id="header-bell-badge" class="absolute -top-1 -right-1 bg-shopee text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full border-2 border-white shadow-sm hidden">0</span>
+                    <span id="header-bell-badge" class="absolute -top-1 -right-1 bg-brandPrimary text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full border-2 border-white shadow-sm hidden">0</span>
                 </button>
             </div>
         </div>
@@ -318,15 +317,15 @@
                 <a href="#" onclick="switchTab('dashboard')" id="menu-dashboard" class="menu-active block py-3 px-4 rounded-xl text-sm hover:bg-gray-50 transition flex items-center gap-3 font-bold mb-1">
                     <i class="fas fa-chart-line w-5 text-center text-lg drop-shadow-sm"></i> Dasbor
                 </a>
-                <a href="#" onclick="switchTab('orders')" id="menu-orders" class="block py-3 px-4 rounded-xl text-sm text-gray-600 hover:bg-orange-50 hover:text-shopee transition flex items-center gap-3 font-bold mb-1">
+                <a href="#" onclick="switchTab('orders')" id="menu-orders" class="block py-3 px-4 rounded-xl text-sm text-gray-600 hover:bg-orange-50 hover:text-brandPrimary transition flex items-center gap-3 font-bold mb-1">
                     <i class="fas fa-clipboard-list w-5 text-center text-lg drop-shadow-sm"></i> Pesanan Saya
                 </a>
-                <a href="#" onclick="switchTab('products')" id="menu-products" class="block py-3 px-4 rounded-xl text-sm text-gray-600 hover:bg-orange-50 hover:text-shopee transition flex items-center gap-3 font-bold mb-1">
+                <a href="#" onclick="switchTab('products')" id="menu-products" class="block py-3 px-4 rounded-xl text-sm text-gray-600 hover:bg-orange-50 hover:text-brandPrimary transition flex items-center gap-3 font-bold mb-1">
                     <i class="fas fa-box w-5 text-center text-lg drop-shadow-sm"></i> Produk Saya
                 </a>
                 
                 <div class="px-3 mt-6 mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Pengaturan</div>
-                <a href="#" onclick="switchTab('profile')" id="menu-profile" class="block py-3 px-4 rounded-xl text-sm text-gray-600 hover:bg-orange-50 hover:text-shopee transition flex items-center gap-3 font-bold mb-1">
+                <a href="#" onclick="switchTab('profile')" id="menu-profile" class="block py-3 px-4 rounded-xl text-sm text-gray-600 hover:bg-orange-50 hover:text-brandPrimary transition flex items-center gap-3 font-bold mb-1">
                     <i class="fas fa-store-alt w-5 text-center text-lg drop-shadow-sm"></i> Profil Outlet
                 </a>
 
@@ -346,7 +345,7 @@
                     <div class="flex items-center gap-2">
                         <label class="text-sm font-bold text-gray-600">Filter:</label>
                         <!-- Filter Bulan -->
-                        <select id="month-filter" onchange="updateDashboardStats()" class="bg-white border-2 border-gray-200 text-gray-700 py-1.5 px-2 rounded-lg shadow-sm focus:outline-none focus:border-shopee font-bold cursor-pointer transition text-sm">
+                        <select id="month-filter" onchange="updateDashboardStats()" class="bg-white border-2 border-gray-200 text-gray-700 py-1.5 px-2 rounded-lg shadow-sm focus:outline-none focus:border-brandPrimary font-bold cursor-pointer transition text-sm">
                             <option value="01">Januari</option>
                             <option value="02">Februari</option>
                             <option value="03">Maret</option>
@@ -360,8 +359,7 @@
                             <option value="11">November</option>
                             <option value="12">Desember</option>
                         </select>
-                        <!-- Tambahan: Filter Tahun -->
-                        <select id="year-filter" onchange="updateDashboardStats()" class="bg-white border-2 border-gray-200 text-gray-700 py-1.5 px-2 rounded-lg shadow-sm focus:outline-none focus:border-shopee font-bold cursor-pointer transition text-sm">
+                        <select id="year-filter" onchange="updateDashboardStats()" class="bg-white border-2 border-gray-200 text-gray-700 py-1.5 px-2 rounded-lg shadow-sm focus:outline-none focus:border-brandPrimary font-bold cursor-pointer transition text-sm">
                             <!-- Opsi tahun akan diisi otomatis lewat JavaScript -->
                         </select>
                     </div>
@@ -369,8 +367,8 @@
                 
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                     <div class="btn-3d bg-gradient-to-br from-white to-gray-50 p-5 rounded-2xl shadow-[0_5px_0_0_#e5e7eb] border-2 border-gray-100 flex flex-col items-center justify-center text-center cursor-pointer">
-                        <div class="w-12 h-12 rounded-full bg-orange-100 text-shopee flex items-center justify-center text-2xl mb-2 shadow-inner"><i class="fas fa-bell"></i></div>
-                        <div class="text-shopee text-3xl font-extrabold mb-1 drop-shadow-sm" id="dash-new">0</div>
+                        <div class="w-12 h-12 rounded-full bg-orange-100 text-brandPrimary flex items-center justify-center text-2xl mb-2 shadow-inner"><i class="fas fa-bell"></i></div>
+                        <div class="text-brandPrimary text-3xl font-extrabold mb-1 drop-shadow-sm" id="dash-new">0</div>
                         <div class="text-xs md:text-sm text-gray-600 font-bold">Pesanan Baru</div>
                     </div>
                     <div class="btn-3d bg-gradient-to-br from-white to-gray-50 p-5 rounded-2xl shadow-[0_5px_0_0_#e5e7eb] border-2 border-gray-100 flex flex-col items-center justify-center text-center cursor-pointer">
@@ -383,7 +381,7 @@
                         <div class="text-green-500 text-3xl font-extrabold mb-1 drop-shadow-sm" id="dash-done">0</div>
                         <div class="text-xs md:text-sm text-gray-600 font-bold">Selesai</div>
                     </div>
-                    <div class="btn-3d bg-gradient-to-br from-shopee to-[#d73211] p-5 rounded-2xl shadow-[0_5px_0_0_#991b1b] border-2 border-shopee flex flex-col items-center justify-center text-center cursor-pointer text-white">
+                    <div class="btn-3d bg-gradient-to-br from-brandPrimary to-[#d73211] p-5 rounded-2xl shadow-[0_5px_0_0_#991b1b] border-2 border-brandPrimary flex flex-col items-center justify-center text-center cursor-pointer text-white">
                         <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-2xl mb-2 shadow-inner"><i class="fas fa-wallet"></i></div>
                         <div class="text-xl md:text-2xl font-extrabold mb-1 drop-shadow-md" id="dash-income">Rp0</div>
                         <div class="text-xs md:text-sm text-white/90 font-bold">Total Pendapatan</div>
@@ -391,7 +389,7 @@
                 </div>
 
                 <div class="bg-white rounded-2xl shadow-sm p-6 border-2 border-gray-100">
-                    <h2 class="text-lg font-bold mb-4 text-gray-800"><i class="fas fa-chart-area text-shopee mr-2"></i> Performa Penjualan (Pesanan Selesai)</h2>
+                    <h2 class="text-lg font-bold mb-4 text-gray-800"><i class="fas fa-chart-area text-brandPrimary mr-2"></i> Performa Penjualan (Pesanan Selesai)</h2>
                     
                     <!-- Informasi Total di atas Grafik -->
                     <div class="flex justify-between items-center mb-6 p-4 bg-orange-50 rounded-xl border border-orange-100 shadow-inner">
@@ -401,7 +399,7 @@
                         </div>
                         <div class="text-center flex-1">
                             <div class="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Total Pendapatan</div>
-                            <div class="text-2xl md:text-3xl font-extrabold text-shopee" id="chart-total-income">Rp 0</div>
+                            <div class="text-2xl md:text-3xl font-extrabold text-brandPrimary" id="chart-total-income">Rp 0</div>
                         </div>
                     </div>
 
@@ -410,7 +408,7 @@
                         <canvas id="performanceChart"></canvas>
                     </div>
                     
-                    <!-- Rincian Breakdown Produk per Tanggal (Tersembunyi by default) -->
+                    <!-- Rincian Breakdown Produk per Tanggal -->
                     <div id="chart-breakdown-container" class="hidden mt-6 border-t-2 border-gray-100 pt-4">
                         <h3 class="font-bold text-gray-800 mb-3 bg-gray-50 px-4 py-2 rounded-lg border border-gray-200 inline-block shadow-sm" id="breakdown-title">Rincian: -</h3>
                         <div class="overflow-x-auto bg-white rounded-xl border border-gray-200 shadow-sm">
@@ -438,9 +436,9 @@
                 <div class="bg-white rounded-2xl shadow-sm border-2 border-gray-100 overflow-hidden">
                     <div class="flex border-b-2 overflow-x-auto hide-scrollbar bg-gray-50" id="order-tabs">
                         <div class="px-6 py-4 tab-active whitespace-nowrap cursor-pointer transition" onclick="filterOrders('Semua', this)">Semua</div>
-                        <div class="px-6 py-4 font-bold text-gray-500 hover:text-shopee whitespace-nowrap cursor-pointer transition" onclick="filterOrders('Menunggu Konfirmasi', this)">Pesanan Baru</div>
-                        <div class="px-6 py-4 font-bold text-gray-500 hover:text-shopee whitespace-nowrap cursor-pointer transition" onclick="filterOrders('Menunggu Kurir', this)">Dalam Pengiriman</div>
-                        <div class="px-6 py-4 font-bold text-gray-500 hover:text-shopee whitespace-nowrap cursor-pointer transition" onclick="filterOrders('Selesai', this)">Selesai</div>
+                        <div class="px-6 py-4 font-bold text-gray-500 hover:text-brandPrimary whitespace-nowrap cursor-pointer transition" onclick="filterOrders('Menunggu Konfirmasi', this)">Pesanan Baru</div>
+                        <div class="px-6 py-4 font-bold text-gray-500 hover:text-brandPrimary whitespace-nowrap cursor-pointer transition" onclick="filterOrders('Menunggu Kurir', this)">Dalam Pengiriman</div>
+                        <div class="px-6 py-4 font-bold text-gray-500 hover:text-brandPrimary whitespace-nowrap cursor-pointer transition" onclick="filterOrders('Selesai', this)">Selesai</div>
                     </div>
 
                     <div class="p-4" id="orders-list-container">
@@ -453,23 +451,23 @@
             <section id="section-products" class="hidden">
                 <div class="flex flex-col md:flex-row justify-between md:items-center mb-6 gap-4">
                     <h1 class="text-2xl font-bold text-gray-800 drop-shadow-sm">Produk Saya</h1>
-                    <button onclick="toggleAddProductForm()" class="btn-3d bg-shopee text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-shopeeHover transition flex items-center justify-center gap-2 shadow-[0_4px_0_0_#be3118]">
+                    <button onclick="toggleAddProductForm()" class="btn-3d bg-brandPrimary text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-brandPrimaryHover transition flex items-center justify-center gap-2 shadow-[0_4px_0_0_#be3118]">
                         <i class="fas fa-plus-circle text-lg"></i> Tambah Produk Baru
                     </button>
                 </div>
 
                 <!-- ADD PRODUCT FORM -->
                 <div id="form-add-product" class="hidden bg-white rounded-2xl shadow-sm border-2 border-gray-100 p-6 mb-6">
-                    <h2 class="text-lg font-bold mb-4 border-b pb-2 text-shopee"><i class="fas fa-box-open mr-2"></i>Informasi Produk Baru</h2>
+                    <h2 class="text-lg font-bold mb-4 border-b pb-2 text-brandPrimary"><i class="fas fa-box-open mr-2"></i>Informasi Produk Baru</h2>
                     <form id="productForm" onsubmit="submitNewProduct(event)">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                             <div>
                                 <label class="block text-sm font-bold text-gray-700 mb-1">Nama Produk *</label>
-                                <input type="text" id="prodName" required placeholder="Contoh: Nasi Goreng Spesial" class="w-full px-3 py-2.5 border-2 rounded-lg outline-none focus:border-shopee bg-gray-50 text-gray-800 font-semibold">
+                                <input type="text" id="prodName" required placeholder="Contoh: Nasi Goreng Spesial" class="w-full px-3 py-2.5 border-2 rounded-lg outline-none focus:border-brandPrimary bg-gray-50 text-gray-800 font-semibold">
                             </div>
                             <div>
                                 <label class="block text-sm font-bold text-gray-700 mb-1">Kategori (Database Tujuan) *</label>
-                                <select id="prodCategory" required class="w-full px-3 py-2.5 border-2 rounded-lg outline-none focus:border-shopee bg-gray-50 text-gray-800 font-semibold cursor-pointer">
+                                <select id="prodCategory" required class="w-full px-3 py-2.5 border-2 rounded-lg outline-none focus:border-brandPrimary bg-gray-50 text-gray-800 font-semibold cursor-pointer">
                                     <option value="makanan_berat">Makanan Berat</option>
                                     <option value="minuman">Minuman</option>
                                     <option value="jajanan">Jajanan</option>
@@ -483,25 +481,25 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-bold text-gray-700 mb-1">Harga (Rp) *</label>
-                                <input type="number" id="prodPrice" required placeholder="Contoh: 25000 (tanpa titik)" class="w-full px-3 py-2.5 border-2 rounded-lg outline-none focus:border-shopee bg-gray-50 text-gray-800 font-semibold">
+                                <input type="number" id="prodPrice" required placeholder="Contoh: 25000 (tanpa titik)" class="w-full px-3 py-2.5 border-2 rounded-lg outline-none focus:border-brandPrimary bg-gray-50 text-gray-800 font-semibold">
                             </div>
                             <div>
                                 <label class="block text-sm font-bold text-gray-700 mb-1">Foto Produk *</label>
-                                <input type="file" id="prodImgFile" accept="image/*" required class="w-full px-3 py-2 border-2 rounded-lg outline-none focus:border-shopee bg-gray-50 text-sm text-gray-800 font-semibold cursor-pointer">
+                                <input type="file" id="prodImgFile" accept="image/*" required class="w-full px-3 py-2 border-2 rounded-lg outline-none focus:border-brandPrimary bg-gray-50 text-sm text-gray-800 font-semibold cursor-pointer">
                             </div>
                         </div>
                         
                         <div id="flashPromoFields" class="hidden grid-cols-1 md:grid-cols-2 gap-4 mb-4 p-4 border-2 rounded-xl bg-orange-50 border-orange-200">
                             <div class="col-span-full">
-                                <span class="text-shopee font-bold text-base"><i class="fas fa-bolt"></i> Pengaturan Waktu Flash Promo</span>
+                                <span class="text-brandPrimary font-bold text-base"><i class="fas fa-bolt"></i> Pengaturan Waktu Flash Promo</span>
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-gray-700 mb-1">Waktu Mulai *</label>
-                                <input type="datetime-local" id="prodPromoStart" class="w-full px-3 py-2 border-2 rounded-lg outline-none focus:border-shopee text-sm font-semibold bg-white cursor-pointer">
+                                <input type="datetime-local" id="prodPromoStart" class="w-full px-3 py-2 border-2 rounded-lg outline-none focus:border-brandPrimary text-sm font-semibold bg-white cursor-pointer">
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-gray-700 mb-1">Waktu Berakhir *</label>
-                                <input type="datetime-local" id="prodPromoEnd" class="w-full px-3 py-2 border-2 rounded-lg outline-none focus:border-shopee text-sm font-semibold bg-white cursor-pointer">
+                                <input type="datetime-local" id="prodPromoEnd" class="w-full px-3 py-2 border-2 rounded-lg outline-none focus:border-brandPrimary text-sm font-semibold bg-white cursor-pointer">
                             </div>
                         </div>
                         
@@ -509,7 +507,7 @@
 
                         <div class="flex justify-end gap-3 mt-4 pt-4 border-t">
                             <button type="button" onclick="toggleAddProductForm()" class="btn-3d px-5 py-2.5 border-2 border-gray-200 rounded-xl text-gray-600 hover:bg-gray-100 transition text-sm font-bold shadow-[0_3px_0_0_#d1d5db]">Batal</button>
-                            <button type="submit" id="btnSubmitProduct" class="btn-3d px-5 py-2.5 bg-shopee text-white rounded-xl font-bold hover:bg-shopeeHover transition text-sm flex items-center gap-2 shadow-[0_4px_0_0_#be3118]">
+                            <button type="submit" id="btnSubmitProduct" class="btn-3d px-5 py-2.5 bg-brandPrimary text-white rounded-xl font-bold hover:bg-brandPrimaryHover transition text-sm flex items-center gap-2 shadow-[0_4px_0_0_#be3118]">
                                 <i class="fas fa-save"></i> Simpan & Tampilkan
                             </button>
                         </div>
@@ -519,7 +517,7 @@
                 <!-- Product List -->
                 <div class="bg-white rounded-2xl shadow-sm border-2 border-gray-100 overflow-hidden">
                     <div class="p-4 border-b-2 bg-gray-50 flex justify-between items-center">
-                        <span class="font-bold text-gray-800 text-lg"><i class="fas fa-list-alt text-shopee mr-2"></i>Daftar Produk Aktif</span>
+                        <span class="font-bold text-gray-800 text-lg"><i class="fas fa-list-alt text-brandPrimary mr-2"></i>Daftar Produk Aktif</span>
                         <div class="flex border-2 bg-white rounded-lg px-3 py-2 items-center shadow-inner">
                             <i class="fas fa-search text-gray-400 mr-2"></i>
                             <input type="text" placeholder="Cari produk..." class="outline-none text-sm w-24 md:w-48 bg-transparent text-gray-800 font-semibold">
@@ -555,7 +553,7 @@
 
                 <!-- MODE BACA (VIEW) -->
                 <div id="profile-view-mode" class="bg-white rounded-2xl shadow-sm border-2 border-gray-100 p-6">
-                    <h2 class="font-bold text-shopee mb-4 border-b-2 pb-2 text-lg"><i class="fas fa-store mr-2"></i>Informasi Toko</h2>
+                    <h2 class="font-bold text-brandPrimary mb-4 border-b-2 pb-2 text-lg"><i class="fas fa-store mr-2"></i>Informasi Toko</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                         <div>
                             <label class="block text-xs font-bold text-gray-500 mb-1 uppercase tracking-wide">Nama Toko</label>
@@ -574,7 +572,7 @@
                         </div>
                     </div>
 
-                    <h2 class="font-bold text-shopee mb-4 border-b-2 pb-2 text-lg"><i class="fas fa-user-tie mr-2"></i>Data Pemilik</h2>
+                    <h2 class="font-bold text-brandPrimary mb-4 border-b-2 pb-2 text-lg"><i class="fas fa-user-tie mr-2"></i>Data Pemilik</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                         <div>
                             <label class="block text-xs font-bold text-gray-500 mb-1 uppercase tracking-wide">Nama Lengkap</label>
@@ -594,7 +592,7 @@
                         </div>
                     </div>
 
-                    <h2 class="font-bold text-shopee mb-4 border-b-2 pb-2 text-lg"><i class="fas fa-money-check-alt mr-2"></i>Informasi Bank</h2>
+                    <h2 class="font-bold text-brandPrimary mb-4 border-b-2 pb-2 text-lg"><i class="fas fa-money-check-alt mr-2"></i>Informasi Bank</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-bold text-gray-500 mb-1 uppercase tracking-wide">Nama Bank</label>
@@ -614,34 +612,35 @@
                 <!-- MODE EDIT -->
                 <div id="profile-edit-mode" class="hidden bg-white rounded-2xl shadow-sm border-2 border-gray-100 p-6">
                     <form id="formEditProfile" onsubmit="submitEditProfile(event)">
-                        <h2 class="font-bold text-shopee mb-4 border-b-2 pb-2 text-lg"><i class="fas fa-store mr-2"></i>Informasi & Lokasi Toko</h2>
+                        <h2 class="font-bold text-brandPrimary mb-4 border-b-2 pb-2 text-lg"><i class="fas fa-store mr-2"></i>Informasi & Lokasi Toko</h2>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                             <div>
                                 <label class="block text-xs font-bold text-gray-700 mb-1">Nama Toko *</label>
-                                <input type="text" id="editStoreName" required class="w-full px-3 py-2.5 border-2 rounded-lg outline-none focus:border-shopee bg-gray-50 text-sm font-semibold text-gray-800 shadow-inner">
+                                <input type="text" id="editStoreName" required class="w-full px-3 py-2.5 border-2 rounded-lg outline-none focus:border-brandPrimary bg-gray-50 text-sm font-semibold text-gray-800 shadow-inner">
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-gray-700 mb-1">Alamat Toko (Teks) *</label>
-                                <input type="text" id="editStoreAddress" required class="w-full px-3 py-2.5 border-2 rounded-lg outline-none focus:border-shopee bg-gray-50 text-sm font-semibold text-gray-800 shadow-inner">
+                                <input type="text" id="editStoreAddress" required class="w-full px-3 py-2.5 border-2 rounded-lg outline-none focus:border-brandPrimary bg-gray-50 text-sm font-semibold text-gray-800 shadow-inner">
                             </div>
                             <div class="md:col-span-2 border-2 rounded-xl bg-blue-50/50 p-4 border-blue-100">
                                 <label class="block text-sm font-bold text-blue-800 mb-2"><i class="fas fa-map-marked-alt mr-1"></i> Kunci Titik Lokasi Peta (GPS) *</label>
+                                <div id="editMap" class="w-full h-48 rounded-lg border-2 border-blue-200 mb-3" style="z-index: 10;"></div>
                                 <div class="flex flex-col sm:flex-row gap-2">
-                                    <input type="text" id="editLat" placeholder="Latitude" class="w-full sm:w-1/2 px-3 py-2.5 border-2 rounded-lg outline-none text-sm bg-white font-bold text-gray-600 shadow-inner" readonly>
-                                    <input type="text" id="editLng" placeholder="Longitude" class="w-full sm:w-1/2 px-3 py-2.5 border-2 rounded-lg outline-none text-sm bg-white font-bold text-gray-600 shadow-inner" readonly>
+                                    <input type="hidden" id="editLat" required>
+                                    <input type="hidden" id="editLng" required>
                                     <button type="button" onclick="getLocationSeller()" class="btn-3d w-full sm:w-auto bg-blue-500 text-white px-5 py-2.5 rounded-lg hover:bg-blue-600 shadow-[0_4px_0_0_#1e40af] flex items-center justify-center gap-2 whitespace-nowrap font-bold text-sm">
                                         <i class="fas fa-crosshairs text-lg"></i> Dapatkan Lokasi Saat Ini
                                     </button>
                                 </div>
-                                <p class="text-[11px] text-gray-500 mt-2 font-semibold">Harap klik tombol biru saat Anda <span class="text-shopee">berada persis di depan Toko</span> agar kurir tidak tersasar.</p>
+                                <p class="text-[11px] text-gray-500 mt-2 font-semibold">Anda dapat <b>menggeser pin biru di peta</b> agar lebih presisi. Harap klik tombol biru saat Anda berada persis di depan Toko agar kurir tidak tersasar.</p>
                             </div>
                         </div>
 
-                        <h2 class="font-bold text-shopee mb-4 border-b-2 pb-2 text-lg"><i class="fas fa-user-tie mr-2"></i>Data Pemilik</h2>
+                        <h2 class="font-bold text-brandPrimary mb-4 border-b-2 pb-2 text-lg"><i class="fas fa-user-tie mr-2"></i>Data Pemilik</h2>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                             <div>
                                 <label class="block text-xs font-bold text-gray-700 mb-1">Nama Lengkap *</label>
-                                <input type="text" id="editOwnerName" required class="w-full px-3 py-2.5 border-2 rounded-lg outline-none focus:border-shopee bg-gray-50 text-sm font-semibold text-gray-800 shadow-inner">
+                                <input type="text" id="editOwnerName" required class="w-full px-3 py-2.5 border-2 rounded-lg outline-none focus:border-brandPrimary bg-gray-50 text-sm font-semibold text-gray-800 shadow-inner">
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-gray-500 mb-1">NIK (Tidak dapat diubah)</label>
@@ -653,15 +652,15 @@
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-gray-700 mb-1">Nomor HP *</label>
-                                <input type="tel" id="editPhone" required class="w-full px-3 py-2.5 border-2 rounded-lg outline-none focus:border-shopee bg-gray-50 text-sm font-semibold text-gray-800 shadow-inner tracking-widest">
+                                <input type="tel" id="editPhone" required class="w-full px-3 py-2.5 border-2 rounded-lg outline-none focus:border-brandPrimary bg-gray-50 text-sm font-semibold text-gray-800 shadow-inner tracking-widest">
                             </div>
                         </div>
 
-                        <h2 class="font-bold text-shopee mb-4 border-b-2 pb-2 text-lg"><i class="fas fa-money-check-alt mr-2"></i>Informasi Bank</h2>
+                        <h2 class="font-bold text-brandPrimary mb-4 border-b-2 pb-2 text-lg"><i class="fas fa-money-check-alt mr-2"></i>Informasi Bank</h2>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                             <div>
                                 <label class="block text-xs font-bold text-gray-700 mb-1">Nama Bank *</label>
-                                <select id="editBankName" required class="w-full px-3 py-2.5 border-2 rounded-lg outline-none focus:border-shopee bg-gray-50 text-sm font-bold text-gray-800 shadow-inner uppercase cursor-pointer">
+                                <select id="editBankName" required class="w-full px-3 py-2.5 border-2 rounded-lg outline-none focus:border-brandPrimary bg-gray-50 text-sm font-bold text-gray-800 shadow-inner uppercase cursor-pointer">
                                     <option value="BCA">BCA</option>
                                     <option value="Mandiri">Bank Mandiri</option>
                                     <option value="BRI">BRI</option>
@@ -671,13 +670,13 @@
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-gray-700 mb-1">Nomor Rekening *</label>
-                                <input type="number" id="editBankAccount" required class="w-full px-3 py-2.5 border-2 rounded-lg outline-none focus:border-shopee bg-gray-50 text-sm font-bold text-gray-800 shadow-inner tracking-widest">
+                                <input type="number" id="editBankAccount" required class="w-full px-3 py-2.5 border-2 rounded-lg outline-none focus:border-brandPrimary bg-gray-50 text-sm font-bold text-gray-800 shadow-inner tracking-widest">
                             </div>
                         </div>
 
                         <div class="flex flex-col sm:flex-row justify-end gap-3 border-t-2 pt-6">
                             <button type="button" onclick="toggleEditProfile()" class="btn-3d w-full sm:w-auto px-8 py-3 border-2 border-gray-300 rounded-xl text-gray-600 hover:bg-gray-100 text-sm font-bold shadow-[0_4px_0_0_#d1d5db]">Batal</button>
-                            <button type="submit" id="btnSaveProfile" class="btn-3d w-full sm:w-auto px-8 py-3 bg-shopee text-white rounded-xl font-bold hover:bg-shopeeHover text-sm flex items-center justify-center gap-2 shadow-[0_4px_0_0_#be3118]">
+                            <button type="submit" id="btnSaveProfile" class="btn-3d w-full sm:w-auto px-8 py-3 bg-brandPrimary text-white rounded-xl font-bold hover:bg-brandPrimaryHover text-sm flex items-center justify-center gap-2 shadow-[0_4px_0_0_#be3118]">
                                 <i class="fas fa-save text-lg"></i> Simpan Perubahan
                             </button>
                         </div>
@@ -690,20 +689,20 @@
 
     <!-- MOBILE BOTTOM NAVIGATION (Seller Specific) -->
     <nav class="md:hidden fixed bottom-0 left-0 right-0 w-full bg-white border-t flex justify-around text-[10px] text-gray-500 pb-3 pt-2 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-50">
-        <div onclick="switchTab('dashboard')" class="flex flex-col items-center cursor-pointer py-1 mobile-nav-item text-shopee active:scale-90 transition-transform" data-target="dashboard">
+        <div onclick="switchTab('dashboard')" class="flex flex-col items-center cursor-pointer py-1 mobile-nav-item text-brandPrimary active:scale-90 transition-transform" data-target="dashboard">
             <i class="fas fa-chart-line text-2xl mb-1 drop-shadow-sm"></i>
             <span class="font-bold mt-1">Dasbor</span>
         </div>
-        <div onclick="switchTab('orders')" class="flex flex-col items-center cursor-pointer py-1 mobile-nav-item hover:text-shopee relative active:scale-90 transition-transform" data-target="orders">
+        <div onclick="switchTab('orders')" class="flex flex-col items-center cursor-pointer py-1 mobile-nav-item hover:text-brandPrimary relative active:scale-90 transition-transform" data-target="orders">
             <i class="fas fa-clipboard-list text-2xl mb-1 drop-shadow-sm"></i>
-            <span class="absolute top-0 right-2 bg-shopee text-white text-[9px] font-bold px-1.5 rounded-full border-2 border-white shadow-sm" id="nav-badge-order">0</span>
+            <span class="absolute top-0 right-2 bg-brandPrimary text-white text-[9px] font-bold px-1.5 rounded-full border-2 border-white shadow-sm" id="nav-badge-order">0</span>
             <span class="font-bold mt-1">Pesanan</span>
         </div>
-        <div onclick="switchTab('products')" class="flex flex-col items-center cursor-pointer py-1 mobile-nav-item hover:text-shopee active:scale-90 transition-transform" data-target="products">
+        <div onclick="switchTab('products')" class="flex flex-col items-center cursor-pointer py-1 mobile-nav-item hover:text-brandPrimary active:scale-90 transition-transform" data-target="products">
             <i class="fas fa-box text-2xl mb-1 drop-shadow-sm"></i>
             <span class="font-bold mt-1">Produk</span>
         </div>
-        <div onclick="switchTab('profile')" class="flex flex-col items-center cursor-pointer py-1 mobile-nav-item hover:text-shopee active:scale-90 transition-transform" data-target="profile">
+        <div onclick="switchTab('profile')" class="flex flex-col items-center cursor-pointer py-1 mobile-nav-item hover:text-brandPrimary active:scale-90 transition-transform" data-target="profile">
             <i class="fas fa-store-alt text-2xl mb-1 drop-shadow-sm"></i>
             <span class="font-bold mt-1">Toko</span>
         </div>
@@ -778,6 +777,161 @@
             });
         }
 
+        // --- LEAFLET MAP REGISTRATION ---
+        let regMap, regMarker;
+
+        function initRegMap() {
+            if (regMap) {
+                regMap.invalidateSize();
+                return;
+            }
+            // Titik Awal: Pusat Kota Jakarta (opsional, bisa diubah)
+            regMap = L.map('regMap').setView([-6.2088, 106.8456], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(regMap);
+
+            regMap.on('click', function(e) {
+                setRegMarker(e.latlng.lat, e.latlng.lng);
+            });
+        }
+
+        function setRegMarker(lat, lng) {
+            if (regMarker) {
+                regMarker.setLatLng([lat, lng]);
+            } else {
+                // Tambahkan opsi draggable: true agar marker bisa digeser
+                regMarker = L.marker([lat, lng], { draggable: true }).addTo(regMap);
+                
+                // Tambahkan event 'dragend' untuk update koordinat saat marker selesai digeser
+                regMarker.on('dragend', function(e) {
+                    const position = regMarker.getLatLng();
+                    updateCoordinatesAndAddress(position.lat, position.lng);
+                });
+            }
+            regMap.setView([lat, lng], 16);
+            updateCoordinatesAndAddress(lat, lng);
+        }
+
+        function updateCoordinatesAndAddress(lat, lng) {
+            // Set Hidden Inputs
+            document.getElementById('regLat').value = lat;
+            document.getElementById('regLng').value = lng;
+            
+            // Reverse Geocoding untuk Address Otomatis
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.display_name) {
+                        document.getElementById('regStoreAddress').value = data.display_name;
+                    }
+                })
+                .catch(err => console.error("Gagal menarik alamat:", err));
+        }
+
+        function getRegLocation() {
+            const btn = document.querySelector('button[onclick="getRegLocation()"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mendeteksi Lokasi...';
+            btn.disabled = true;
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    setRegMarker(position.coords.latitude, position.coords.longitude);
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }, function(error) {
+                    window.alert("Gagal mendapatkan lokasi GPS. Pastikan izin lokasi diaktifkan di pengaturan browser atau perangkat Anda.");
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                });
+            } else {
+                window.alert("Browser Anda tidak mendukung layanan Geolocation.");
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // --- MAP LOGIC UNTUK EDIT PROFIL ---
+        let editMap, editMarker;
+
+        function initEditMap(lat, lng) {
+            // Default ke titik awal (Jakarta) jika belum ada koordinat
+            const startLat = lat || -6.2088;
+            const startLng = lng || 106.8456;
+
+            if (editMap) {
+                editMap.invalidateSize();
+                if(lat && lng) setEditMarker(lat, lng, false);
+                return;
+            }
+            
+            editMap = L.map('editMap').setView([startLat, startLng], 15);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(editMap);
+
+            editMap.on('click', function(e) {
+                setEditMarker(e.latlng.lat, e.latlng.lng, true);
+            });
+
+            // Set marker awal jika data koordinat sudah ada
+            if (lat && lng) {
+                setEditMarker(lat, lng, false);
+            }
+        }
+
+        function setEditMarker(lat, lng, fetchAddress = true) {
+            if (editMarker) {
+                editMarker.setLatLng([lat, lng]);
+            } else {
+                editMarker = L.marker([lat, lng], { draggable: true }).addTo(editMap);
+                editMarker.on('dragend', function(e) {
+                    const position = editMarker.getLatLng();
+                    updateEditCoordinatesAndAddress(position.lat, position.lng);
+                });
+            }
+            editMap.setView([lat, lng], 16);
+            
+            if (fetchAddress) {
+                updateEditCoordinatesAndAddress(lat, lng);
+            } else {
+                // Update input hidden saja tanpa menarik API Address
+                document.getElementById('editLat').value = lat;
+                document.getElementById('editLng').value = lng;
+            }
+        }
+
+        function updateEditCoordinatesAndAddress(lat, lng) {
+            document.getElementById('editLat').value = lat;
+            document.getElementById('editLng').value = lng;
+            
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.display_name) {
+                        document.getElementById('editStoreAddress').value = data.display_name;
+                    }
+                })
+                .catch(err => console.error("Gagal menarik alamat:", err));
+        }
+
+        // --- PASSWORD VISIBILITY TOGGLE ---
+        function togglePasswordVisibility(inputId, btnEl) {
+            const input = document.getElementById(inputId);
+            const icon = btnEl.querySelector('i');
+            
+            if (input.type === "password") {
+                input.type = "text";
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = "password";
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
         // --- AUTHENTICATION LOGIC ---
         let SELLER_OUTLET_NAME = ""; 
         let SELLER_DATA = null; 
@@ -794,7 +948,6 @@
         const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxepD3BGU993WBCuZjH2Wo4sDyUkwyp4SGE4_mZ6EbrzD_qCDGzkRIOnPqmcXVnKNM/exec";
 
         document.addEventListener('DOMContentLoaded', () => {
-            // Modifikasi: Set filter default ke bulan dan tahun sistem saat ini
             const now = new Date();
             const currentMonth = (now.getMonth() + 1).toString().padStart(2, '0');
             const currentYear = now.getFullYear();
@@ -802,7 +955,6 @@
             const monthFilter = document.getElementById('month-filter');
             if(monthFilter) monthFilter.value = currentMonth;
 
-            // Tambahan: Mengisi Dropdown Tahun secara Dinamis (misal dari 2 tahun lalu s.d 2 tahun ke depan)
             const yearFilter = document.getElementById('year-filter');
             if(yearFilter) {
                 yearFilter.innerHTML = '';
@@ -838,7 +990,6 @@
                 }
             }
 
-            // Membaca sinyal apakah harus otomatis membuka halaman registrasi
             let isForceRegister = false;
             if (localStorage.getItem('foodcourt_force_register') === 'true') {
                 isForceRegister = true;
@@ -885,6 +1036,13 @@
             const activeView = document.getElementById('view-' + viewId);
             activeView.classList.remove('hidden');
             activeView.classList.add('flex');
+
+            // Inisialisasi Peta saat form registrasi terbuka
+            if (viewId === 'register') {
+                setTimeout(() => {
+                    if(typeof initRegMap === 'function') initRegMap();
+                }, 200);
+            }
         }
 
         async function handleLogin(e) {
@@ -933,6 +1091,15 @@
 
         async function handleRegister(e) {
             e.preventDefault();
+            
+            const lat = document.getElementById('regLat').value;
+            const lng = document.getElementById('regLng').value;
+
+            if (!lat || !lng) {
+                window.alert("Mohon klik tombol 'Gunakan Lokasi Saat Ini' atau tandai toko Anda di peta terlebih dahulu.");
+                return;
+            }
+
             const btn = document.getElementById('btnRegister');
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengirim Data...';
             btn.disabled = true;
@@ -944,12 +1111,12 @@
             const email = document.getElementById('regEmail').value;
             const phone = document.getElementById('regPhone').value;
             const password = document.getElementById('regPass').value;
-            const bankName = document.getElementById('regBankName').value;
-            const bankAccount = document.getElementById('regBankAccount').value;
+            const bankName = document.getElementById('regBankName') ? document.getElementById('regBankName').value : "-";
+            const bankAccount = document.getElementById('regBankAccount') ? document.getElementById('regBankAccount').value : "-";
 
             const newId = "SEL-" + Math.floor(Math.random() * 100000);
             const rowData = [
-                newId, storeName, storeAddress, ownerName, nik, email, phone, password, bankName, bankAccount, "URL_KTP_PLACEHOLDER", "", ""
+                newId, storeName, storeAddress, ownerName, nik, email, phone, password, bankName || "-", bankAccount || "-", "URL_KTP_PLACEHOLDER", lat, lng
             ];
 
             try {
@@ -1001,7 +1168,7 @@
         // --- SISTEM BACKGROUND SYNC ---
         function startBackgroundSync() {
             if(syncInterval) clearInterval(syncInterval);
-            syncInterval = setInterval(syncDataBackground, 10000); // 10 detik
+            syncInterval = setInterval(syncDataBackground, 10000); 
         }
 
         async function syncDataBackground() {
@@ -1010,7 +1177,7 @@
             const syncIcon = document.getElementById('sync-icon');
             const syncTime = document.getElementById('sync-time');
             
-            if(syncIcon) syncIcon.classList.add('fa-spin', 'text-shopee');
+            if(syncIcon) syncIcon.classList.add('fa-spin', 'text-brandPrimary');
 
             try {
                 await loadSellerOrders(true);
@@ -1030,7 +1197,7 @@
             } catch (error) {
                 console.error("Sync error");
             } finally {
-                if(syncIcon) syncIcon.classList.remove('fa-spin', 'text-shopee');
+                if(syncIcon) syncIcon.classList.remove('fa-spin', 'text-brandPrimary');
             }
         }
 
@@ -1089,7 +1256,6 @@
                     }
                 }
 
-                // Modifikasi: Saring pesanan jika bulan ATAU tahunnya tidak sama dengan filter
                 if(orderMonth !== "" && orderYear !== "" && (orderMonth !== selectedMonth || orderYear !== selectedYear)) {
                     return; 
                 }
@@ -1204,7 +1370,7 @@
         function showChartBreakdown(dateStr) {
             const container = document.getElementById('chart-breakdown-container');
             const tbody = document.getElementById('breakdown-tbody');
-            document.getElementById('breakdown-title').innerHTML = `<i class="far fa-calendar-alt text-shopee mr-1"></i> Rincian Penjualan: <b class="text-shopee">${dateStr}</b>`;
+            document.getElementById('breakdown-title').innerHTML = `<i class="far fa-calendar-alt text-brandPrimary mr-1"></i> Rincian Penjualan: <b class="text-brandPrimary">${dateStr}</b>`;
             
             container.classList.remove('hidden');
             tbody.innerHTML = '';
@@ -1216,7 +1382,7 @@
                 tr.innerHTML = `
                     <td class="p-3 text-gray-700 font-semibold">${prodName}</td>
                     <td class="p-3 text-center font-extrabold text-gray-800 bg-gray-50/50">${data.qty}</td>
-                    <td class="p-3 text-right font-extrabold text-shopee">Rp ${new Intl.NumberFormat('id-ID').format(data.income)}</td>
+                    <td class="p-3 text-right font-extrabold text-brandPrimary">Rp ${new Intl.NumberFormat('id-ID').format(data.income)}</td>
                 `;
                 tbody.appendChild(tr);
             }
@@ -1230,7 +1396,7 @@
 
             if(order.status === 'Menunggu Konfirmasi') {
                 statusColor = 'text-orange-500';
-                actionBtn = `<button onclick="updateOrder('${order.order_id}', 'Menunggu Kurir')" class="btn-3d w-full md:w-auto bg-shopee text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow-[0_4px_0_0_#be3118] hover:bg-shopeeHover transition flex items-center justify-center gap-2"><i class="fas fa-motorcycle"></i> Atur Pengiriman</button>`;
+                actionBtn = `<button onclick="updateOrder('${order.order_id}', 'Menunggu Kurir')" class="btn-3d w-full md:w-auto bg-brandPrimary text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow-[0_4px_0_0_#be3118] hover:bg-brandPrimaryHover transition flex items-center justify-center gap-2"><i class="fas fa-motorcycle"></i> Atur Pengiriman</button>`;
             } else if (order.status === 'Menunggu Kurir') {
                 statusColor = 'text-blue-500';
                 actionBtn = `<button disabled class="w-full md:w-auto bg-gray-200 text-gray-500 px-6 py-2.5 rounded-lg text-sm font-bold cursor-not-allowed border-2 border-gray-300 flex items-center justify-center gap-2"><i class="fas fa-search"></i> Mencari Kurir...</button>`;
@@ -1241,7 +1407,7 @@
                 statusColor = 'text-green-600';
                 actionBtn = `<button onclick="showOrderDetails('${order.order_id}')" class="btn-3d w-full md:w-auto border-2 border-gray-300 text-gray-600 px-6 py-2.5 rounded-lg text-sm font-bold hover:bg-gray-50 shadow-[0_3px_0_0_#d1d5db] transition flex items-center justify-center gap-2"><i class="fas fa-eye"></i> Rincian</button>`;
             } else {
-                statusColor = 'text-shopee';
+                statusColor = 'text-brandPrimary';
                 actionBtn = `<button disabled class="w-full md:w-auto bg-gray-100 text-gray-600 px-6 py-2.5 rounded-lg text-sm font-bold border-2 border-gray-200">${order.status}</button>`;
             }
 
@@ -1257,17 +1423,17 @@
                     </div>
                     <div class="p-4 flex flex-col md:flex-row gap-4 justify-between items-center bg-white">
                         <div class="flex gap-4 items-center w-full md:w-auto">
-                            <div class="w-16 h-16 bg-gradient-to-br from-orange-50 to-orange-100 border border-orange-200 rounded-xl flex items-center justify-center text-shopee flex-shrink-0 shadow-inner">
+                            <div class="w-16 h-16 bg-gradient-to-br from-orange-50 to-orange-100 border border-orange-200 rounded-xl flex items-center justify-center text-brandPrimary flex-shrink-0 shadow-inner">
                                 <i class="fas fa-shopping-bag text-2xl drop-shadow-sm"></i>
                             </div>
                             <div class="flex-1">
                                 <div class="font-bold text-gray-800 line-clamp-2 text-base">${order.product_name}</div>
                                 <div class="text-xs text-gray-400 mt-1 font-semibold tracking-wider">ORDER: #${order.order_id}</div>
-                                <div class="text-sm font-bold text-shopee mt-1 bg-orange-50 inline-block px-2 py-0.5 rounded border border-orange-100">x ${order.qty || 1}</div>
+                                <div class="text-sm font-bold text-brandPrimary mt-1 bg-orange-50 inline-block px-2 py-0.5 rounded border border-orange-100">x ${order.qty || 1}</div>
                             </div>
                         </div>
                         <div class="flex flex-col items-end gap-2 w-full md:w-auto border-t md:border-t-0 pt-4 md:pt-0">
-                            <div class="text-xl text-shopee font-extrabold drop-shadow-sm mb-1">${formattedPrice}</div>
+                            <div class="text-xl text-brandPrimary font-extrabold drop-shadow-sm mb-1">${formattedPrice}</div>
                             ${actionBtn}
                             ${!order.status.includes('Selesai') ? `<button onclick="showOrderDetails('${order.order_id}')" class="text-xs font-bold text-blue-500 hover:text-blue-700 underline mt-2 cursor-pointer transition">Lihat Rincian Pesanan</button>` : ''}
                         </div>
@@ -1360,7 +1526,7 @@
             document.getElementById('detail-price').innerText = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(order.total_price);
             document.getElementById('detail-timestamp').innerText = order.timestamp || '-';
 
-            document.getElementById('detail-buyer-name').innerHTML = '<i class="fas fa-spinner fa-spin text-shopee"></i> Memuat...';
+            document.getElementById('detail-buyer-name').innerHTML = '<i class="fas fa-spinner fa-spin text-brandPrimary"></i> Memuat...';
             document.getElementById('detail-buyer-phone').innerText = '';
             document.getElementById('detail-buyer-address').innerText = 'Mencari alamat pengiriman...';
             
@@ -1377,10 +1543,10 @@
             let s1 = "text-gray-400", s2 = "text-gray-400", s3 = "text-gray-400", s4 = "text-gray-400";
             let b1 = "bg-gray-200", b2 = "bg-gray-200", b3 = "bg-gray-200", b4 = "bg-gray-200";
 
-            if (order.status.includes("Konfirmasi") || order.status.includes("Belum")) { s1 = "text-shopee font-bold"; b1 = "bg-shopee border-shopee"; }
-            else if (order.status.includes("Menunggu Kurir") || order.status.includes("Menuju Outlet")) { s1 = "text-shopee font-bold"; b1 = "bg-shopee border-shopee"; s2 = "text-blue-500 font-bold"; b2 = "bg-blue-500 border-blue-500"; }
-            else if (order.status.includes("Tujuan") || order.status.includes("Diambil")) { s1 = "text-shopee font-bold"; b1 = "bg-shopee border-shopee"; s2 = "text-blue-500 font-bold"; b2 = "bg-blue-500 border-blue-500"; s3 = "text-orange-500 font-bold"; b3 = "bg-orange-500 border-orange-500"; }
-            else if (order.status.includes("Selesai")) { s1 = "text-shopee font-bold"; b1 = "bg-shopee border-shopee"; s2 = "text-blue-500 font-bold"; b2 = "bg-blue-500 border-blue-500"; s3 = "text-orange-500 font-bold"; b3 = "bg-orange-500 border-orange-500"; s4 = "text-green-600 font-bold"; b4 = "bg-green-600 border-green-600"; }
+            if (order.status.includes("Konfirmasi") || order.status.includes("Belum")) { s1 = "text-brandPrimary font-bold"; b1 = "bg-brandPrimary border-brandPrimary"; }
+            else if (order.status.includes("Menunggu Kurir") || order.status.includes("Menuju Outlet")) { s1 = "text-brandPrimary font-bold"; b1 = "bg-brandPrimary border-brandPrimary"; s2 = "text-blue-500 font-bold"; b2 = "bg-blue-500 border-blue-500"; }
+            else if (order.status.includes("Tujuan") || order.status.includes("Diambil")) { s1 = "text-brandPrimary font-bold"; b1 = "bg-brandPrimary border-brandPrimary"; s2 = "text-blue-500 font-bold"; b2 = "bg-blue-500 border-blue-500"; s3 = "text-orange-500 font-bold"; b3 = "bg-orange-500 border-orange-500"; }
+            else if (order.status.includes("Selesai")) { s1 = "text-brandPrimary font-bold"; b1 = "bg-brandPrimary border-brandPrimary"; s2 = "text-blue-500 font-bold"; b2 = "bg-blue-500 border-blue-500"; s3 = "text-orange-500 font-bold"; b3 = "bg-orange-500 border-orange-500"; s4 = "text-green-600 font-bold"; b4 = "bg-green-600 border-green-600"; }
 
             timeline.innerHTML = `
                 <div class="relative">
@@ -1463,7 +1629,7 @@
                             <td class="p-4 flex items-center gap-3">
                                 <img src="${prod.img}" class="w-12 h-12 md:w-14 md:h-14 object-cover rounded-lg border-2 border-gray-100 shadow-sm" onerror="this.src='https://placehold.co/100x100/e0e0e0/333?text=Img'">
                                 <div class="flex flex-col">
-                                    <span class="text-[10px] font-bold text-shopee bg-orange-50 border border-orange-200 px-1.5 py-0.5 rounded w-fit mb-1">${prod.id}</span>
+                                    <span class="text-[10px] font-bold text-brandPrimary bg-orange-50 border border-orange-200 px-1.5 py-0.5 rounded w-fit mb-1">${prod.id}</span>
                                     <span class="text-gray-800 line-clamp-2 w-32 md:w-full">${prod.name}</span>
                                 </div>
                             </td>
@@ -1471,7 +1637,7 @@
                                 <span class="bg-gray-100 px-2 py-1 rounded border border-gray-200">${displayCategory}</span>
                             </td>
                             <td class="p-4">
-                                <div class="text-shopee font-extrabold text-sm md:text-base">${formattedPrice}</div>
+                                <div class="text-brandPrimary font-extrabold text-sm md:text-base">${formattedPrice}</div>
                                 <div class="text-xs text-gray-400 mt-1">${prod.sold || 0} Terjual</div>
                             </td>
                             <td class="p-4 align-middle text-center">
@@ -1550,7 +1716,7 @@
             // Konfirmasi dihapus: Setelah input, langsung proses ke database
             try {
                 const tbody = document.getElementById('product-table-body');
-                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-10 text-shopee font-bold"><i class="fas fa-spinner fa-spin text-2xl mb-2"></i><br>Memperbarui harga produk...</td></tr>';
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-10 text-brandPrimary font-bold"><i class="fas fa-spinner fa-spin text-2xl mb-2"></i><br>Memperbarui harga produk...</td></tr>`;
 
                 const response = await fetch(GAS_WEB_APP_URL, {
                     method: 'POST',
@@ -1564,8 +1730,6 @@
                 const result = await response.json();
                 
                 if (result.status === 'success') {
-                    // Optional: Notifikasi sukses bisa dihilangkan jika ingin tanpa notif sama sekali, 
-                    // namun disarankan tetap ada agar seller tahu proses berhasil.
                     window.alert("Harga berhasil diubah!");
                 } else {
                     window.alert("Gagal mengubah harga: " + result.message);
@@ -1627,7 +1791,7 @@
                 <td class="p-4 flex items-center gap-3">
                     <img src="${img}" class="w-12 h-12 md:w-14 md:h-14 object-cover rounded-lg border-2 border-gray-100 shadow-sm" onerror="this.src='https://placehold.co/100x100/e0e0e0/333?text=Img'">
                     <div class="flex flex-col">
-                        <span class="text-[10px] font-bold text-shopee bg-orange-50 border border-orange-200 px-1.5 py-0.5 rounded w-fit mb-1">${newId}</span>
+                        <span class="text-[10px] font-bold text-brandPrimary bg-orange-50 border border-orange-200 px-1.5 py-0.5 rounded w-fit mb-1">${newId}</span>
                         <span class="text-gray-800 line-clamp-2 w-32 md:w-full">${name}</span>
                     </div>
                 </td>
@@ -1635,7 +1799,7 @@
                     <span class="bg-gray-100 px-2 py-1 rounded border border-gray-200">${displayCategory}</span>
                 </td>
                 <td class="p-4">
-                    <div class="text-shopee font-extrabold text-sm md:text-base">${formattedPrice}</div>
+                    <div class="text-brandPrimary font-extrabold text-sm md:text-base">${formattedPrice}</div>
                     <div class="text-xs text-gray-400 mt-1">0 Terjual</div>
                 </td>
                 <td class="p-4 align-middle text-center">
@@ -1794,7 +1958,7 @@
 
             document.querySelectorAll('aside a').forEach(el => {
                 el.classList.remove('menu-active', 'text-gray-600');
-                if(!el.classList.contains('text-shopee')) el.classList.add('text-gray-600');
+                if(!el.classList.contains('text-brandPrimary')) el.classList.add('text-gray-600');
                 if(el.id === 'menu-' + tabId) {
                     el.classList.add('menu-active');
                     el.classList.remove('text-gray-600');
@@ -1802,8 +1966,8 @@
             });
 
             document.querySelectorAll('.mobile-nav-item').forEach(el => {
-                el.classList.remove('text-shopee');
-                if(el.dataset.target === tabId) el.classList.add('text-shopee');
+                el.classList.remove('text-brandPrimary');
+                if(el.dataset.target === tabId) el.classList.add('text-brandPrimary');
             });
         }
 
@@ -1875,6 +2039,12 @@
                 document.getElementById('editBankAccount').value = SELLER_DATA.bank_account || '';
                 document.getElementById('editLat').value = SELLER_DATA.lat || '';
                 document.getElementById('editLng').value = SELLER_DATA.lng || '';
+
+                // Render Map untuk Edit Profil
+                setTimeout(() => {
+                    initEditMap(SELLER_DATA.lat, SELLER_DATA.lng);
+                }, 300);
+
             } else {
                 viewMode.classList.remove('hidden');
                 editMode.classList.add('hidden');
@@ -1883,21 +2053,41 @@
         }
 
         function getLocationSeller() {
+            const btn = document.querySelector('button[onclick="getLocationSeller()"]');
+            const orig = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mendeteksi...';
+            btn.disabled = true;
+
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(function(position) {
-                    document.getElementById('editLat').value = position.coords.latitude;
-                    document.getElementById('editLng').value = position.coords.longitude;
+                    setEditMarker(position.coords.latitude, position.coords.longitude, true);
                     window.alert("Lokasi GPS berhasil ditangkap! Jangan lupa klik 'Simpan Perubahan'.");
+                    btn.innerHTML = orig;
+                    btn.disabled = false;
                 }, function(error) {
                     window.alert("Gagal mendapatkan lokasi. Pastikan izin lokasi (GPS) diaktifkan di browser Anda.");
+                    btn.innerHTML = orig;
+                    btn.disabled = false;
                 });
             } else {
                 window.alert("Browser Anda tidak mendukung Geolocation.");
+                btn.innerHTML = orig;
+                btn.disabled = false;
             }
         }
 
         async function submitEditProfile(e) {
             e.preventDefault();
+            
+            // Validasi Wajib GPS ditambahkan di sini
+            const latValue = document.getElementById('editLat').value;
+            const lngValue = document.getElementById('editLng').value;
+            
+            if(!latValue || !lngValue) {
+                window.alert("Mohon maaf, Anda WAJIB mengunci Titik Lokasi Peta (GPS) sebelum bisa menyimpan profil. Silakan klik tombol biru 'Dapatkan Lokasi Saat Ini'.");
+                return; // Membatalkan pengiriman data
+            }
+            
             const btn = document.getElementById('btnSaveProfile');
             btn.innerHTML = '<i class="fas fa-spinner fa-spin text-lg"></i> Menyimpan...';
             btn.disabled = true;
@@ -1910,8 +2100,8 @@
                 phone: document.getElementById('editPhone').value,
                 bank_name: document.getElementById('editBankName').value,
                 bank_account: document.getElementById('editBankAccount').value,
-                lat: document.getElementById('editLat').value,
-                lng: document.getElementById('editLng').value
+                lat: latValue,
+                lng: lngValue
             };
 
             try {
