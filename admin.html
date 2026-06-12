@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Foodcourt</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        shopee: '#ee4d2d',
+                        shopeeHover: '#d73211',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .btn-3d { transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1); }
+        .btn-3d:active { transform: translateY(3px); box-shadow: 0 0px 0 0 transparent !important; }
+    </style>
+</head>
+<body class="bg-[#f0f2f5] font-sans h-screen overflow-hidden flex selection:bg-orange-200 text-gray-800">
+
+    <!-- ================= LOADING OVERLAY ================= -->
+    <div id="loading-overlay" class="hidden fixed inset-0 z-[150] bg-black/50 backdrop-blur-sm justify-center items-center">
+        <div class="bg-white p-6 rounded-2xl shadow-2xl text-center flex flex-col items-center transform scale-105">
+            <div class="w-12 h-12 rounded-full border-4 border-gray-100 border-t-shopee animate-spin mb-3"></div>
+            <p class="text-sm font-extrabold text-gray-700 mt-2" id="loading-text">Memuat Data Server...</p>
+        </div>
+    </div>
+
+    <!-- ================= AUTHENTICATION VIEWS ================= -->
+    <div id="auth-container" class="absolute inset-0 bg-white z-[100] flex flex-col w-full h-full overflow-y-auto">
+        
+        <!-- LOGIN VIEW -->
+        <div id="view-login" class="flex flex-col h-full justify-center items-center p-4">
+            <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-8 border border-gray-100 text-center">
+                <img src="https://res.cloudinary.com/dmlllfubf/image/upload/v1781243016/Gemini_Generated_Image_bidjrobidjrobidj_wszrvn.png" alt="Admin Logo" class="w-24 h-24 mx-auto mb-6 object-contain drop-shadow-md">
+                <h1 class="text-2xl font-black text-gray-800 tracking-tight mb-1">Admin Foodcourt</h1>
+                <p class="text-xs text-gray-500 font-semibold mb-8">Pusat Kendali Sistem FoodCourt</p>
+                
+                <form onsubmit="handleAdminLogin(event)" class="flex flex-col gap-4">
+                    <div>
+                        <input type="password" id="adminPass" required placeholder="Masukkan PIN Admin" class="w-full px-4 py-3.5 border-2 border-gray-100 rounded-xl outline-none focus:border-red-500 bg-gray-50 font-black text-center tracking-widest shadow-inner transition text-lg">
+                    </div>
+                    <div class="text-right mt-1">
+                        <button type="button" onclick="switchAuthView('forgot')" class="text-xs text-red-500 font-bold hover:text-red-700 transition">Lupa PIN?</button>
+                    </div>
+                    <button type="submit" id="btnLogin" class="btn-3d w-full bg-gradient-to-b from-[#ef4444] to-[#dc2626] text-white py-3.5 rounded-xl font-bold text-base hover:from-[#dc2626] hover:to-[#b91c1c] shadow-[0_5px_0_0_#991b1b] transition mt-2 tracking-wider">MASUK SISTEM</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- FORGOT PIN VIEW -->
+        <div id="view-forgot" class="hidden flex-col h-full justify-center items-center p-4">
+            <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-8 border border-gray-100 text-center">
+                <button type="button" onclick="switchAuthView('login')" class="text-gray-500 mb-6 flex items-center gap-2 hover:text-red-500 w-fit font-bold bg-gray-100 px-4 py-2 rounded-full text-xs transition">
+                    <i class="fas fa-arrow-left"></i> Kembali
+                </button>
+                <div class="w-16 h-16 bg-blue-50 rounded-full mx-auto flex justify-center items-center mb-4">
+                    <i class="fas fa-unlock-alt text-blue-500 text-3xl drop-shadow-sm"></i>
+                </div>
+                <h1 class="text-2xl font-black text-gray-800 tracking-tight mb-1">Lupa PIN?</h1>
+                <p class="text-xs text-gray-500 font-semibold mb-6">Masukkan email admin Anda yang terdaftar di sistem.</p>
+                
+                <form onsubmit="handleAdminForgot(event)" class="flex flex-col gap-4">
+                    <div>
+                        <input type="email" id="forgotEmail" required placeholder="Email Admin Terdaftar" class="w-full px-4 py-3.5 border-2 border-gray-100 rounded-xl outline-none focus:border-blue-500 bg-gray-50 font-bold text-center shadow-inner transition text-sm">
+                    </div>
+                    <button type="submit" id="btnForgot" class="btn-3d w-full bg-gradient-to-b from-[#3b82f6] to-[#2563eb] text-white py-3.5 rounded-xl font-bold text-base hover:from-[#2563eb] hover:to-[#1d4ed8] shadow-[0_5px_0_0_#1e3a8a] transition tracking-wider">KIRIM PIN KE EMAIL</button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ================= MAIN DASHBOARD ================= -->
+    <div id="app-container" class="hidden h-full w-full flex-col md:flex-row">
+        
+        <!-- SIDEBAR (Desktop) -->
+        <aside class="bg-gradient-to-b from-gray-900 to-gray-800 text-gray-300 w-full md:w-64 flex flex-row md:flex-col fixed bottom-0 md:relative z-50 md:z-auto h-16 md:h-full justify-around md:justify-start shadow-[0_-5px_15px_rgba(0,0,0,0.3)] md:shadow-2xl transition-all">
+            <div class="hidden md:flex flex-col items-center p-6 border-b border-gray-700 bg-black/20">
+                <img src="https://res.cloudinary.com/dmlllfubf/image/upload/v1781243016/Gemini_Generated_Image_bidjrobidjrobidj_wszrvn.png" alt="Logo" class="w-16 h-16 rounded-full object-contain border-2 border-gray-800 mb-3 shadow-lg bg-white p-1">
+                <div class="font-black text-white tracking-widest uppercase">Admin Foodcourt</div>
+                <div class="text-[10px] text-green-400 font-bold mt-1"><i class="fas fa-circle text-[8px]"></i> Server Online</div>
+            </div>
+            
+            <nav class="flex md:flex-col w-full md:w-auto h-full md:h-auto items-center md:items-stretch py-2 md:py-4 gap-1 px-2 flex-1">
+                <a href="javascript:void(0)" onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-item flex flex-col md:flex-row items-center gap-1 md:gap-3 p-2 md:p-3 md:mx-3 rounded-xl text-gray-400 hover:bg-white/10 hover:text-white transition font-bold group flex-1 md:flex-none">
+                    <i class="fas fa-chart-pie text-lg md:text-xl group-hover:scale-110 transition-transform"></i> <span class="text-[10px] md:text-sm">Ringkasan</span>
+                </a>
+                <a href="javascript:void(0)" onclick="switchTab('settings')" id="nav-settings" class="nav-item flex flex-col md:flex-row items-center gap-1 md:gap-3 p-2 md:p-3 md:mx-3 rounded-xl text-gray-400 hover:bg-white/10 hover:text-white transition font-bold group flex-1 md:flex-none">
+                    <i class="fas fa-user-cog text-lg md:text-xl group-hover:scale-110 transition-transform"></i> <span class="text-[10px] md:text-sm">Profil & Tarif</span>
+                </a>
+                <a href="javascript:void(0)" onclick="switchTab('sellers')" id="nav-sellers" class="nav-item flex flex-col md:flex-row items-center gap-1 md:gap-3 p-2 md:p-3 md:mx-3 rounded-xl text-gray-400 hover:bg-white/10 hover:text-white transition font-bold group flex-1 md:flex-none">
+                    <i class="fas fa-store text-lg md:text-xl group-hover:scale-110 transition-transform"></i> <span class="text-[10px] md:text-sm">Mitra Toko</span>
+                </a>
+                <a href="javascript:void(0)" onclick="switchTab('drivers')" id="nav-drivers" class="nav-item flex flex-col md:flex-row items-center gap-1 md:gap-3 p-2 md:p-3 md:mx-3 rounded-xl text-gray-400 hover:bg-white/10 hover:text-white transition font-bold group flex-1 md:flex-none">
+                    <i class="fas fa-motorcycle text-lg md:text-xl group-hover:scale-110 transition-transform"></i> <span class="text-[10px] md:text-sm">Mitra Kurir</span>
+                </a>
+                
+                <div class="hidden md:block mt-auto pb-4 px-3">
+                    <button onclick="handleLogout()" class="w-full bg-red-500/20 text-red-400 border border-red-500/50 py-3 rounded-xl font-bold hover:bg-red-500 hover:text-white transition flex items-center justify-center gap-2"><i class="fas fa-power-off"></i> Keluar</button>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- CONTENT AREA -->
+        <main class="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth pb-24 md:pb-8">
+            
+            <!-- SECTION: DASHBOARD RINGKASAN -->
+            <section id="section-dashboard" class="block">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                    <div>
+                        <h1 class="text-2xl font-black text-gray-800 tracking-tight">Status Operasional</h1>
+                        <p class="text-xs font-bold text-gray-500 mt-1" id="last-sync-time">Menunggu sinkronisasi...</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2 bg-white p-1.5 rounded-xl shadow-sm border border-gray-200">
+                            <i class="fas fa-calendar-alt text-gray-400 ml-2"></i>
+                            <select id="admin-month-filter" onchange="updateDashboardStats()" class="bg-transparent text-gray-700 py-1 px-2 focus:outline-none font-bold cursor-pointer text-sm">
+                                <option value="01">Januari</option><option value="02">Februari</option><option value="03">Maret</option>
+                                <option value="04">April</option><option value="05">Mei</option><option value="06">Juni</option>
+                                <option value="07">Juli</option><option value="08">Agustus</option><option value="09">September</option>
+                                <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
+                            </select>
+                            <div class="w-px h-5 bg-gray-300"></div>
+                            <select id="admin-year-filter" onchange="updateDashboardStats()" class="bg-transparent text-gray-700 py-1 px-2 focus:outline-none font-bold cursor-pointer text-sm"></select>
+                        </div>
+                        <button onclick="refreshAllData()" class="btn-3d bg-white border border-gray-200 text-gray-600 w-10 h-10 rounded-xl shadow-sm hover:bg-gray-50 flex items-center justify-center"><i class="fas fa-sync-alt" id="sync-spin"></i></button>
+                    </div>
+                </div>
+                
+                <!-- 5 KOTAK STATISTIK (DIPERBARUI) -->
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between">
+                        <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Total Toko Aktif</div>
+                        <div class="text-3xl font-black text-gray-800 flex items-center gap-2"><i class="fas fa-store text-orange-400 text-xl"></i> <span id="stat-sellers">0</span></div>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between">
+                        <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Total Kurir Aktif</div>
+                        <div class="text-3xl font-black text-gray-800 flex items-center gap-2"><i class="fas fa-motorcycle text-blue-500 text-xl"></i> <span id="stat-drivers">0</span></div>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between">
+                        <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2" id="label-orders-time">Pesanan (Bulan Ini)</div>
+                        <div class="text-3xl font-black text-gray-800 flex items-center gap-2"><i class="fas fa-shopping-bag text-green-500 text-xl"></i> <span id="stat-orders">0</span></div>
+                    </div>
+                    
+                    <div class="bg-gradient-to-br from-blue-600 to-blue-800 p-5 rounded-2xl shadow-md border border-blue-700 flex flex-col text-white justify-between relative overflow-hidden">
+                        <i class="fas fa-truck-fast absolute -right-2 -bottom-2 text-5xl opacity-10"></i>
+                        <div class="text-[10px] font-bold text-blue-200 uppercase tracking-wider mb-2 relative z-10">Total Ongkir (Bulan Ini)</div>
+                        <div class="text-xl md:text-2xl font-black text-white drop-shadow-md relative z-10" id="stat-ongkir">Rp 0</div>
+                    </div>
+
+                    <div class="bg-gradient-to-br from-gray-800 to-gray-900 p-5 rounded-2xl shadow-md border border-gray-700 flex flex-col text-white justify-between relative overflow-hidden col-span-2 md:col-span-1">
+                        <i class="fas fa-chart-line absolute -right-2 -bottom-2 text-5xl opacity-10"></i>
+                        <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 relative z-10" id="label-income-time">Pemasukan App (Bulan Ini)</div>
+                        <div class="text-xl md:text-2xl font-black text-green-400 drop-shadow-md relative z-10" id="stat-income">Rp 0</div>
+                    </div>
+                </div>
+
+                <!-- GRAFIK & RINCIAN TOKO -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                    <!-- Grafik Pendapatan Harian (Kiri, lebih lebar) -->
+                    <div class="lg:col-span-2 bg-white p-5 md:p-6 rounded-3xl shadow-sm border border-gray-100">
+                        <h2 class="font-black text-gray-800 mb-4 flex items-center gap-2"><i class="fas fa-chart-area text-blue-500"></i> Pergerakan Pemasukan Harian</h2>
+                        <div class="w-full h-64">
+                            <canvas id="adminIncomeChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Leaderboard Rincian per Toko (Kanan) -->
+                    <div class="bg-white p-5 md:p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col max-h-[350px]">
+                        <h2 class="font-black text-gray-800 mb-4 flex items-center justify-between border-b pb-3">
+                            <span class="flex items-center gap-2"><i class="fas fa-trophy text-yellow-500"></i> Pemasukan per Toko</span>
+                        </h2>
+                        <div class="flex-1 overflow-y-auto pr-2 hide-scrollbar" id="store-income-breakdown">
+                            <!-- List toko diinjeksi via JS -->
+                            <div class="text-center text-gray-400 font-bold py-10">Memuat rincian...</div>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- SECTION: PENGATURAN -->
+            <section id="section-settings" class="hidden">
+                <h1 class="text-2xl font-black text-gray-800 mb-2 tracking-tight">Profil & Pengaturan Sistem</h1>
+                <p class="text-sm font-bold text-gray-500 mb-6">Kelola tarif biaya dan kredensial akses profil admin Anda.</p>
+                
+                <form onsubmit="saveSettings(event)" class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 max-w-2xl">
+                    
+                    <h2 class="text-lg font-black text-gray-800 tracking-tight border-b border-gray-100 pb-2 mb-4">Skema Biaya & Tarif</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                        <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                            <label class="block text-xs font-black text-blue-800 mb-1 uppercase tracking-wider"><i class="fas fa-motorcycle mr-1"></i> Ongkir Dasar (Per KM)</label>
+                            <p class="text-[10px] text-blue-600 font-semibold mb-3">Tarif dasar pengiriman kurir.</p>
+                            <div class="flex items-center">
+                                <span class="bg-white border-y-2 border-l-2 border-white text-gray-500 font-bold px-4 py-3 rounded-l-xl">Rp</span>
+                                <input type="number" id="setOngkir" required class="w-full px-4 py-3 border-2 border-white rounded-r-xl outline-none focus:border-blue-500 font-black text-gray-800 shadow-inner">
+                            </div>
+                        </div>
+
+                        <div class="bg-orange-50 p-4 rounded-xl border border-orange-100">
+                            <label class="block text-xs font-black text-orange-800 mb-1 uppercase tracking-wider"><i class="fas fa-server mr-1"></i> Biaya Layanan Aplikasi</label>
+                            <p class="text-[10px] text-orange-600 font-semibold mb-3">Biaya perawatan operasional.</p>
+                            <div class="flex items-center">
+                                <span class="bg-white border-y-2 border-l-2 border-white text-gray-500 font-bold px-4 py-3 rounded-l-xl">Rp</span>
+                                <input type="number" id="setLayanan" required class="w-full px-4 py-3 border-2 border-white rounded-r-xl outline-none focus:border-brandPrimary font-black text-gray-800 shadow-inner">
+                            </div>
+                        </div>
+
+                        <div class="bg-purple-50 p-4 rounded-xl border border-purple-100 md:col-span-2 shadow-inner">
+                            <label class="block text-xs font-black text-purple-800 mb-1 uppercase tracking-wider"><i class="fas fa-route mr-1"></i> Jarak Maksimal Pengantaran (KM)</label>
+                            <p class="text-[10px] text-purple-600 font-semibold mb-3">Pesanan akan ditolak otomatis dan tombol checkout dikunci jika jarak pembeli ke toko melebihi batas ini.</p>
+                            <div class="flex items-center">
+                                <input type="number" id="setMaxDistance" required class="w-full px-4 py-3 border-2 border-white rounded-l-xl outline-none focus:border-purple-500 font-black text-gray-800 shadow-inner">
+                                <span class="bg-white border-y-2 border-r-2 border-white text-gray-500 font-bold px-4 py-3 rounded-r-xl">KM</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h2 class="text-lg font-black text-gray-800 tracking-tight border-b border-gray-100 pb-2 mb-4">Profil & Keamanan Admin</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                            <label class="block text-xs font-black text-gray-800 mb-1 uppercase tracking-wider"><i class="fas fa-envelope mr-1"></i> Email Pemulihan (Recovery)</label>
+                            <p class="text-[10px] text-gray-500 font-semibold mb-3">Email untuk mengirim PIN jika lupa.</p>
+                            <input type="email" id="setAdminEmail" required placeholder="admin@contoh.com" class="w-full px-4 py-3 border-2 border-white rounded-xl outline-none focus:border-red-400 font-bold text-gray-800 shadow-inner text-sm">
+                        </div>
+
+                        <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                            <label class="block text-xs font-black text-gray-800 mb-1 uppercase tracking-wider"><i class="fas fa-key mr-1"></i> Ganti PIN Akses</label>
+                            <p class="text-[10px] text-gray-500 font-semibold mb-3">Ketik PIN baru & konfirmasi untuk merubahnya.</p>
+                            
+                            <div class="relative mb-2">
+                                <input type="password" id="setAdminPin" required placeholder="PIN Anda" class="w-full px-4 py-3 border-2 border-white rounded-xl outline-none focus:border-red-400 font-black tracking-widest text-center text-gray-800 shadow-inner pr-10">
+                                <button type="button" onclick="togglePinVisibility('setAdminPin')" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"><i class="fas fa-eye"></i></button>
+                            </div>
+                            <div class="relative">
+                                <input type="password" id="confirmAdminPin" required placeholder="Konfirmasi PIN" class="w-full px-4 py-3 border-2 border-white rounded-xl outline-none focus:border-red-400 font-black tracking-widest text-center text-gray-800 shadow-inner pr-10">
+                                <button type="button" onclick="togglePinVisibility('confirmAdminPin')" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"><i class="fas fa-eye"></i></button>
+                            </div>
+                            
+                            <p id="pin-error-msg" class="text-[10px] text-red-500 font-bold mt-1.5 hidden animate-pulse"><i class="fas fa-exclamation-triangle"></i> Konfirmasi PIN tidak cocok!</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 pt-6 border-t border-gray-100 flex justify-end">
+                        <button type="submit" id="btnSaveSettings" class="btn-3d w-full md:w-auto bg-gradient-to-b from-[#f36b4e] to-[#ee4d2d] text-white px-8 py-3.5 rounded-xl font-black shadow-[0_4px_0_0_#be3118] hover:from-[#f05c3d] hover:to-[#d73211] transition flex items-center justify-center gap-2"><i class="fas fa-save"></i> SIMPAN PENGATURAN</button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- SECTION: MANAJEMEN TOKO -->
+            <section id="section-sellers" class="hidden">
+                <div class="flex flex-col md:flex-row justify-between md:items-center mb-6 gap-3">
+                    <h1 class="text-2xl font-black text-gray-800 tracking-tight">Mitra Toko</h1>
+                    <div class="bg-white rounded-lg flex items-center p-1 shadow-sm border border-gray-200 w-full md:w-64">
+                        <input type="text" id="searchSeller" onkeyup="filterTable('sellers-tbody', this.value)" placeholder="Cari nama toko..." class="w-full px-3 py-1.5 outline-none text-sm font-bold text-gray-700 bg-transparent">
+                        <i class="fas fa-search text-gray-400 px-2"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-gray-50 text-gray-500 text-[10px] uppercase tracking-wider border-b border-gray-200">
+                                    <th class="p-4 font-black">ID & Toko</th>
+                                    <th class="p-4 font-black">Pemilik & Kontak</th>
+                                    <th class="p-4 font-black text-center">Status</th>
+                                    <th class="p-4 font-black text-center">Aksi (Suspend)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sellers-tbody" class="text-sm divide-y divide-gray-100">
+                                <!-- Data render here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION: MANAJEMEN KURIR -->
+            <section id="section-drivers" class="hidden">
+                <div class="flex flex-col md:flex-row justify-between md:items-center mb-6 gap-3">
+                    <h1 class="text-2xl font-black text-gray-800 tracking-tight">Mitra Kurir</h1>
+                    <div class="bg-white rounded-lg flex items-center p-1 shadow-sm border border-gray-200 w-full md:w-64">
+                        <input type="text" id="searchDriver" onkeyup="filterTable('drivers-tbody', this.value)" placeholder="Cari nama kurir..." class="w-full px-3 py-1.5 outline-none text-sm font-bold text-gray-700 bg-transparent">
+                        <i class="fas fa-search text-gray-400 px-2"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-gray-50 text-gray-500 text-[10px] uppercase tracking-wider border-b border-gray-200">
+                                    <th class="p-4 font-black">Profil Kurir</th>
+                                    <th class="p-4 font-black">Kendaraan</th>
+                                    <th class="p-4 font-black text-center">Status Akun</th>
+                                    <th class="p-4 font-black text-center">Aksi (Suspend)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="drivers-tbody" class="text-sm divide-y divide-gray-100">
+                                <!-- Data render here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script>
+        // --- KONFIGURASI URL GOOGLE APPS SCRIPT ---
+        const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxepD3BGU993WBCuZjH2Wo4sDyUkwyp4SGE4_mZ6EbrzD_qCDGzkRIOnPqmcXVnKNM/exec";
+
+        let ALL_SELLERS = [];
+        let ALL_DRIVERS = [];
+        let ALL_ORDERS = [];
+        
+        let localFeeLayanan = 1000;
+        let localFeeOngkir = 2000;
+        let adminIncomeChart = null;
+
+        // Fungsi Haversine untuk kalkulasi ongkir di dashboard admin
+        function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
+            var R = 6371; 
+            var dLat = deg2rad(lat2-lat1);  
+            var dLon = deg2rad(lon2-lon1); 
+            var a = 
+                Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.sin(dLon/2) * Math.sin(dLon/2); 
+            var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+            return R * c; 
+        }
+        function deg2rad(deg) { return deg * (Math.PI/180) }
+
+        // --- INIT SAAT HALAMAN DIMUAT ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const now = new Date();
+            const currentMonth = (now.getMonth() + 1).toString().padStart(2, '0');
+            const currentYear = now.getFullYear();
+
+            document.getElementById('admin-month-filter').value = currentMonth;
+
+            const yearFilter = document.getElementById('admin-year-filter');
+            yearFilter.innerHTML = '';
+            for(let y = currentYear - 2; y <= currentYear + 2; y++) {
+                yearFilter.innerHTML += `<option value="${y}">${y}</option>`;
+            }
+            yearFilter.value = currentYear.toString();
+
+            const isLogin = localStorage.getItem('foodcourt_admin_auth');
+            if(isLogin === 'true') {
+                document.getElementById('auth-container').classList.add('hidden');
+                document.getElementById('app-container').classList.remove('hidden');
+                document.getElementById('app-container').classList.add('flex');
+                switchTab('dashboard');
+                refreshAllData();
+            }
+        });
+
+        function switchAuthView(viewId) {
+            document.getElementById('view-login').classList.add('hidden');
+            document.getElementById('view-login').classList.remove('flex');
+            document.getElementById('view-forgot').classList.add('hidden');
+            document.getElementById('view-forgot').classList.remove('flex');
+            
+            const activeView = document.getElementById('view-' + viewId);
+            activeView.classList.remove('hidden');
+            activeView.classList.add('flex');
+        }
+
+        async function handleAdminLogin(e) {
+            e.preventDefault();
+            const pass = document.getElementById('adminPass').value;
+            const btn = document.getElementById('btnLogin');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> MEMPROSES...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'adminLogin', type: 'admin_settings', pin: pass })
+                });
+                const res = await response.json();
+                
+                if(res.status === 'success') {
+                    localStorage.setItem('foodcourt_admin_auth', 'true');
+                    document.getElementById('auth-container').classList.add('hidden');
+                    document.getElementById('app-container').classList.remove('hidden');
+                    document.getElementById('app-container').classList.add('flex');
+                    switchTab('dashboard');
+                    refreshAllData();
+                } else {
+                    alert(res.message); 
+                }
+            } catch (error) {
+                alert("Gagal menghubungi server. Pastikan koneksi internet stabil atau Apps Script sudah di-Deploy ulang.");
+            } finally {
+                btn.innerHTML = 'MASUK SISTEM';
+                btn.disabled = false;
+            }
+        }
+
+        async function handleAdminForgot(e) {
+            e.preventDefault();
+            const email = document.getElementById('forgotEmail').value;
+            const btn = document.getElementById('btnForgot');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> MENGIRIM...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'adminForgotPin', type: 'admin_settings', email: email })
+                });
+                const res = await response.json();
+                alert(res.message);
+                if(res.status === 'success') {
+                    switchAuthView('login');
+                    document.getElementById('forgotEmail').value = '';
+                }
+            } catch (error) {
+                alert("Gagal menghubungi server.");
+            } finally {
+                btn.innerHTML = 'KIRIM PIN KE EMAIL';
+                btn.disabled = false;
+            }
+        }
+
+        function handleLogout() {
+            if(confirm('Yakin ingin keluar dari Dashboard Admin?')) {
+                localStorage.removeItem('foodcourt_admin_auth');
+                window.location.reload();
+            }
+        }
+
+        function switchTab(tabId) {
+            document.getElementById('section-dashboard').classList.add('hidden');
+            document.getElementById('section-settings').classList.add('hidden');
+            document.getElementById('section-sellers').classList.add('hidden');
+            document.getElementById('section-drivers').classList.add('hidden');
+            
+            document.getElementById('section-' + tabId).classList.remove('hidden');
+
+            document.querySelectorAll('.nav-item').forEach(el => {
+                el.classList.remove('bg-white/10', 'text-white');
+                el.classList.add('text-gray-400');
+            });
+            const activeNav = document.getElementById('nav-' + tabId);
+            if(activeNav) {
+                activeNav.classList.remove('text-gray-400');
+                activeNav.classList.add('bg-white/10', 'text-white');
+            }
+        }
+
+        async function refreshAllData() {
+            const spin = document.getElementById('sync-spin');
+            spin.classList.add('fa-spin');
+            document.getElementById('loading-overlay').classList.remove('hidden');
+            document.getElementById('loading-overlay').classList.add('flex');
+
+            try {
+                const promises = [
+                    fetch(`${GAS_WEB_APP_URL}?action=getData&type=users_sellers`).then(r => r.json()),
+                    fetch(`${GAS_WEB_APP_URL}?action=getData&type=users_drivers`).then(r => r.json()),
+                    fetch(`${GAS_WEB_APP_URL}?action=getData&type=orders`).then(r => r.json()),
+                    fetch(GAS_WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getAdminSettings', type: 'admin_settings' }) }).then(r => r.json())
+                ];
+                
+                const [resSellers, resDrivers, resOrders, resSettings] = await Promise.all(promises);
+
+                if(resSellers.status === 'success') ALL_SELLERS = resSellers.data || [];
+                if(resDrivers.status === 'success') ALL_DRIVERS = resDrivers.data || [];
+                if(resOrders.status === 'success') ALL_ORDERS = resOrders.data || [];
+                
+                if(resSettings.status === 'success' && resSettings.data) {
+                    const set = resSettings.data;
+                    document.getElementById('setOngkir').value = set.fee_ongkir || 2000;
+                    document.getElementById('setLayanan').value = set.fee_layanan || 1000;
+                    document.getElementById('setMaxDistance').value = set.max_distance || 15;
+                    document.getElementById('setAdminEmail').value = set.admin_email || '';
+                    document.getElementById('setAdminPin').value = set.admin_pin || '';
+                    document.getElementById('confirmAdminPin').value = set.admin_pin || '';
+                    
+                    localFeeLayanan = parseInt(set.fee_layanan) || 1000;
+                    localFeeOngkir = parseInt(set.fee_ongkir) || 2000;
+                }
+
+                updateDashboardStats();
+                renderSellersTable();
+                renderDriversTable();
+
+                const now = new Date();
+                document.getElementById('last-sync-time').innerText = `Update terakhir: ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+
+            } catch (error) {
+                alert("Gagal menarik data dari server.");
+            } finally {
+                spin.classList.remove('fa-spin');
+                document.getElementById('loading-overlay').classList.add('hidden');
+                document.getElementById('loading-overlay').classList.remove('flex');
+            }
+        }
+
+        // --- SISTEM KALKULASI & GRAFIK DASHBOARD ADMIN ---
+        function updateDashboardStats() {
+            const activeSellers = ALL_SELLERS.filter(s => s.status !== 'Nonaktif' && s.status !== 'Suspend').length;
+            const activeDrivers = ALL_DRIVERS.filter(d => d.status !== 'Nonaktif' && d.status !== 'Suspend').length;
+            
+            const selectedMonth = document.getElementById('admin-month-filter').value;
+            const selectedYear = document.getElementById('admin-year-filter').value;
+
+            let totalAppIncome = 0;
+            let totalOngkirIncome = 0;
+            let ordersCount = 0; 
+            
+            let incomeByDate = {};
+            let incomeByStore = {};
+
+            ALL_ORDERS.forEach(o => {
+                let orderMonth = "";
+                let orderYear = "";
+                let justDate = "Unknown";
+
+                if(o.timestamp) {
+                    const datePart = o.timestamp.split(',')[0].trim().split(' ')[0];
+                    justDate = datePart;
+                    
+                    if(datePart.includes('/')) {
+                        const parts = datePart.split('/');
+                        if(parts.length >= 3) {
+                            orderMonth = parts[1].padStart(2, '0');
+                            orderYear = parts[2];
+                        }
+                    } else if(datePart.includes('-')) {
+                        const parts = datePart.split('-');
+                        if(parts.length >= 3) {
+                            orderMonth = parts[1].padStart(2, '0');
+                            orderYear = parts[2];
+                        }
+                    }
+                }
+
+                if(orderMonth !== "" && orderYear !== "" && (orderMonth !== selectedMonth || orderYear !== selectedYear)) {
+                    return; 
+                }
+
+                if(o.status.includes('Selesai')) {
+                    totalAppIncome += localFeeLayanan; 
+                    ordersCount++;
+
+                    // Kalkulasi Pendapatan Ongkir
+                    let dist = getDistanceFromLatLonInKm(o.buyer_lat, o.buyer_lng, o.seller_lat, o.seller_lng);
+                    if(isNaN(dist) || dist < 1) dist = 1;
+                    totalOngkirIncome += (Math.ceil(dist) * localFeeOngkir);
+
+                    if(!incomeByDate[justDate]) incomeByDate[justDate] = 0;
+                    incomeByDate[justDate] += localFeeLayanan;
+
+                    const storeName = o.outlet || 'Unknown Store';
+                    if(!incomeByStore[storeName]) incomeByStore[storeName] = 0;
+                    incomeByStore[storeName] += localFeeLayanan;
+                }
+            });
+
+            document.getElementById('stat-sellers').innerText = activeSellers;
+            document.getElementById('stat-drivers').innerText = activeDrivers;
+            document.getElementById('stat-orders').innerText = ordersCount;
+            document.getElementById('stat-income').innerText = `Rp ${totalAppIncome.toLocaleString('id-ID')}`;
+            document.getElementById('stat-ongkir').innerText = `Rp ${totalOngkirIncome.toLocaleString('id-ID')}`;
+
+            renderAdminChart(incomeByDate);
+            renderStoreBreakdown(incomeByStore);
+        }
+
+        function renderAdminChart(incomeByDate) {
+            const ctx = document.getElementById('adminIncomeChart');
+            if(!ctx) return;
+            
+            const dates = Object.keys(incomeByDate).sort();
+            const data = dates.map(d => incomeByDate[d]);
+
+            if (adminIncomeChart) adminIncomeChart.destroy();
+
+            adminIncomeChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        label: 'Pemasukan Aplikasi (Rp)',
+                        data: data,
+                        borderColor: '#3b82f6', 
+                        backgroundColor: 'rgba(59, 130, 246, 0.15)',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#2563eb',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) { return 'Rp ' + new Intl.NumberFormat('id-ID').format(context.raw); }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, grid: { borderDash: [5, 5], color: '#e5e7eb' }, ticks: { font: {weight: 'bold'}, color: '#6b7280' } },
+                        x: { grid: { display: false }, ticks: { font: {weight: 'bold'}, color: '#6b7280' } }
+                    }
+                }
+            });
+        }
+
+        function renderStoreBreakdown(incomeByStore) {
+            const container = document.getElementById('store-income-breakdown');
+            container.innerHTML = '';
+            
+            const stores = Object.keys(incomeByStore).sort((a,b) => incomeByStore[b] - incomeByStore[a]); 
+            
+            if(stores.length === 0) {
+                container.innerHTML = '<div class="text-center text-gray-400 font-bold py-10"><i class="fas fa-box-open text-4xl mb-3 opacity-30"></i><br>Belum ada data pemasukan untuk bulan ini.</div>';
+                return;
+            }
+
+            stores.forEach((store, index) => {
+                const income = incomeByStore[store];
+                
+                let rankColor = 'text-gray-400';
+                let rankIcon = '';
+                if (index === 0) { rankColor = 'text-yellow-500'; rankIcon = '<i class="fas fa-medal"></i> '; }
+                else if (index === 1) { rankColor = 'text-gray-400'; rankIcon = '<i class="fas fa-medal"></i> '; }
+                else if (index === 2) { rankColor = 'text-amber-700'; rankIcon = '<i class="fas fa-medal"></i> '; }
+
+                const html = `
+                    <div class="flex justify-between items-center py-3.5 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition px-2 rounded-xl">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 font-black ${rankColor} text-lg text-center">${rankIcon || (index+1)}</div>
+                            <div class="flex flex-col">
+                                <div class="font-extrabold text-gray-700 text-sm line-clamp-1">${store}</div>
+                                <div class="text-[9px] font-bold text-gray-400 uppercase tracking-wider mt-0.5">Toko Peringkat ${index+1}</div>
+                            </div>
+                        </div>
+                        <div class="font-black text-green-500 text-sm bg-green-50 px-2 py-1 rounded shadow-inner border border-green-100">+ Rp ${income.toLocaleString('id-ID')}</div>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', html);
+            });
+        }
+
+        function renderSellersTable() {
+            const tbody = document.getElementById('sellers-tbody');
+            tbody.innerHTML = '';
+            
+            if(ALL_SELLERS.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center py-6">Belum ada data toko</td></tr>';
+                return;
+            }
+
+            ALL_SELLERS.forEach(s => {
+                const isSuspend = s.status === 'Suspend' || s.status === 'Nonaktif';
+                const badgeClass = isSuspend ? 'bg-red-100 text-red-600 border-red-200' : 'bg-green-100 text-green-700 border-green-200';
+                const btnColor = isSuspend ? 'bg-green-50 text-green-600 hover:bg-green-100 border-green-200' : 'bg-red-50 text-red-600 hover:bg-red-100 border-red-200';
+                const btnText = isSuspend ? 'Aktifkan' : 'Suspend';
+                const btnIcon = isSuspend ? 'fa-check' : 'fa-ban';
+
+                const tr = `
+                <tr class="hover:bg-gray-50 transition border-b border-gray-100 search-row">
+                    <td class="p-4">
+                        <div class="font-black text-gray-800">${s.store_name}</div>
+                        <div class="text-[10px] font-bold text-gray-500 font-mono mt-0.5">${s.seller_id}</div>
+                    </td>
+                    <td class="p-4">
+                        <div class="font-bold text-gray-700 text-xs"><i class="fas fa-user text-gray-400 w-4"></i> ${s.owner_name}</div>
+                        <div class="font-bold text-gray-700 text-xs mt-1"><i class="fas fa-phone text-gray-400 w-4"></i> ${s.phone}</div>
+                    </td>
+                    <td class="p-4 text-center">
+                        <span class="px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase border shadow-inner ${badgeClass}">${s.status || 'Aktif'}</span>
+                    </td>
+                    <td class="p-4 text-center">
+                        <button onclick="toggleSuspend('${s.seller_id}', 'users_sellers', '${s.status}')" class="btn-3d px-4 py-1.5 rounded-lg border shadow-sm font-bold text-xs flex items-center justify-center gap-2 mx-auto ${btnColor}">
+                            <i class="fas ${btnIcon}"></i> ${btnText}
+                        </button>
+                    </td>
+                </tr>`;
+                tbody.insertAdjacentHTML('beforeend', tr);
+            });
+        }
+
+        function renderDriversTable() {
+            const tbody = document.getElementById('drivers-tbody');
+            tbody.innerHTML = '';
+            
+            if(ALL_DRIVERS.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center py-6">Belum ada data kurir</td></tr>';
+                return;
+            }
+
+            ALL_DRIVERS.forEach(d => {
+                const isSuspend = d.status === 'Suspend' || d.status === 'Nonaktif';
+                const badgeClass = isSuspend ? 'bg-red-100 text-red-600 border-red-200' : 'bg-green-100 text-green-700 border-green-200';
+                const btnColor = isSuspend ? 'bg-green-50 text-green-600 hover:bg-green-100 border-green-200' : 'bg-red-50 text-red-600 hover:bg-red-100 border-red-200';
+                const btnText = isSuspend ? 'Aktifkan' : 'Suspend';
+                const btnIcon = isSuspend ? 'fa-check' : 'fa-ban';
+
+                const tr = `
+                <tr class="hover:bg-gray-50 transition border-b border-gray-100 search-row">
+                    <td class="p-4 flex items-center gap-3">
+                        <img src="${d.face_img || 'https://placehold.co/100x100'}" class="w-10 h-10 rounded-full object-cover shadow-sm border border-gray-200">
+                        <div>
+                            <div class="font-black text-gray-800">${d.full_name}</div>
+                            <div class="text-[10px] font-bold text-gray-500 font-mono mt-0.5">${d.driver_id} • ${d.phone}</div>
+                        </div>
+                    </td>
+                    <td class="p-4">
+                        <div class="font-bold text-blue-600 text-xs uppercase bg-blue-50 px-2 py-0.5 rounded border border-blue-100 inline-block">${d.vehicle_type}</div>
+                        <div class="font-black text-gray-800 text-sm mt-1 tracking-widest">${d.plate_number}</div>
+                    </td>
+                    <td class="p-4 text-center">
+                        <span class="px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase border shadow-inner ${badgeClass}">${d.status || 'Aktif'}</span>
+                    </td>
+                    <td class="p-4 text-center">
+                        <button onclick="toggleSuspend('${d.driver_id}', 'users_drivers', '${d.status}')" class="btn-3d px-4 py-1.5 rounded-lg border shadow-sm font-bold text-xs flex items-center justify-center gap-2 mx-auto ${btnColor}">
+                            <i class="fas ${btnIcon}"></i> ${btnText}
+                        </button>
+                    </td>
+                </tr>`;
+                tbody.insertAdjacentHTML('beforeend', tr);
+            });
+        }
+
+        async function toggleSuspend(userId, sheetType, currentStatus) {
+            const newStatus = (currentStatus === 'Suspend' || currentStatus === 'Nonaktif') ? 'Aktif' : 'Suspend';
+            const actionText = newStatus === 'Suspend' ? 'Membekukan (Suspend)' : 'Mengaktifkan';
+            
+            if(!confirm(`Yakin ingin ${actionText} akun ini?`)) return;
+
+            document.getElementById('loading-overlay').classList.remove('hidden');
+            document.getElementById('loading-overlay').classList.add('flex');
+            document.getElementById('loading-text').innerText = "Memperbarui Database...";
+
+            try {
+                const response = await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ 
+                        action: 'updateAccountStatus', 
+                        type: 'admin_settings', 
+                        userType: sheetType, 
+                        userId: userId, 
+                        newStatus: newStatus 
+                    })
+                });
+                
+                const res = await response.json();
+                
+                if(res.status === 'success') {
+                    if(sheetType === 'users_sellers') {
+                        const idx = ALL_SELLERS.findIndex(s => s.seller_id === userId);
+                        if(idx > -1) ALL_SELLERS[idx].status = newStatus;
+                        renderSellersTable();
+                    } else {
+                        const idx = ALL_DRIVERS.findIndex(d => d.driver_id === userId);
+                        if(idx > -1) ALL_DRIVERS[idx].status = newStatus;
+                        renderDriversTable();
+                    }
+                    alert(res.message);
+                } else {
+                    alert("Gagal melakukan aksi: " + res.message);
+                }
+            } catch(e) {
+                alert("Gagal menghubungi server database.");
+            } finally {
+                document.getElementById('loading-overlay').classList.add('hidden');
+                document.getElementById('loading-overlay').classList.remove('flex');
+            }
+        }
+
+        function filterTable(tbodyId, query) {
+            const trs = document.getElementById(tbodyId).getElementsByClassName('search-row');
+            const q = query.toLowerCase();
+            for(let tr of trs) {
+                const text = tr.innerText.toLowerCase();
+                tr.style.display = text.includes(q) ? '' : 'none';
+            }
+        }
+
+        function togglePinVisibility(inputId) {
+            const inputEl = document.getElementById(inputId);
+            const icon = inputEl.nextElementSibling.querySelector('i');
+            
+            if (inputEl.type === "password") {
+                inputEl.type = "text";
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                inputEl.type = "password";
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        async function saveSettings(e) {
+            e.preventDefault();
+            
+            const pin1 = document.getElementById('setAdminPin').value;
+            const pin2 = document.getElementById('confirmAdminPin').value;
+            const errorMsg = document.getElementById('pin-error-msg');
+
+            if (pin1 !== pin2) {
+                errorMsg.classList.remove('hidden');
+                return;
+            } else {
+                errorMsg.classList.add('hidden');
+            }
+
+            const btn = document.getElementById('btnSaveSettings');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan ke Database...';
+            btn.disabled = true;
+            
+            const settingsObj = {
+                fee_ongkir: document.getElementById('setOngkir').value,
+                fee_layanan: document.getElementById('setLayanan').value,
+                max_distance: document.getElementById('setMaxDistance').value,
+                admin_email: document.getElementById('setAdminEmail').value,
+                admin_pin: pin1
+            };
+
+            try {
+                const response = await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'saveAdminSettings', type: 'admin_settings', settings: settingsObj })
+                });
+                const res = await response.json();
+                
+                if(res.status === 'success') {
+                    alert("Profil Admin & Pengaturan Tarif berhasil disimpan secara permanen!");
+                    localFeeLayanan = parseInt(settingsObj.fee_layanan) || 1000;
+                    localFeeOngkir = parseInt(settingsObj.fee_ongkir) || 2000;
+                    updateDashboardStats(); 
+                } else {
+                    alert("Gagal menyimpan: " + res.message);
+                }
+            } catch(error) {
+                alert("Koneksi internet terputus atau server gagal merespons.");
+            } finally {
+                btn.innerHTML = '<i class="fas fa-save"></i> SIMPAN PENGATURAN';
+                btn.disabled = false;
+            }
+        }
+
+    </script>
+</body>
+</html>
