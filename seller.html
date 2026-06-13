@@ -70,18 +70,18 @@
         </div>
     </div>
 
-    <!-- ================= CUSTOM MODAL ================= -->
+    <!-- ================= CUSTOM MODAL (AUTO-TOAST) ================= -->
     <div id="customModal" class="hidden fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col transform scale-95 transition-transform duration-300" id="customModalContent">
             <div id="modalHeader" class="bg-brandPrimary text-white p-4 font-extrabold text-lg flex items-center gap-2">
                 <i class="fas fa-info-circle"></i> <span id="modalTitle">Informasi</span>
             </div>
-            <div class="p-6">
-                <p id="modalMessage" class="text-gray-700 text-sm md:text-base mb-5 leading-relaxed whitespace-pre-line"></p>
-                <input type="number" id="modalInput" class="hidden w-full px-4 py-3 border-2 border-gray-200 rounded-xl outline-none focus:border-brandPrimary bg-gray-50 text-gray-800 font-bold mb-5 shadow-inner" placeholder="Ketik angka di sini...">
-                <div class="flex justify-end gap-3 mt-2">
-                    <button id="modalBtnCancel" class="btn-3d hidden px-5 py-2.5 bg-white border-2 border-gray-200 text-gray-600 rounded-xl font-bold hover:bg-gray-50 shadow-[0_3px_0_0_#e5e7eb]">Batal</button>
-                    <button id="modalBtnConfirm" class="btn-3d px-5 py-2.5 bg-brandPrimary text-white rounded-xl font-bold hover:bg-brandPrimaryHover shadow-[0_4px_0_0_#be3118]">OK</button>
+            <div class="p-6 text-center">
+                <p id="modalMessage" class="text-gray-700 text-sm md:text-base mb-2 leading-relaxed whitespace-pre-line"></p>
+                <input type="number" id="modalInput" class="hidden w-full px-4 py-3 border-2 border-gray-200 rounded-xl outline-none focus:border-brandPrimary bg-gray-50 text-gray-800 font-bold mb-5 shadow-inner mt-4" placeholder="Ketik angka di sini...">
+                <div class="flex justify-center gap-3 mt-4 hidden" id="modalBtnContainer">
+                    <button id="modalBtnCancel" class="btn-3d hidden flex-1 px-5 py-2.5 bg-white border-2 border-gray-200 text-gray-600 rounded-xl font-bold hover:bg-gray-50 shadow-[0_3px_0_0_#e5e7eb]">Batal</button>
+                    <button id="modalBtnConfirm" class="btn-3d flex-1 px-5 py-2.5 bg-brandPrimary text-white rounded-xl font-bold hover:bg-brandPrimaryHover shadow-[0_4px_0_0_#be3118]">OK</button>
                 </div>
             </div>
         </div>
@@ -929,11 +929,15 @@
                 document.getElementById('modalHeader').innerHTML = `<i class="fas fa-info-circle"></i> <span id="modalTitle">${title}</span>`;
                 document.getElementById('modalMessage').innerText = message;
                 document.getElementById('modalInput').classList.add('hidden');
-                document.getElementById('modalBtnCancel').classList.add('hidden');
-                document.getElementById('modalBtnConfirm').innerText = "OK";
+                document.getElementById('modalBtnContainer').classList.add('hidden');
                 
                 openModalAnim();
-                document.getElementById('modalBtnConfirm').onclick = () => { closeModalAnim(); resolve(true); };
+
+                // Notifikasi Auto-Tutup setelah 2 Detik (Tanpa perlu klik OK)
+                setTimeout(() => {
+                    closeModalAnim();
+                    resolve(true);
+                }, 2000);
             });
         }
 
@@ -942,6 +946,7 @@
                 document.getElementById('modalHeader').innerHTML = `<i class="fas fa-question-circle"></i> <span id="modalTitle">${title}</span>`;
                 document.getElementById('modalMessage').innerText = message;
                 document.getElementById('modalInput').classList.add('hidden');
+                document.getElementById('modalBtnContainer').classList.remove('hidden');
                 document.getElementById('modalBtnCancel').classList.remove('hidden');
                 document.getElementById('modalBtnConfirm').innerText = "Ya, Lanjutkan";
                 
@@ -960,6 +965,7 @@
                 inputEl.value = defaultValue;
                 inputEl.classList.remove('hidden');
 
+                document.getElementById('modalBtnContainer').classList.remove('hidden');
                 document.getElementById('modalBtnCancel').classList.remove('hidden');
                 document.getElementById('modalBtnConfirm').innerText = "Simpan";
                 
