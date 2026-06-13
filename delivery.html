@@ -13,6 +13,9 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 
+    <!-- Chart.js untuk Grafik Analitik -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <!-- PWA THEME COLOR -->
     <meta name="theme-color" content="#ee4d2d">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -49,18 +52,54 @@
 </head>
 <body class="bg-bgMain font-sans text-gray-800 h-screen flex flex-col md:max-w-md md:mx-auto md:border-x md:shadow-2xl relative overflow-hidden selection:bg-orange-200">
 
-    <!-- ================= CUSTOM MODAL NOTIFICATION ================= -->
-    <div id="customModal" class="hidden fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 transition-opacity duration-300 md:max-w-md md:mx-auto">
+    <!-- ================= PWA INSTALL PROMPT MODAL ================= -->
+    <div id="pwa-install-modal" class="hidden fixed inset-0 z-[300] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 transition-opacity duration-300 md:max-w-md md:mx-auto">
+        <div class="bg-white rounded-3xl shadow-[0_15px_50px_rgba(0,0,0,0.3)] w-full max-w-sm overflow-hidden flex flex-col transform scale-95 transition-transform duration-300 border border-white/20">
+            <div class="bg-gradient-to-r from-brandPrimary to-[#ff7337] text-white p-5 font-black text-lg flex items-center gap-3">
+                <i class="fas fa-download text-2xl drop-shadow-md"></i> <span class="drop-shadow-md">Instal Aplikasi Kurir</span>
+            </div>
+            <div class="p-6 bg-gray-50 flex flex-col items-center text-center">
+                <div class="w-20 h-20 bg-orange-100 rounded-3xl flex items-center justify-center text-brandPrimary text-4xl shadow-inner border border-orange-200 mb-4 transform -rotate-6">
+                    <i class="fas fa-motorcycle drop-shadow-sm"></i>
+                </div>
+                <h3 class="font-extrabold text-gray-800 text-lg mb-2 tracking-tight">Terima Order Tanpa Delay!</h3>
+                <p class="text-gray-600 text-xs font-semibold mb-6 leading-relaxed w-full px-2">Instal aplikasi FoodCourt Driver di layar utama (Homescreen) HP Anda agar notifikasi pesanan baru masuk lebih cepat dan GPS lebih akurat.</p>
+                <div class="flex justify-center gap-3 w-full mt-2">
+                    <button onclick="dismissInstallPrompt()" class="btn-3d flex-1 py-3.5 bg-white border-2 border-gray-200 text-gray-500 rounded-xl font-bold hover:bg-gray-100 shadow-[0_3px_0_0_#e5e7eb] transition text-sm">Nanti Saja</button>
+                    <button onclick="acceptInstallPrompt()" class="btn-3d flex-[1.5] py-3.5 bg-gradient-to-b from-[#f36b4e] to-brandPrimary text-white rounded-xl font-bold hover:from-[#f05c3d] hover:to-brandPrimaryHover shadow-[0_4px_0_0_#be3118] transition text-sm flex items-center justify-center gap-2">
+                        <i class="fas fa-home"></i> Instal Sekarang
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= CUSTOM MODAL NOTIFICATION (AUTO-TOAST) ================= -->
+    <div id="customModal" class="hidden fixed inset-0 z-[200] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 transition-opacity duration-300 md:max-w-md md:mx-auto">
         <div class="bg-white rounded-3xl shadow-[0_15px_50px_rgba(0,0,0,0.3)] w-full max-w-sm overflow-hidden flex flex-col transform scale-95 transition-transform duration-300 border border-white/20" id="customModalContent">
             <div id="modalHeader" class="bg-gradient-to-r from-brandPrimary to-[#ff7337] text-white p-5 font-black text-lg flex items-center gap-3">
                 <i id="modalIcon" class="fas fa-info-circle text-2xl drop-shadow-md"></i> <span id="modalTitle" class="drop-shadow-md">Informasi</span>
             </div>
             <div class="p-6 bg-gray-50 flex flex-col items-center text-center">
-                <p id="modalMessage" class="text-gray-700 text-sm font-semibold mb-6 leading-relaxed whitespace-pre-line w-full"></p>
-                <div class="flex justify-center gap-3 w-full mt-2">
-                    <button id="modalBtnCancel" class="btn-3d hidden flex-1 py-3 bg-white border-2 border-gray-200 text-gray-600 rounded-xl font-bold hover:bg-gray-100 shadow-[0_3px_0_0_#e5e7eb] transition">Batal</button>
+                <p id="modalMessage" class="text-gray-700 text-sm font-semibold mb-2 leading-relaxed whitespace-pre-line w-full"></p>
+                <!-- Tombol OK disembunyikan agar notifikasi auto-close tanpa diklik -->
+                <div class="flex justify-center gap-3 w-full mt-2 hidden">
+                    <button id="modalBtnCancel" class="btn-3d flex-1 py-3 bg-white border-2 border-gray-200 text-gray-600 rounded-xl font-bold hover:bg-gray-100 shadow-[0_3px_0_0_#e5e7eb] transition">Batal</button>
                     <button id="modalBtnConfirm" class="btn-3d flex-1 py-3 bg-gradient-to-b from-[#f36b4e] to-brandPrimary text-white rounded-xl font-bold hover:from-[#f05c3d] hover:to-brandPrimaryHover shadow-[0_4px_0_0_#be3118] transition">OK</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= RIWAYAT DETAIL OVERLAY ================= -->
+    <div id="history-detail-overlay" class="hidden fixed inset-0 z-[150] bg-black/50 backdrop-blur-sm overflow-y-auto flex-col justify-center items-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-0 relative mt-10 md:mt-0 flex flex-col max-h-[90vh] overflow-hidden">
+            <div class="p-4 border-b flex justify-between items-center bg-gray-50 shrink-0">
+                <h2 class="text-lg font-bold text-gray-800"><i class="fas fa-history text-brandPrimary mr-2 drop-shadow-md"></i> Detail Riwayat</h2>
+                <button onclick="hideHistoryDetail()" class="text-gray-500 hover:text-red-500 bg-white w-8 h-8 rounded-full shadow flex justify-center items-center transition"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-5 flex-1 overflow-y-auto flex flex-col bg-white" id="history-detail-content">
+                <!-- Konten dinamis riwayat akan dimuat di sini -->
             </div>
         </div>
     </div>
@@ -219,7 +258,7 @@
         <div class="flex justify-between items-center px-4 py-3">
             <div class="flex items-center gap-3">
                 <div class="relative">
-                    <img src="https://placehold.co/100x100/333/white?text=Driver" alt="Profile" class="w-12 h-12 rounded-full object-cover border-2 border-white shadow-md" id="userProfileImage">
+                    <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ccc'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>" alt="Profile" class="w-12 h-12 rounded-full object-cover border-2 border-white shadow-md bg-gray-100" id="userProfileImage">
                     <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
                 </div>
                 <div>
@@ -290,11 +329,54 @@
             </div>
         </section>
 
-        <!-- SECTION: RIWAYAT (History) -->
+        <!-- SECTION: RIWAYAT & STATISTIK (History & Dashboard) -->
         <section id="section-history" class="hidden p-4">
-            <div class="flex justify-between items-center mb-4 bg-white p-3 rounded-xl shadow-sm border border-gray-100">
-                <h2 class="font-black text-gray-800 text-lg"><i class="fas fa-clipboard-check text-blue-500 mr-1"></i> Riwayat Antaran</h2>
+            <div class="flex flex-col md:flex-row justify-between md:items-center mb-4 gap-4">
+                <h2 class="font-black text-gray-800 text-lg flex items-center gap-2"><i class="fas fa-chart-bar text-blue-500"></i> Riwayat & Statistik</h2>
+                <div class="flex items-center gap-2">
+                    <select id="history-month-filter" onchange="onHistoryFilterChange()" class="bg-white border border-gray-200 text-gray-700 py-1.5 px-2 rounded-lg shadow-sm focus:outline-none focus:border-brandPrimary font-bold text-xs cursor-pointer">
+                        <option value="01">Januari</option>
+                        <option value="02">Februari</option>
+                        <option value="03">Maret</option>
+                        <option value="04">April</option>
+                        <option value="05">Mei</option>
+                        <option value="06">Juni</option>
+                        <option value="07">Juli</option>
+                        <option value="08">Agustus</option>
+                        <option value="09">September</option>
+                        <option value="10">Oktober</option>
+                        <option value="11">November</option>
+                        <option value="12">Desember</option>
+                    </select>
+                    <select id="history-year-filter" onchange="onHistoryFilterChange()" class="bg-white border border-gray-200 text-gray-700 py-1.5 px-2 rounded-lg shadow-sm focus:outline-none focus:border-brandPrimary font-bold text-xs cursor-pointer">
+                        <!-- Populated via JS -->
+                    </select>
+                </div>
             </div>
+
+            <!-- Summary Cards Dashboard -->
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex flex-col justify-center items-center text-center">
+                    <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center mb-2 shadow-inner"><i class="fas fa-boxes"></i></div>
+                    <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Total Antaran</div>
+                    <div class="text-xl font-black text-gray-800" id="hist-summary-qty">0</div>
+                </div>
+                <div class="bg-gradient-to-br from-brandPrimary to-[#ff7337] p-4 rounded-xl shadow-[0_4px_10px_rgba(238,77,45,0.2)] flex flex-col justify-center items-center text-center text-white border border-orange-400">
+                    <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center mb-2 shadow-inner"><i class="fas fa-wallet"></i></div>
+                    <div class="text-[10px] font-bold text-white/90 uppercase tracking-wider mb-0.5">Pendapatan Bersih</div>
+                    <div class="text-lg font-black drop-shadow-sm tracking-tight" id="hist-summary-income">Rp 0</div>
+                </div>
+            </div>
+
+            <!-- Chart Analytic -->
+            <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm mb-5">
+                <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100 pb-2 mb-3">Grafik Performa Harian</h3>
+                <div class="relative h-48 w-full">
+                    <canvas id="historyChartCanvas"></canvas>
+                </div>
+            </div>
+
+            <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 pl-1">Daftar Antaran</h3>
             <div id="history-container" class="flex flex-col gap-3 pb-10">
                 <!-- Riwayat dinamis akan muncul di sini -->
             </div>
@@ -306,10 +388,10 @@
                 <h2 class="font-black text-gray-800 text-lg"><i class="fas fa-id-card text-brandPrimary mr-1"></i> Profil Mitra</h2>
             </div>
             
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-4">
                 <div class="flex items-center gap-5 mb-5 border-b border-gray-100 pb-5">
                     <div class="relative inline-block shrink-0">
-                        <img src="https://placehold.co/100x100/333/white?text=Profil" id="profDetailImage" class="w-20 h-20 rounded-full object-cover border-4 border-gray-50 shadow-md">
+                        <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ccc'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>" id="profDetailImage" class="w-20 h-20 rounded-full object-cover border-4 border-gray-50 shadow-md bg-gray-100">
                         <input type="file" id="driverImgInput" accept="image/*" class="hidden" onchange="uploadProfileImage(event)">
                         <label for="driverImgInput" id="btnEditPhoto" class="btn-3d absolute bottom-0 right-[-5px] bg-brandPrimary text-white w-8 h-8 rounded-full flex items-center justify-center cursor-pointer shadow-[0_2px_5px_rgba(0,0,0,0.2)] border-2 border-white hover:bg-brandPrimaryHover" title="Ubah Foto Profil">
                             <i class="fas fa-camera text-xs"></i>
@@ -354,7 +436,12 @@
                 </div>
             </div>
 
-            <button onclick="handleLogout()" class="btn-3d w-full bg-red-50 text-red-600 border-2 border-red-200 py-3.5 rounded-xl font-black text-base hover:bg-red-100 shadow-[0_4px_0_0_#fca5a5] flex justify-center items-center gap-2 mb-10">
+            <!-- Tombol Manual Install PWA -->
+            <button onclick="acceptInstallPrompt()" class="btn-3d w-full bg-white text-brandPrimary border-2 border-brandPrimary py-3 rounded-xl font-black text-sm hover:bg-orange-50 shadow-[0_3px_0_0_#ee4d2d] flex justify-center items-center gap-2 mb-3">
+                <i class="fas fa-download"></i> INSTAL APLIKASI (KE LAYAR UTAMA)
+            </button>
+
+            <button onclick="handleLogout()" class="btn-3d w-full bg-red-50 text-red-600 border-2 border-red-200 py-3 rounded-xl font-black text-sm hover:bg-red-100 shadow-[0_4px_0_0_#fca5a5] flex justify-center items-center gap-2 mb-10">
                 <i class="fas fa-sign-out-alt"></i> KELUAR AKUN
             </button>
         </section>
@@ -382,7 +469,7 @@
 
         <div onclick="switchTab('history')" class="flex flex-col items-center cursor-pointer w-1/4 relative z-10 group transition-all mobile-nav-item" data-target="history">
             <div class="nav-icon-container w-12 h-12 flex items-center justify-center transform group-hover:-translate-y-6 group-hover:shadow-[0_8px_15px_rgba(238,77,45,0.2)] group-hover:border-[3px] border-white rounded-full transition-all duration-300 relative group-active:scale-90 bg-white">
-                <i class="nav-icon fas fa-clipboard-check text-2xl drop-shadow-sm text-gray-400 transition-colors"></i>
+                <i class="nav-icon fas fa-chart-line text-2xl drop-shadow-sm text-gray-400 transition-colors"></i>
             </div>
             <span class="nav-text font-bold mt-1 group-hover:opacity-0 transition-opacity duration-300">Riwayat</span>
         </div>
@@ -397,7 +484,128 @@
 
     <!-- JAVASCRIPT LOGIC -->
     <script>
-        // --- CUSTOM MODAL SYSTEM ---
+        // --- PWA SETUP (DENGAN ID UNIK AGAR TIDAK BENTROK) ---
+        const pwaManifest = {
+            "id": "foodcourt-driver-app-v1", // ID UNIK (Super Penting!)
+            "name": "FoodCourt Driver",
+            "short_name": "FCDriver",
+            "start_url": window.location.pathname + "?mode=pwa", // URL UNIK
+            "display": "standalone",
+            "background_color": "#f5f5f5",
+            "theme_color": "#ee4d2d",
+            "icons": [
+                {
+                    "src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ee4d2d'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>",
+                    "sizes": "192x192",
+                    "type": "image/svg+xml"
+                }
+            ]
+        };
+        const manifestBlob = new Blob([JSON.stringify(pwaManifest)], {type: 'application/json'});
+        const manifestURL = URL.createObjectURL(manifestBlob);
+        const linkManifest = document.createElement('link');
+        linkManifest.rel = 'manifest';
+        linkManifest.href = manifestURL;
+        document.head.appendChild(linkManifest);
+
+        const swContent = `
+            self.addEventListener('install', e => self.skipWaiting());
+            self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
+            self.addEventListener('fetch', e => {}); 
+        `;
+        const swBlob = new Blob([swContent], {type: 'application/javascript'});
+        const swUrl = URL.createObjectURL(swBlob);
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register(swUrl).catch(err => console.log('PWA SW err:', err));
+        }
+
+        // --- SISTEM NOTIFIKASI BACKGROUND PWA ---
+        function requestNotificationPermission() {
+            if ('Notification' in window) {
+                if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+                    Notification.requestPermission().then(permission => {
+                        if (permission === 'granted') {
+                            console.log("Izin Notifikasi Diberikan");
+                        }
+                    });
+                }
+            }
+        }
+
+        function triggerSystemNotification(title, bodyText) {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                navigator.serviceWorker.ready.then(function(registration) {
+                    registration.showNotification(title, {
+                        body: bodyText,
+                        icon: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ee4d2d'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>",
+                        vibrate: [200, 100, 200],
+                        tag: 'fcdriver-notif' 
+                    });
+                });
+            }
+        }
+
+        // --- PWA INSTALLATION PROMPT (ANTI-UNINSTALL BUG) ---
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            if(localStorage.getItem('fcdriver_pwa_status') === 'installed') {
+                localStorage.removeItem('fcdriver_pwa_status');
+                localStorage.removeItem('fcdriver_pwa_time');
+            }
+        });
+
+        function checkAndShowInstallPrompt(forceNow = false) {
+            if (!deferredPrompt) return; 
+            if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) return;
+
+            const lastPrompt = localStorage.getItem('fcdriver_pwa_time');
+            const now = new Date().getTime();
+            const interval = 86400000; 
+
+            if (forceNow || !lastPrompt || (now - lastPrompt > interval)) {
+                const m = document.getElementById('pwa-install-modal');
+                if(m) {
+                    m.classList.remove('hidden');
+                    setTimeout(() => { 
+                        m.classList.remove('opacity-0'); 
+                        m.children[0].classList.remove('scale-95'); 
+                    }, 10);
+                }
+            }
+        }
+
+        function dismissInstallPrompt() {
+            const m = document.getElementById('pwa-install-modal');
+            if(m) {
+                m.classList.add('opacity-0'); 
+                m.children[0].classList.add('scale-95');
+                setTimeout(() => { m.classList.add('hidden'); }, 300);
+            }
+            localStorage.setItem('fcdriver_pwa_time', new Date().getTime());
+        }
+
+        async function acceptInstallPrompt() {
+            dismissInstallPrompt();
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    localStorage.setItem('fcdriver_pwa_status', 'installed'); 
+                } else {
+                    localStorage.setItem('fcdriver_pwa_time', new Date().getTime());
+                }
+                deferredPrompt = null;
+            } else {
+                showCustomAlert("Aplikasi sudah terinstal, atau browser Anda tidak mendukung fitur ini.", "info");
+            }
+        }
+
+
+        // --- CUSTOM MODAL SYSTEM (AUTO-TOAST) ---
         function openModalAnim() {
             const m = document.getElementById('customModal');
             const c = document.getElementById('customModalContent');
@@ -426,7 +634,7 @@
                 } else if (type === 'error') {
                     header.className = "bg-gradient-to-r from-red-600 to-red-500 text-white p-5 font-black text-lg flex items-center gap-3";
                     icon.className = "fas fa-exclamation-circle text-2xl drop-shadow-sm";
-                    title.innerText = "Gagal";
+                    title.innerText = "Perhatian";
                 } else {
                     header.className = "bg-gradient-to-r from-brandPrimary to-[#ff7337] text-white p-5 font-black text-lg flex items-center gap-3";
                     icon.className = "fas fa-info-circle text-2xl drop-shadow-sm";
@@ -434,11 +642,13 @@
                 }
 
                 document.getElementById('modalMessage').innerText = message;
-                document.getElementById('modalBtnCancel').classList.add('hidden');
-                document.getElementById('modalBtnConfirm').innerText = "OK";
                 
                 openModalAnim();
-                document.getElementById('modalBtnConfirm').onclick = () => { closeModalAnim(); resolve(true); };
+
+                setTimeout(() => {
+                    closeModalAnim();
+                    resolve(true);
+                }, 2000);
             });
         }
 
@@ -456,20 +666,21 @@
             }
         }
 
-        // --- VARIABEL GLOBAL ---
+        // --- VARIABEL GLOBAL & 100% REAL DATA ---
         let DRIVER_DATA = null; 
         let syncInterval;
+        let historyChartInstance = null; // Variabel chart
 
-        // GPS Tracker Real-time
-        let driverPos = { lat: -7.147500, lng: 112.604400 }; // Default PPS Gresik
+        let driverPos = { lat: null, lng: null }; 
         let activeDeliveryMap = null;
-        let activeMarkers = [];
+        let activeMapLayers = []; 
 
-        let ALL_SELLERS = []; // Data Toko untuk kalkulasi jarak multi-toko
-        let localFeeOngkir = 2000; // Default Fee
-        let localFeeLayanan = 1000; // Default App Fee
-        let localMaxOngkir = 50000; // Default Max Ongkir
-        let localMaxOngkirMulti = 75000; // Default Max Ongkir Multi-Drop
+        let ALL_SELLERS = []; 
+        let localFeeOngkir = 0; 
+        let localFeeLayanan = 0; 
+        let localMaxOngkir = 0; 
+        let localMaxOngkirMulti = 0; 
+        let IS_SYSTEM_READY = false;
 
         // URL Web App
         const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxepD3BGU993WBCuZjH2Wo4sDyUkwyp4SGE4_mZ6EbrzD_qCDGzkRIOnPqmcXVnKNM/exec"; 
@@ -485,7 +696,6 @@
         }
         function deg2rad(deg) { return deg * (Math.PI/180) }
 
-        // Kalkulator Ongkir Multi-Toko Yang Kuat (Error-Proof)
         function calculateOngkirMultiStore(order) {
             if (!order || !order.outlet) return localFeeOngkir;
             
@@ -505,7 +715,7 @@
                     if (!isNaN(distToBuyer)) {
                         let added = false;
                         for(let cluster of clusters) {
-                            if(getDistanceFromLatLonInKm(sLat, sLng, cluster.lat, cluster.lng) <= 0.3) { // 300 Meter Radius
+                            if(getDistanceFromLatLonInKm(sLat, sLng, cluster.lat, cluster.lng) <= 0.3) { 
                                 if (distToBuyer > cluster.maxDistToBuyer) cluster.maxDistToBuyer = distToBuyer;
                                 added = true; break;
                             }
@@ -551,17 +761,17 @@
                 if(resSellers.status === 'success') ALL_SELLERS = resSellers.data || [];
                 
                 if(resSettings.status === 'success' && resSettings.data) {
-                    localFeeOngkir = parseInt(resSettings.data.fee_ongkir) || 2000;
-                    localFeeLayanan = parseInt(resSettings.data.fee_layanan) || 1000;
-                    localMaxOngkir = parseInt(resSettings.data.max_ongkir) || 50000;
-                    localMaxOngkirMulti = parseInt(resSettings.data.max_ongkir_multi) || 75000;
+                    localFeeOngkir = parseInt(resSettings.data.fee_ongkir) || 0;
+                    localFeeLayanan = parseInt(resSettings.data.fee_layanan) || 0;
+                    localMaxOngkir = parseInt(resSettings.data.max_ongkir) || 0;
+                    localMaxOngkirMulti = parseInt(resSettings.data.max_ongkir_multi) || 0;
+                    IS_SYSTEM_READY = true;
                 }
             } catch(e) {
                 console.error("Gagal menarik pengaturan sistem");
             }
         }
 
-        // --- UPDATE PENDAPATAN DASHBOARD ---
         function updateDriverStats(allOrders) {
             if(!DRIVER_DATA) return;
             const todayStr = new Date().toLocaleString('id-ID').split(',')[0].trim().split(' ')[0];
@@ -585,12 +795,10 @@
             document.getElementById('header-count').innerText = todayCount;
         }
 
-        // --- BACKGROUND SYNC & GPS LOGIC ---
         function startBackgroundSync() {
             if(syncInterval) clearInterval(syncInterval);
             syncInterval = setInterval(syncDataBackground, 10000); 
 
-            // Aktifkan Live Tracker GPS
             if (navigator.geolocation) {
                 navigator.geolocation.watchPosition(
                     (pos) => {
@@ -604,7 +812,7 @@
         }
 
         async function syncDataBackground() {
-            if(!DRIVER_DATA) return;
+            if(!DRIVER_DATA || !IS_SYSTEM_READY) return;
             
             const isOnline = document.getElementById('onlineToggle').checked;
             if(!isOnline) {
@@ -625,7 +833,7 @@
                     updateDriverStats(res.data);
                     
                     processNewOrders(res.data, true);
-                    processActiveOrders(res.data); // Proses Multi-Tasking Render
+                    processActiveOrders(res.data); 
 
                     if (!document.getElementById('section-history').classList.contains('hidden')) {
                         processHistoryOrders(res.data, true);
@@ -684,6 +892,23 @@
         document.addEventListener('DOMContentLoaded', () => {
             fetchSystemSettings(); 
 
+            // Setup Filter Tanggal/Tahun Default
+            const now = new Date();
+            const curMonth = (now.getMonth() + 1).toString().padStart(2, '0');
+            const curYear = now.getFullYear();
+
+            const yearFilter = document.getElementById('history-year-filter');
+            if(yearFilter) {
+                yearFilter.innerHTML = '';
+                for(let y = curYear - 2; y <= curYear + 1; y++) {
+                    yearFilter.innerHTML += `<option value="${y}">${y}</option>`;
+                }
+                yearFilter.value = curYear.toString();
+            }
+            const monthFilter = document.getElementById('history-month-filter');
+            if(monthFilter) monthFilter.value = curMonth;
+
+            // Memuat Data Login
             const savedDriver = localStorage.getItem('foodcourt_driver_login');
             if (savedDriver) {
                 try {
@@ -714,6 +939,9 @@
 
                     switchTab('new');
                     startBackgroundSync();
+
+                    setTimeout(() => checkAndShowInstallPrompt(), 3000);
+                    requestNotificationPermission();
                     
                 } catch(e) {
                     localStorage.removeItem('foodcourt_driver_login');
@@ -778,6 +1006,9 @@
                     switchTab('new');
                     startBackgroundSync();
 
+                    setTimeout(() => checkAndShowInstallPrompt(), 3000);
+                    requestNotificationPermission();
+
                 } else {
                     await showCustomAlert(res.message, "error");
                 }
@@ -790,18 +1021,6 @@
         }
 
         async function handleLogout() {
-            // Cek apakah ada tugas yang belum selesai sebelum logout
-            const cachedData = localStorage.getItem('foodcourt_driver_orders_cache');
-            if(cachedData) {
-                const allOrders = JSON.parse(cachedData);
-                const myActive = allOrders.filter(o => o.status && !o.status.includes('Selesai') && o.status.includes(DRIVER_DATA.full_name));
-                if(myActive.length > 0) {
-                    await showCustomAlert(`Anda masih memiliki ${myActive.length} pesanan aktif yang belum diselesaikan. Harap selesaikan terlebih dahulu sebelum keluar!`, "error");
-                    switchTab('active');
-                    return;
-                }
-            }
-
             DRIVER_DATA = null;
             if(syncInterval) clearInterval(syncInterval);
             localStorage.removeItem('foodcourt_driver_login');
@@ -999,6 +1218,17 @@
                 return;
             }
 
+            if (!IS_SYSTEM_READY) {
+                if(!isBackground) {
+                    container.innerHTML = `
+                    <div class="text-center py-16 text-gray-400 font-bold bg-white rounded-2xl border border-gray-100 shadow-sm">
+                        <i class="fas fa-spinner fa-spin text-4xl mb-3 text-brandPrimary"></i>
+                        <p>Menyiapkan sistem tarif database...</p>
+                    </div>`;
+                }
+                return;
+            }
+
             const cachedData = localStorage.getItem('foodcourt_driver_orders_cache');
             if (!isBackground) {
                 if (cachedData) {
@@ -1048,7 +1278,6 @@
                 return;
             }
 
-            // --- ALGORITMA SORTING: RADIUS TERDEKAT ---
             if (driverPos.lat && driverPos.lng) {
                 availableOrders.forEach(o => {
                     let sLat = parseFloat(o.seller_lat);
@@ -1060,11 +1289,21 @@
                     o.distToDriver = getDistanceFromLatLonInKm(driverPos.lat, driverPos.lng, sLat, sLng);
                     if(isNaN(o.distToDriver)) o.distToDriver = 999; 
                 });
-                // Urutkan dari jarak terdekat
                 availableOrders.sort((a, b) => a.distToDriver - b.distToDriver);
             }
 
             const newIds = availableOrders.map(o => o.order_id).join(',');
+            
+            if (isBackground && container.dataset.lastIds !== undefined && newIds !== "" && container.dataset.lastIds !== newIds) {
+                const oldIdsArr = container.dataset.lastIds.split(',');
+                const newIdsArr = newIds.split(',');
+                const hasNewTask = newIdsArr.some(id => !oldIdsArr.includes(id));
+                
+                if (hasNewTask) {
+                    triggerSystemNotification("Tugas Baru Masuk! 🛵", "Ada pesanan baru di sekitar lokasi Anda. Buka aplikasi untuk menerima.");
+                }
+            }
+            
             if (isBackground && container.dataset.lastIds === newIds) return;
             container.dataset.lastIds = newIds;
 
@@ -1126,7 +1365,6 @@
             const container = document.getElementById('active-orders-container');
             const badge = document.getElementById('activeBadge');
             
-            // Filter semua pesanan yang dibawa oleh kurir ini
             const myActiveOrders = allOrders.filter(order => order && order.status && !order.status.includes('Selesai') && order.status.includes(DRIVER_DATA.full_name));
             
             if (myActiveOrders.length > 0) {
@@ -1142,9 +1380,9 @@
                         <i class="fas fa-box-open text-5xl mb-3 opacity-30 drop-shadow"></i>
                         <p>Belum ada antaran aktif. Silakan cari di menu Tugas Baru.</p>
                     </div>`;
-                if (activeDeliveryMap && activeMarkers) {
-                    activeMarkers.forEach(m => activeDeliveryMap.removeLayer(m));
-                    activeMarkers = [];
+                if (activeDeliveryMap && activeMapLayers) {
+                    activeMapLayers.forEach(m => activeDeliveryMap.removeLayer(m));
+                    activeMapLayers = [];
                 }
                 return;
             }
@@ -1174,6 +1412,17 @@
                 let bLng = parseFloat(order.buyer_lng || order.lng);
                 let sLat = parseFloat(order.seller_lat);
                 let sLng = parseFloat(order.seller_lng);
+                let dLat = parseFloat(driverPos.lat);
+                let dLng = parseFloat(driverPos.lng);
+
+                // --- ESTIMASI JARAK DAN WAKTU (LIVE) ---
+                let distToStore = getDistanceFromLatLonInKm(dLat, dLng, sLat, sLng);
+                let timeToStore = Math.ceil(distToStore * 3); 
+                let distToStoreStr = isNaN(distToStore) ? "Menghitung..." : `${distToStore.toFixed(1)} KM (~${timeToStore} mnt)`;
+
+                let distToBuyer = getDistanceFromLatLonInKm(sLat, sLng, bLat, bLng);
+                let timeToBuyer = Math.ceil(distToBuyer * 3);
+                let distToBuyerStr = isNaN(distToBuyer) ? "Menghitung..." : `${distToBuyer.toFixed(1)} KM (~${timeToBuyer} mnt)`;
 
                 html += `
                 <div class="bg-white rounded-2xl p-4 mb-4 border border-gray-100 shadow-[0_4px_10px_rgba(0,0,0,0.02)] mx-4">
@@ -1185,12 +1434,14 @@
                     <div class="mb-3">
                         <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Penjemputan</div>
                         <div class="font-extrabold text-sm text-gray-800 break-words"><i class="fas fa-store text-orange-500 w-4"></i> ${order.outlet}</div>
-                        <div class="text-xs font-medium text-gray-600 ml-5">${order.qty}x ${order.product_name}</div>
+                        <div class="text-[10px] font-semibold text-gray-500 ml-5 mt-1"><i class="fas fa-location-arrow text-brandPrimary mr-1"></i> Jarak dr Anda: <span class="text-brandPrimary font-bold">${distToStoreStr}</span></div>
+                        <div class="text-xs font-medium text-gray-600 ml-5 mt-1 border-t border-dashed border-gray-50 pt-1">${order.qty}x ${order.product_name}</div>
                     </div>
 
                     <div class="mb-3 border-t border-gray-50 pt-2">
                         <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Pengantaran</div>
                         <div class="font-extrabold text-sm text-gray-800 break-words"><i class="fas fa-user-circle text-blue-500 w-4"></i> Pemesan ID: ${order.user_id}</div>
+                        <div class="text-[10px] font-semibold text-gray-500 ml-5 mt-1"><i class="fas fa-route text-blue-500 mr-1"></i> Jarak dr Toko: <span class="text-blue-500 font-bold">${distToBuyerStr}</span></div>
                         <div class="flex gap-2 mt-2 ml-5">
                             <button onclick="openGoogleMapsNav(${sLat}, ${sLng})" class="text-[10px] font-bold bg-orange-50 text-orange-600 px-2 py-1.5 rounded-lg border border-orange-100 hover:bg-orange-100 shadow-sm"><i class="fas fa-location-arrow mr-1"></i> Peta Toko</button>
                             <button onclick="openGoogleMapsNav(${bLat}, ${bLng})" class="text-[10px] font-bold bg-blue-50 text-blue-600 px-2 py-1.5 rounded-lg border border-blue-100 hover:bg-blue-100 shadow-sm"><i class="fas fa-location-arrow mr-1"></i> Peta Pembeli</button>
@@ -1221,49 +1472,91 @@
             renderActiveMap(myActiveOrders);
         }
 
-        // --- MAP RENDERER (MULTI PIN) ---
+        // --- MAP RENDERER (MULTI PIN DENGAN GARIS RUTE) ---
         function renderActiveMap(activeOrders) {
+            let centerLat = parseFloat(driverPos.lat);
+            let centerLng = parseFloat(driverPos.lng);
+
+            if (isNaN(centerLat) || isNaN(centerLng)) {
+                if (activeOrders.length > 0) {
+                    centerLat = parseFloat(activeOrders[0].seller_lat);
+                    centerLng = parseFloat(activeOrders[0].seller_lng);
+                }
+            }
+
+            if (isNaN(centerLat) || isNaN(centerLng)) {
+                centerLat = -7.1475;
+                centerLng = 112.6044;
+            }
+
             if (!activeDeliveryMap) {
-                activeDeliveryMap = L.map('live-map-leaflet', { zoomControl: false }).setView([driverPos.lat || -7.1475, driverPos.lng || 112.6044], 14);
+                var mapContainer = document.getElementById('live-map-leaflet');
+                if (mapContainer && mapContainer._leaflet_id) {
+                    mapContainer._leaflet_id = null;
+                }
+                
+                activeDeliveryMap = L.map('live-map-leaflet', { zoomControl: false }).setView([centerLat, centerLng], 14);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(activeDeliveryMap);
             }
             
-            // Bersihkan marker lama
-            activeMarkers.forEach(m => activeDeliveryMap.removeLayer(m));
-            activeMarkers = [];
+            // Bersihkan marker & garis lama
+            activeMapLayers.forEach(m => activeDeliveryMap.removeLayer(m));
+            activeMapLayers = [];
             
-            // Marker Kurir Saat Ini
             if (driverPos.lat && driverPos.lng) {
-                let dm = L.marker([driverPos.lat, driverPos.lng], {
-                    icon: L.divIcon({ html: '<i class="fas fa-motorcycle text-brandPrimary text-2xl drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)] bg-white p-1.5 rounded-full border-2 border-brandPrimary"></i>', className: 'custom-div-icon', iconSize: [40, 40], iconAnchor: [20, 20] })
-                }).addTo(activeDeliveryMap);
-                activeMarkers.push(dm);
+                let dLat = parseFloat(driverPos.lat);
+                let dLng = parseFloat(driverPos.lng);
+                if (!isNaN(dLat) && !isNaN(dLng)) {
+                    let dm = L.marker([dLat, dLng], {
+                        icon: L.divIcon({ html: '<i class="fas fa-motorcycle text-brandPrimary text-2xl drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)] bg-white p-1.5 rounded-full border-2 border-brandPrimary"></i>', className: 'custom-div-icon', iconSize: [40, 40], iconAnchor: [20, 20] })
+                    }).bindTooltip("Posisi Anda", {direction: 'top', offset: [0, -15], className: 'font-bold text-xs'}).addTo(activeDeliveryMap);
+                    activeMapLayers.push(dm);
+                }
             }
             
-            // Loop titik Toko & Pembeli
             activeOrders.forEach(o => {
                 let sLat = parseFloat(o.seller_lat);
                 let sLng = parseFloat(o.seller_lng);
-                if(!isNaN(sLat) && !isNaN(sLng)) {
-                    let sm = L.marker([sLat, sLng], {
-                        icon: L.divIcon({ html: '<i class="fas fa-store text-orange-500 text-xl drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)] bg-white p-1 rounded-full border-2 border-orange-500"></i>', className: 'custom-div-icon', iconSize: [30, 30], iconAnchor: [15, 15] })
-                    }).addTo(activeDeliveryMap);
-                    activeMarkers.push(sm);
-                }
-                
                 let bLat = parseFloat(o.buyer_lat || o.lat);
                 let bLng = parseFloat(o.buyer_lng || o.lng);
+
+                let distToStore = getDistanceFromLatLonInKm(parseFloat(driverPos.lat), parseFloat(driverPos.lng), sLat, sLng);
+                let timeToStore = Math.ceil(distToStore * 3);
+                
+                let distToBuyer = getDistanceFromLatLonInKm(sLat, sLng, bLat, bLng);
+                let timeToBuyer = Math.ceil(distToBuyer * 3);
+
+                if(!isNaN(sLat) && !isNaN(sLng)) {
+                    let tooltipText = `<b>${o.outlet}</b><br><span class="text-brandPrimary">Dr Anda: ${distToStore.toFixed(1)}km (~${timeToStore} mnt)</span>`;
+                    let sm = L.marker([sLat, sLng], {
+                        icon: L.divIcon({ html: '<i class="fas fa-store text-orange-500 text-xl drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)] bg-white p-1 rounded-full border-2 border-orange-500"></i>', className: 'custom-div-icon', iconSize: [30, 30], iconAnchor: [15, 15] })
+                    }).bindTooltip(tooltipText, {direction: 'top', offset: [0, -10], className: 'text-xs'}).addTo(activeDeliveryMap);
+                    activeMapLayers.push(sm);
+
+                    // Garis Kurir ke Toko (jika belum diambil)
+                    if(driverPos.lat && driverPos.lng && !o.status.includes('Diambil') && !o.status.includes('Selesai')) {
+                        let line1 = L.polyline([[driverPos.lat, driverPos.lng], [sLat, sLng]], {color: '#ee4d2d', weight: 3, dashArray: '5, 5'}).addTo(activeDeliveryMap);
+                        activeMapLayers.push(line1);
+                    }
+                }
+                
                 if(!isNaN(bLat) && !isNaN(bLng)) {
+                    let tooltipText = `<b>Pembeli ID: ${o.user_id}</b><br><span class="text-blue-500">Dr Toko: ${distToBuyer.toFixed(1)}km (~${timeToBuyer} mnt)</span>`;
                     let bm = L.marker([bLat, bLng], {
                         icon: L.divIcon({ html: '<i class="fas fa-user text-blue-500 text-xl drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)] bg-white p-1 rounded-full border-2 border-blue-500"></i>', className: 'custom-div-icon', iconSize: [30, 30], iconAnchor: [15, 15] })
-                    }).addTo(activeDeliveryMap);
-                    activeMarkers.push(bm);
+                    }).bindTooltip(tooltipText, {direction: 'top', offset: [0, -10], className: 'text-xs'}).addTo(activeDeliveryMap);
+                    activeMapLayers.push(bm);
+
+                    // Garis Toko ke Pembeli
+                    if(!isNaN(sLat) && !isNaN(sLng)) {
+                        let line2 = L.polyline([[sLat, sLng], [bLat, bLng]], {color: '#3b82f6', weight: 3, dashArray: '5, 5'}).addTo(activeDeliveryMap);
+                        activeMapLayers.push(line2);
+                    }
                 }
             });
 
-            // Fokus peta mencakup semua marker
-            if (activeMarkers.length > 0) {
-                let group = new L.featureGroup(activeMarkers);
+            if (activeMapLayers.length > 0) {
+                let group = new L.featureGroup(activeMapLayers);
                 activeDeliveryMap.fitBounds(group.getBounds(), { padding: [30, 30] });
             }
         }
@@ -1289,30 +1582,24 @@
                 btn.disabled = true;
 
                 try {
-                    // Sematkan NAMA DRIVER agar order terkunci pada driver ini
                     const newStatus = `Kurir Menuju Outlet (${DRIVER_DATA.full_name})`;
                     const response = await fetch(GAS_WEB_APP_URL, {
                         method: 'POST',
-                        body: JSON.stringify({
-                            action: 'updateOrderStatus',
-                            type: 'orders',
-                            orderId: orderId,
-                            newStatus: newStatus
-                        })
+                        body: JSON.stringify({ action: 'updateOrderStatus', type: 'orders', orderId: orderId, newStatus: newStatus })
                     });
                     const res = await response.json();
                     
                     if (res.status === 'success') {
                         card.style.display = 'none';
-                        await showCustomAlert("Pesanan berhasil ditambahkan ke daftar Aktif Anda!", "success");
-                        refreshOrders(); // Sync data untuk memperbarui tab Aktif
+                        showCustomAlert("Pesanan masuk ke daftar aktif.", "success");
+                        refreshOrders(); 
                     } else {
-                        await showCustomAlert(res.message, "error");
+                        showCustomAlert(res.message, "error");
                         btn.innerHTML = '<i class="fas fa-check-circle drop-shadow-md"></i> Terima Pesanan';
                         btn.disabled = false;
                     }
                 } catch (error) {
-                    await showCustomAlert("Gagal koneksi ke server.", "error");
+                    showCustomAlert("Gagal koneksi ke server.", "error");
                     btn.innerHTML = '<i class="fas fa-check-circle drop-shadow-md"></i> Terima Pesanan';
                     btn.disabled = false;
                 }
@@ -1340,18 +1627,92 @@
 
                 if (res.status === 'success') {
                     if(nextStatus.includes('Selesai')) {
-                        await showCustomAlert("Selesai! Pesanan berhasil diserahkan ke pembeli.", "success");
+                        showCustomAlert("Antaran Selesai!", "success");
                     }
                     refreshOrders(); 
                 } else {
-                    await showCustomAlert(res.message, "error");
+                    showCustomAlert(res.message, "error");
                 }
             } catch (error) {
-                await showCustomAlert("Koneksi gagal.", "error");
+                showCustomAlert("Koneksi gagal.", "error");
             }
         }
 
-        // --- FUNGSI TARIK DATA RIWAYAT (HISTORY) ---
+        // --- FUNGSI TARIK DATA RIWAYAT (HISTORY & STATISTIK) ---
+        function onHistoryFilterChange() {
+            const cachedData = localStorage.getItem('foodcourt_driver_orders_cache');
+            if (cachedData) {
+                processHistoryOrders(JSON.parse(cachedData), false);
+            }
+        }
+
+        function renderHistoryChart(dataByDate) {
+            const ctx = document.getElementById('historyChartCanvas');
+            if (!ctx) return;
+
+            const labels = Object.keys(dataByDate).sort(); // Sort by date ascending
+            const incomeData = labels.map(date => dataByDate[date].totalIncome);
+            const qtyData = labels.map(date => dataByDate[date].totalQty);
+
+            if (historyChartInstance) {
+                historyChartInstance.destroy();
+            }
+
+            historyChartInstance = new Chart(ctx.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Pendapatan Bersih (Rp)',
+                            data: incomeData,
+                            backgroundColor: '#ee4d2d',
+                            borderRadius: 4,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Jml Antaran',
+                            data: qtyData,
+                            type: 'line',
+                            borderColor: '#3b82f6',
+                            backgroundColor: '#3b82f6',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top', labels: { boxWidth: 10, font: {size: 10} } },
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            beginAtZero: true,
+                            grid: { borderDash: [4, 4] }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            beginAtZero: true,
+                            grid: { drawOnChartArea: false },
+                            ticks: { precision: 0 } // Menghilangkan desimal untuk antaran
+                        },
+                        x: { 
+                            grid: { display: false }, 
+                            ticks: { font: {size: 9} } 
+                        }
+                    }
+                }
+            });
+        }
+
         async function loadHistory(isBackground = false) {
             const container = document.getElementById('history-container');
             
@@ -1386,25 +1747,72 @@
             
             const myHistory = allOrders.filter(order => order && order.status && String(order.status).includes('Selesai') && String(order.status).includes(DRIVER_DATA.full_name));
             
-            if(myHistory.length === 0) {
-                if(!isBackground || container.innerHTML.includes('order-id')) {
-                    container.innerHTML = '<div class="text-center py-16 text-gray-400 font-bold bg-white rounded-2xl border border-gray-100 shadow-sm"><i class="fas fa-clipboard-list text-5xl mb-3 opacity-30 drop-shadow"></i><br>Belum ada riwayat antaran.</div>';
-                }
-                return;
-            }
+            const selectedMonth = document.getElementById('history-month-filter').value;
+            const selectedYear = document.getElementById('history-year-filter').value;
 
-            const newIds = myHistory.map(o => o.order_id).join(',');
+            let filteredHistory = [];
+            let chartDataByDate = {};
+            let totalIncomeFilter = 0;
+            let totalAntaranFilter = 0;
+
+            myHistory.forEach(order => {
+                let orderMonth = "";
+                let orderYear = "";
+                let justDate = "Unknown";
+
+                if(order.timestamp) {
+                    const datePart = String(order.timestamp).split(',')[0].trim().split(' ')[0];
+                    justDate = datePart;
+                    
+                    const separator = datePart.includes('/') ? '/' : '-';
+                    const parts = datePart.split(separator);
+                    
+                    if(parts.length >= 3) {
+                        orderMonth = parts[1].padStart(2, '0');
+                        orderYear = parts[2];
+                    }
+                }
+
+                if(orderMonth === selectedMonth && orderYear === selectedYear) {
+                    filteredHistory.push(order);
+                    let ongkir = calculateOngkirMultiStore(order);
+                    
+                    totalIncomeFilter += ongkir;
+                    totalAntaranFilter++;
+
+                    if(!chartDataByDate[justDate]) {
+                        chartDataByDate[justDate] = { totalIncome: 0, totalQty: 0 };
+                    }
+                    chartDataByDate[justDate].totalIncome += ongkir;
+                    chartDataByDate[justDate].totalQty += 1;
+                }
+            });
+
+            // Update UI Summary Dashboard
+            document.getElementById('hist-summary-qty').innerText = totalAntaranFilter;
+            document.getElementById('hist-summary-income').innerText = 'Rp ' + totalIncomeFilter.toLocaleString('id-ID');
+
+            // Render Chart
+            renderHistoryChart(chartDataByDate);
+
+            // Mencegah render ulang list jika data tidak berubah di background
+            const newIds = filteredHistory.map(o => o.order_id).join(',');
             if (isBackground && container.dataset.lastIds === newIds) return;
             container.dataset.lastIds = newIds;
 
+            if(filteredHistory.length === 0) {
+                container.innerHTML = '<div class="text-center py-16 text-gray-400 font-bold bg-white rounded-2xl border border-gray-100 shadow-sm"><i class="fas fa-clipboard-list text-5xl mb-3 opacity-30 drop-shadow"></i><br>Belum ada riwayat antaran bulan ini.</div>';
+                return;
+            }
+
             let html = '';
-            myHistory.reverse().forEach(order => {
+            filteredHistory.reverse().forEach(order => {
                 let ongkir = calculateOngkirMultiStore(order);
 
                 html += `
-                    <div class="bg-white rounded-2xl p-4 mb-3 border border-gray-100 shadow-sm flex justify-between items-center transition hover:shadow-md">
+                    <div onclick="showHistoryDetail('${order.order_id}')" class="bg-white rounded-2xl p-4 mb-3 border border-gray-100 shadow-sm flex justify-between items-center transition hover:shadow-md cursor-pointer group">
                         <div class="flex items-center gap-4 w-3/4">
-                            <div class="w-10 h-10 rounded-full bg-green-50 border border-green-100 text-green-500 flex items-center justify-center flex-shrink-0 shadow-inner"><i class="fas fa-check drop-shadow-sm"></i></div>
+                            <div class="w-10 h-10 rounded-full bg-green-50 border border-green-100 text-green-500 flex items-center justify-center flex-shrink-0 shadow-inner group-hover:scale-110 transition-transform"><i class="fas fa-check drop-shadow-sm"></i></div>
                             <div class="truncate w-full">
                                 <div class="font-extrabold text-sm truncate text-gray-800">${order.outlet || '-'}</div>
                                 <div class="text-[10px] font-semibold text-gray-500 truncate mt-0.5"><span class="order-id">ID: ${order.order_id}</span> • Selesai</div>
@@ -1478,18 +1886,95 @@
                     DRIVER_DATA.face_img = imageUrl;
                     document.getElementById('profDetailImage').src = imageUrl;
                     document.getElementById('userProfileImage').src = imageUrl;
-                    await showCustomAlert("Foto profil berhasil diperbarui!", "success");
+                    showCustomAlert("Foto profil diperbarui!", "success");
                 } else {
-                    await showCustomAlert("Gagal memperbarui database: " + updateResult.message, "error");
+                    showCustomAlert("Gagal: " + updateResult.message, "error");
                 }
 
             } catch (error) {
-                await showCustomAlert("Terjadi kesalahan: " + error.message, "error");
+                showCustomAlert("Error: " + error.message, "error");
             } finally {
                 btnLabel.innerHTML = originalIcon;
                 btnLabel.classList.remove('opacity-50', 'pointer-events-none');
                 e.target.value = ''; 
             }
+        }
+
+        // --- FUNGSI MODAL DETAIL RIWAYAT ---
+        function showHistoryDetail(orderId) {
+            const cachedData = localStorage.getItem('foodcourt_driver_orders_cache');
+            if(!cachedData) return;
+            const allOrders = JSON.parse(cachedData);
+            const order = allOrders.find(o => o.order_id === orderId);
+            if(!order) return;
+
+            let ongkir = calculateOngkirMultiStore(order);
+            let grandTotal = parseInt(order.total_price) || 0;
+            let subtotalProduct = grandTotal - ongkir - localFeeLayanan;
+            if(subtotalProduct < 0) subtotalProduct = 0;
+
+            let bLat = parseFloat(order.buyer_lat || order.lat);
+            let bLng = parseFloat(order.buyer_lng || order.lng);
+            let sLat = parseFloat(order.seller_lat);
+            let sLng = parseFloat(order.seller_lng);
+            
+            let distToBuyer = getDistanceFromLatLonInKm(sLat, sLng, bLat, bLng);
+            let distText = isNaN(distToBuyer) ? "Tidak diketahui" : `~${distToBuyer.toFixed(1)} km`;
+
+            const content = document.getElementById('history-detail-content');
+            content.innerHTML = `
+                <div class="flex justify-between items-center border-b border-gray-100 pb-4 mb-4">
+                    <div>
+                        <span class="font-black text-gray-800 text-lg block"><i class="fas fa-receipt text-brandPrimary mr-1"></i> #${order.order_id}</span>
+                        <span class="text-[10px] font-bold text-gray-400 mt-1 block"><i class="far fa-clock"></i> ${order.timestamp}</span>
+                    </div>
+                    <span class="text-[10px] font-black px-2 py-1 rounded-full bg-green-100 text-green-700 border border-green-200">Pesanan Selesai</span>
+                </div>
+                
+                <div class="mb-4">
+                    <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Lokasi Penjemputan</div>
+                    <div class="font-extrabold text-sm text-gray-800 break-words flex gap-2">
+                        <i class="fas fa-store text-orange-500 mt-1"></i> 
+                        <span>${order.outlet}</span>
+                    </div>
+                    <div class="text-xs font-medium text-gray-600 ml-6 mt-1 border-t border-dashed border-gray-100 pt-1">${order.qty}x ${order.product_name}</div>
+                </div>
+
+                <div class="mb-4 border-t border-gray-50 pt-4">
+                    <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Lokasi Pengantaran</div>
+                    <div class="font-extrabold text-sm text-gray-800 break-words flex gap-2">
+                        <i class="fas fa-user-circle text-blue-500 mt-1"></i> 
+                        <span>Pemesan ID: ${order.user_id}</span>
+                    </div>
+                    <div class="text-[11px] font-semibold text-gray-500 ml-6 mt-2 flex items-center gap-1 bg-gray-50 p-1.5 rounded-lg border border-gray-100 w-fit">
+                        <i class="fas fa-route text-blue-400"></i> Jarak Pengantaran: <span class="font-bold text-blue-600">${distText}</span>
+                    </div>
+                </div>
+
+                <div class="border-t border-dashed border-gray-200 mt-2 pt-4 bg-gray-50 -mx-5 px-5 -mb-5 pb-5 rounded-b-2xl">
+                    <div class="flex justify-between text-[11px] font-bold text-gray-500 mb-1.5">
+                        <span>Harga Produk (Kotor Toko):</span><span>Rp ${subtotalProduct.toLocaleString('id-ID')}</span>
+                    </div>
+                    <div class="flex justify-between text-[11px] font-bold text-orange-500 mb-1.5">
+                        <span>Biaya Layanan Aplikasi:</span><span>Rp ${localFeeLayanan.toLocaleString('id-ID')}</span>
+                    </div>
+                    <div class="flex justify-between text-xs font-bold text-green-600 mb-2 border-b border-gray-200 pb-2">
+                        <span>Pendapatan Kurir Anda:</span><span>+ Rp ${ongkir.toLocaleString('id-ID')}</span>
+                    </div>
+                    <div class="flex justify-between items-center mt-2">
+                        <span class="text-xs font-black text-gray-800 uppercase tracking-wider">Total Tagihan (Pembeli):</span>
+                        <span class="text-xl font-black text-brandPrimary">Rp ${grandTotal.toLocaleString('id-ID')}</span>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('history-detail-overlay').classList.remove('hidden');
+            document.getElementById('history-detail-overlay').classList.add('flex');
+        }
+
+        function hideHistoryDetail() {
+            document.getElementById('history-detail-overlay').classList.add('hidden');
+            document.getElementById('history-detail-overlay').classList.remove('flex');
         }
 
     </script>
