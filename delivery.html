@@ -346,7 +346,7 @@
                     </div>
                 </div>
 
-                <!-- Info Customer -->
+                <!-- Info Customer & Rincian Tagihan -->
                 <div class="bg-white rounded-2xl p-4 mb-6 border border-gray-100 shadow-sm relative overflow-hidden">
                     <div class="absolute -right-2 -top-2 text-blue-50 opacity-50"><i class="fas fa-user-circle text-6xl"></i></div>
                     <div class="flex justify-between items-start mb-2 relative z-10">
@@ -362,9 +362,27 @@
                             <a href="#" id="btn-call-buyer" class="btn-3d w-10 h-10 rounded-full bg-green-50 text-green-500 flex items-center justify-center border border-green-100 shadow-sm hover:bg-green-100"><i class="fas fa-phone-alt"></i></a>
                         </div>
                     </div>
-                    <div class="flex justify-between items-center border-t border-dashed border-gray-200 mt-3 pt-3 relative z-10">
-                        <span class="text-xs font-bold text-gray-500">Estimasi Ongkir (Pendapatan):</span>
-                        <span class="text-base font-black text-brandPrimary" id="active-ongkir-price">Rp 0</span>
+                    
+                    <!-- Rincian Tagihan Diperbarui -->
+                    <div class="border-t border-dashed border-gray-200 mt-3 pt-3 relative z-10">
+                        <div class="flex flex-col gap-1.5 mb-2">
+                            <div class="flex justify-between text-[11px] font-bold text-gray-500">
+                                <span>Harga Produk (Toko):</span>
+                                <span id="active-subtotal-price">Rp 0</span>
+                            </div>
+                            <div class="flex justify-between text-[11px] font-bold text-green-600">
+                                <span>Pendapatan Kurir (Ongkir):</span>
+                                <span id="active-ongkir-price">Rp 0</span>
+                            </div>
+                            <div class="flex justify-between text-[11px] font-bold text-orange-500">
+                                <span>Biaya Layanan (Aplikasi):</span>
+                                <span id="active-layanan-price">Rp 0</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center border-t border-gray-100 pt-2">
+                            <span class="text-sm font-black text-gray-800">Tagih ke Pembeli:</span>
+                            <span class="text-xl font-black text-brandPrimary" id="active-total-price">Rp 0</span>
+                        </div>
                     </div>
                 </div>
 
@@ -602,6 +620,21 @@
             });
         }
 
+        // --- VISIBILITY TOGGLE ---
+        function togglePasswordVisibility(inputId, buttonEl) {
+            const inputEl = document.getElementById(inputId);
+            const icon = buttonEl.querySelector('i');
+            if (inputEl.type === "password") {
+                inputEl.type = "text";
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                inputEl.type = "password";
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
         // --- VARIABEL GLOBAL ---
         let DRIVER_DATA = null; 
         let availableOrders = []; 
@@ -618,6 +651,7 @@
         let activeOrderId = null;
 
         let localFeeOngkir = 2000; // Default Fee
+        let localFeeLayanan = 1000; // Default App Fee
 
         // URL Web App
         const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxepD3BGU993WBCuZjH2Wo4sDyUkwyp4SGE4_mZ6EbrzD_qCDGzkRIOnPqmcXVnKNM/exec"; 
@@ -639,6 +673,7 @@
                 const json = await res.json();
                 if(json.status === 'success' && json.data) {
                     localFeeOngkir = parseInt(json.data.fee_ongkir) || 2000;
+                    localFeeLayanan = parseInt(json.data.fee_layanan) || 1000;
                 }
             } catch(e) {}
         }
@@ -755,7 +790,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            fetchSystemSettings(); // Panggil data pengaturan ongkir
+            fetchSystemSettings(); 
 
             const savedDriver = localStorage.getItem('foodcourt_driver_login');
             if (savedDriver) {
@@ -782,7 +817,6 @@
                     document.getElementById('app-container').classList.remove('hidden');
                     document.getElementById('app-container').classList.add('flex');
                     
-                    // Render statistik awal dari cache
                     const cachedOrders = localStorage.getItem('foodcourt_driver_orders_cache');
                     if (cachedOrders) updateDriverStats(JSON.parse(cachedOrders));
 
@@ -958,24 +992,24 @@
         async function handleForgot(e) {
             e.preventDefault();
             const email = document.getElementById('forgotEmail').value;
-            if(viewId === 'register') {
-                setTimeout(() => {
-                    getLocationSellerReg();
-                }, 500);
-            }
-        }
-
-        function togglePasswordVisibility(inputId, buttonEl) {
-            const inputEl = document.getElementById(inputId);
-            const icon = buttonEl.querySelector('i');
-            if (inputEl.type === "password") {
-                inputEl.type = "text";
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
-            } else {
-                inputEl.type = "password";
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
+            const btn = document.getElementById('btnForgot');
+            
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin drop-shadow-md"></i> Mengirim...';
+            btn.disabled = true;
+            
+            try {
+                const response = await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'forgotPassword', type: 'users_drivers', email: email })
+                });
+                const res = await response.json();
+                await showCustomAlert(res.message, res.status === 'success' ? 'success' : 'error');
+                if(res.status === 'success') switchAuthView('login');
+            } catch (error) {
+                await showCustomAlert("Gagal koneksi.", "error");
+            } finally {
+                btn.innerHTML = 'Kirim Password Baru';
+                btn.disabled = false;
             }
         }
 
@@ -1127,14 +1161,16 @@
                 let dist = getDistanceFromLatLonInKm(order.buyer_lat, order.buyer_lng, order.seller_lat, order.seller_lng);
                 if(isNaN(dist) || dist < 1) dist = 1;
                 let estimatedOngkir = Math.ceil(dist) * localFeeOngkir;
+                let grandTotal = parseInt(order.total_price) || 0;
 
                 html += `
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-4 transform hover:-translate-y-1 hover:shadow-md transition-all duration-300 order-card" id="order-card-${order.order_id}">
                     <div class="flex justify-between items-start border-b border-dashed border-gray-200 pb-3 mb-4">
                         <div class="bg-gradient-to-r from-orange-100 to-orange-50 border border-orange-200 text-brandPrimary text-[10px] font-black tracking-widest px-2 py-1 rounded shadow-inner uppercase">Delivery Baru</div>
                         <div class="text-right">
-                            <div class="text-[10px] text-gray-500 font-bold mb-0.5">Ongkir / Pendapatan</div>
+                            <div class="text-[10px] text-gray-500 font-bold mb-0.5">Pendapatan Kurir</div>
                             <div class="text-xl font-black text-green-500 drop-shadow-sm">+ Rp ${estimatedOngkir.toLocaleString('id-ID')}</div>
+                            <div class="text-[10px] text-gray-500 font-bold mt-1">Tagihan: <span class="text-brandPrimary">Rp ${grandTotal.toLocaleString('id-ID')}</span></div>
                         </div>
                     </div>
                     
@@ -1293,11 +1329,20 @@
             document.getElementById('active-customer-name').innerText = `Mencari nama...`;
             document.getElementById('active-customer-address').innerText = `Mencari alamat tujuan...`; 
 
-            // Hitung estimasi ongkir
+            // Hitung estimasi ongkir & Breakdown Biaya
             let dist = getDistanceFromLatLonInKm(activeOrderData.buyer_lat, activeOrderData.buyer_lng, activeOrderData.seller_lat, activeOrderData.seller_lng);
             if(isNaN(dist) || dist < 1) dist = 1;
+            
             let currentOngkir = Math.ceil(dist) * localFeeOngkir;
+            let currentLayanan = localFeeLayanan;
+            let grandTotal = parseInt(activeOrderData.total_price) || 0;
+            let subtotalProduct = grandTotal - currentOngkir - currentLayanan;
+            if(subtotalProduct < 0) subtotalProduct = 0; // Fallback jika data minus
+
+            document.getElementById('active-subtotal-price').innerText = `Rp ${subtotalProduct.toLocaleString('id-ID')}`;
             document.getElementById('active-ongkir-price').innerText = `+ Rp ${currentOngkir.toLocaleString('id-ID')}`;
+            document.getElementById('active-layanan-price').innerText = `Rp ${currentLayanan.toLocaleString('id-ID')}`;
+            document.getElementById('active-total-price').innerText = `Rp ${grandTotal.toLocaleString('id-ID')}`;
 
             let sellerLat = null, sellerLng = null;
             let buyerLat = activeOrderData.lat; 
@@ -1433,7 +1478,10 @@
                         document.getElementById('active-product-details').innerHTML = `<i class="fas fa-shopping-bag text-brandPrimary mr-1"></i> Pesanan: -`;
                         document.getElementById('active-customer-name').innerText = "Memuat...";
                         document.getElementById('active-customer-address').innerText = "Menunggu alamat tujuan...";
+                        document.getElementById('active-total-price').innerText = "Rp 0";
+                        document.getElementById('active-subtotal-price').innerText = "Rp 0";
                         document.getElementById('active-ongkir-price').innerText = "Rp 0";
+                        document.getElementById('active-layanan-price').innerText = "Rp 0";
                         
                         badge.innerText = "Menunggu Tugas";
                         badge.className = "bg-gradient-to-r from-gray-100 to-gray-50 border border-gray-200 text-gray-500 px-3 py-1 text-[10px] font-black tracking-widest uppercase rounded-full shadow-inner";
