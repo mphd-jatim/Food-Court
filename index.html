@@ -1272,6 +1272,7 @@
             // Simpan ke form
             document.getElementById('cartForm').dataset.grandTotal = grandTotal;
             document.getElementById('cartForm').dataset.buyerOngkir = buyerOngkir; // Simpan nominal yang khusus dibayar buyer
+            document.getElementById('cartForm').dataset.sellerOngkir = sellerOngkir; // Simpan nominal yang disubsidi toko
         }
 
         function updateCartItemQty(index, change) {
@@ -1308,6 +1309,7 @@
             btn.disabled = true;
 
             const buyerOngkir = parseInt(document.getElementById('cartForm').dataset.buyerOngkir) || 0;
+            const sellerOngkir = parseInt(document.getElementById('cartForm').dataset.sellerOngkir) || 0;
 
             const address = document.getElementById('cartAddress').value;
             const lat = document.getElementById('cartLat').value;
@@ -1343,7 +1345,7 @@
                 remainingLayanan = 0; // Saldo layanan habis terpakai
 
                 const orderId = "ORD-" + Math.floor(Math.random() * 1000000);
-                ordersData.push([ orderId, loggedInUser.user_id, combinedNames, totalQty, gTotal, "Menunggu Konfirmasi", combinedSellers, timestamp, "", lat, lng, sLoc.lat, sLoc.lng ]);
+                ordersData.push([ orderId, loggedInUser.user_id, combinedNames, totalQty, gTotal, "Menunggu Konfirmasi", combinedSellers, timestamp, "", lat, lng, sLoc.lat, sLoc.lng, buyerOngkir ]);
             }
 
             // 2. Proses Pesanan Gratis Ongkir (Subdisi Toko, Ongkir Buyer = 0)
@@ -1358,7 +1360,7 @@
 
                 const orderId = "ORD-" + Math.floor(Math.random() * 1000000);
                 let prefixedNames = "[GRATIS ONGKIR] " + combinedNames; 
-                ordersData.push([ orderId, loggedInUser.user_id, prefixedNames, totalQty, gTotal, "Menunggu Konfirmasi", combinedSellers, timestamp, "", lat, lng, sLoc.lat, sLoc.lng ]);
+                ordersData.push([ orderId, loggedInUser.user_id, prefixedNames, totalQty, gTotal, "Menunggu Konfirmasi", combinedSellers, timestamp, "", lat, lng, sLoc.lat, sLoc.lng, sellerOngkir ]);
             }
 
             try {
@@ -1625,6 +1627,7 @@
 
             // Simpan ke form
             document.getElementById('singleCheckoutForm').dataset.grandTotal = grandTotal;
+            document.getElementById('singleCheckoutForm').dataset.driverIncome = actualOngkir;
         }
 
         function changeSingleCheckoutQty(change) {
@@ -1653,6 +1656,7 @@
             const qty = parseInt(document.getElementById('checkoutQty').value);
             
             const grandTotal = parseInt(document.getElementById('singleCheckoutForm').dataset.grandTotal);
+            const driverIncome = parseInt(document.getElementById('singleCheckoutForm').dataset.driverIncome) || 0;
             
             const address = document.getElementById('checkoutAddress').value;
             const lat = document.getElementById('checkoutLat').value;
@@ -1672,7 +1676,7 @@
             
             let finalProdName = isGratisOngkir ? "[GRATIS ONGKIR] " + prodName : prodName;
 
-            const rowData = [ orderId, loggedInUser.user_id, finalProdName, qty, grandTotal, "Menunggu Konfirmasi", sellerName, timestamp, "", lat, lng, sellerLat, sellerLng ];
+            const rowData = [ orderId, loggedInUser.user_id, finalProdName, qty, grandTotal, "Menunggu Konfirmasi", sellerName, timestamp, "", lat, lng, sellerLat, sellerLng, driverIncome ];
 
             try {
                 const response = await fetch(GAS_WEB_APP_URL, {
