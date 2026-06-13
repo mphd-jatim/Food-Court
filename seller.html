@@ -1121,8 +1121,14 @@
                 return;
             }
 
+            const ktpFile = document.getElementById('regKtpImg').files[0];
+            if (!ktpFile) {
+                window.alert("Mohon unggah foto KTP asli Anda terlebih dahulu.");
+                return;
+            }
+
             const btn = document.getElementById('btnRegister');
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengirim Data...';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengunggah KTP...';
             btn.disabled = true;
             
             const storeName = document.getElementById('regStoreName').value;
@@ -1135,12 +1141,34 @@
             const bankName = document.getElementById('regBankName') ? document.getElementById('regBankName').value : "-";
             const bankAccount = document.getElementById('regBankAccount') ? document.getElementById('regBankAccount').value : "-";
 
-            const newId = "SEL-" + Math.floor(Math.random() * 100000);
-            const rowData = [
-                newId, storeName, storeAddress, ownerName, nik, email, phone, password, bankName || "-", bankAccount || "-", "URL_KTP_PLACEHOLDER", lat, lng
-            ];
-
             try {
+                // 1. Kompres dan Upload KTP ke Google Drive
+                const ktpBase64 = await compressImage(ktpFile, 800, 800, 0.7);
+                const uploadPayload = {
+                    action: 'uploadImage',
+                    base64: ktpBase64,
+                    mimeType: 'image/jpeg',
+                    filename: 'KTP_SELLER_' + nik + '.jpg'
+                };
+
+                const uploadResponse = await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(uploadPayload)
+                });
+                const uploadResult = await uploadResponse.json();
+
+                if (uploadResult.status !== 'success') {
+                    throw new Error("Gagal mengunggah KTP: " + uploadResult.message);
+                }
+                const ktpUrl = uploadResult.url;
+
+                // 2. Simpan Data Pendaftaran ke Database
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan Data...';
+                const newId = "SEL-" + Math.floor(Math.random() * 100000);
+                const rowData = [
+                    newId, storeName, storeAddress, ownerName, nik, email, phone, password, bankName || "-", bankAccount || "-", ktpUrl, lat, lng
+                ];
+
                 const response = await fetch(GAS_WEB_APP_URL, {
                     method: 'POST',
                     body: JSON.stringify({ action: 'register', type: 'users_sellers', rowData: rowData })
@@ -1155,7 +1183,7 @@
                     window.alert(res.message);
                 }
             } catch (error) {
-                window.alert("Gagal koneksi.");
+                window.alert("Gagal koneksi atau error: " + error.message);
             } finally {
                 btn.innerHTML = '<i class="fas fa-paper-plane"></i> Ajukan Pendaftaran Toko';
                 btn.disabled = false;
