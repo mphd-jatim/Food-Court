@@ -1236,7 +1236,38 @@
         // GANTI DENGAN URL GOOGLE APPS SCRIPT WEB APP ANDA
         const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxepD3BGU993WBCuZjH2Wo4sDyUkwyp4SGE4_mZ6EbrzD_qCDGzkRIOnPqmcXVnKNM/exec";
 
+        // --- VARIABEL BIAYA & SISTEM ---
+        let ALL_SELLERS = []; 
+        let localFeeOngkir = 2000; 
+        let localFeeLayanan = 1000; 
+        let localMaxOngkir = 50000; 
+        let localMaxOngkirMulti = 75000; 
+
+        async function fetchSystemSettings() {
+            try {
+                const promises = [
+                    fetch(`${GAS_WEB_APP_URL}?action=getData&type=users_sellers`).then(r => r.json()),
+                    fetch(GAS_WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getAdminSettings', type: 'admin_settings' }) }).then(r => r.json())
+                ];
+                
+                const [resSellers, resSettings] = await Promise.all(promises);
+
+                if(resSellers.status === 'success') ALL_SELLERS = resSellers.data || [];
+                
+                if(resSettings.status === 'success' && resSettings.data) {
+                    localFeeOngkir = parseInt(resSettings.data.fee_ongkir) || 0;
+                    localFeeLayanan = parseInt(resSettings.data.fee_layanan) || 0;
+                    localMaxOngkir = parseInt(resSettings.data.max_ongkir) || 0;
+                    localMaxOngkirMulti = parseInt(resSettings.data.max_ongkir_multi) || 0;
+                }
+            } catch(e) {
+                console.error("Gagal menarik pengaturan sistem");
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
+            fetchSystemSettings();
+
             const now = new Date();
             const currentMonth = (now.getMonth() + 1).toString().padStart(2, '0');
             const currentYear = now.getFullYear();
