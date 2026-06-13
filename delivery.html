@@ -749,6 +749,14 @@
             return isNaN(ongkir) ? localFeeOngkir : ongkir;
         }
 
+        // FUNGSI BARU: Mengambil ongkir yang dikunci di database (Atau fallback ke hitung ulang jika data lama)
+        function getOrderOngkir(order) {
+            if (order.driver_income !== undefined && order.driver_income !== null && order.driver_income !== "") {
+                return parseInt(order.driver_income);
+            }
+            return calculateOngkirMultiStore(order); 
+        }
+
         async function fetchSystemSettings() {
             try {
                 const promises = [
@@ -787,7 +795,7 @@
                 }
                 if(orderDate === todayStr || (o.timestamp && String(o.timestamp).includes(todayStr))) {
                     todayCount++;
-                    todayIncome += calculateOngkirMultiStore(o);
+                    todayIncome += getOrderOngkir(o);
                 }
             });
 
@@ -800,6 +808,28 @@
             syncInterval = setInterval(syncDataBackground, 10000); 
 
             if (navigator.geolocation) {
+                // 1. Tarik lokasi secepat mungkin saat aplikasi baru dibuka
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        if(!driverPos.lat) {
+                            driverPos.lat = pos.coords.latitude;
+                            driverPos.lng = pos.coords.longitude;
+                            refreshOrders(true); // Refresh layar agar tulisan "Menghitung..." langsung hilang
+                        }
+                    },
+                    (err) => {
+                        console.log("Quick GPS Error: ", err);
+                        // Fallback ke PPS Gresik jika GPS ditolak/gagal agar tidak stuck "Menghitung..."
+                        if(!driverPos.lat) {
+                            driverPos.lat = -7.147500;
+                            driverPos.lng = 112.604400;
+                            refreshOrders(true);
+                        }
+                    },
+                    { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+                );
+
+                // 2. Pantau pergerakan kurir secara real-time
                 navigator.geolocation.watchPosition(
                     (pos) => {
                         driverPos.lat = pos.coords.latitude;
@@ -1309,7 +1339,7 @@
 
             let html = '';
             availableOrders.forEach(order => {
-                let estimatedOngkir = calculateOngkirMultiStore(order);
+                let estimatedOngkir = getOrderOngkir(order);
                 let grandTotal = parseInt(order.total_price) || 0;
 
                 let distStr = "";
@@ -1389,7 +1419,7 @@
 
             let html = '';
             myActiveOrders.forEach(order => {
-                let ongkir = calculateOngkirMultiStore(order);
+                let ongkir = getOrderOngkir(order);
                 let grandTotal = parseInt(order.total_price) || 0;
                 let subtotalProduct = grandTotal - ongkir - localFeeLayanan;
                 if(subtotalProduct < 0) subtotalProduct = 0;
@@ -1775,7 +1805,7 @@
 
                 if(orderMonth === selectedMonth && orderYear === selectedYear) {
                     filteredHistory.push(order);
-                    let ongkir = calculateOngkirMultiStore(order);
+                    let ongkir = getOrderOngkir(order);
                     
                     totalIncomeFilter += ongkir;
                     totalAntaranFilter++;
@@ -1807,7 +1837,7 @@
 
             let html = '';
             filteredHistory.reverse().forEach(order => {
-                let ongkir = calculateOngkirMultiStore(order);
+                let ongkir = getOrderOngkir(order);
 
                 html += `
                     <div onclick="showHistoryDetail('${order.order_id}')" class="bg-white rounded-2xl p-4 mb-3 border border-gray-100 shadow-sm flex justify-between items-center transition hover:shadow-md cursor-pointer group">
@@ -1908,7 +1938,7 @@
             const order = allOrders.find(o => o.order_id === orderId);
             if(!order) return;
 
-            let ongkir = calculateOngkirMultiStore(order);
+            let ongkir = getOrderOngkir(order);
             let grandTotal = parseInt(order.total_price) || 0;
             let subtotalProduct = grandTotal - ongkir - localFeeLayanan;
             if(subtotalProduct < 0) subtotalProduct = 0;
