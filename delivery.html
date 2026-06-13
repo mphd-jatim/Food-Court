@@ -650,8 +650,11 @@
         let currentStep = 0; 
         let activeOrderId = null;
 
+        let ALL_SELLERS = []; // Data Toko untuk kalkulasi jarak multi-toko
         let localFeeOngkir = 2000; // Default Fee
         let localFeeLayanan = 1000; // Default App Fee
+        let localMaxOngkir = 50000; // Default Max Ongkir
+        let localMaxOngkirMulti = 75000; // Default Max Ongkir Multi-Drop
 
         // URL Web App
         const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxepD3BGU993WBCuZjH2Wo4sDyUkwyp4SGE4_mZ6EbrzD_qCDGzkRIOnPqmcXVnKNM/exec"; 
@@ -667,15 +670,81 @@
         }
         function deg2rad(deg) { return deg * (Math.PI/180) }
 
+        // Kalkulator Ongkir Multi-Toko Yang Kuat (Error-Proof)
+        function calculateOngkirMultiStore(order) {
+            if (!order || !order.outlet) return localFeeOngkir;
+            
+            const bLat = parseFloat(order.buyer_lat || order.lat || 0); 
+            const bLng = parseFloat(order.buyer_lng || order.lng || 0);
+            
+            let sellers = String(order.outlet).split(', ');
+            let clusters = [];
+            
+            sellers.forEach(sellerName => {
+                const sInfo = ALL_SELLERS.find(s => s.store_name === sellerName);
+                if(sInfo && sInfo.lat && sInfo.lng) {
+                    let sLat = parseFloat(sInfo.lat);
+                    let sLng = parseFloat(sInfo.lng);
+                    let distToBuyer = getDistanceFromLatLonInKm(bLat, bLng, sLat, sLng);
+
+                    if (!isNaN(distToBuyer)) {
+                        let added = false;
+                        for(let cluster of clusters) {
+                            if(getDistanceFromLatLonInKm(sLat, sLng, cluster.lat, cluster.lng) <= 0.3) { // 300 Meter Radius
+                                if (distToBuyer > cluster.maxDistToBuyer) cluster.maxDistToBuyer = distToBuyer;
+                                added = true; break;
+                            }
+                        }
+                        if(!added) {
+                            clusters.push({lat: sLat, lng: sLng, maxDistToBuyer: distToBuyer});
+                        }
+                    }
+                }
+            });
+
+            let ongkir = 0;
+            if(clusters.length === 0) {
+                let sLatFallback = parseFloat(order.seller_lat || 0);
+                let sLngFallback = parseFloat(order.seller_lng || 0);
+                let dist = getDistanceFromLatLonInKm(bLat, bLng, sLatFallback, sLngFallback);
+                if(isNaN(dist) || dist < 1) dist = 1;
+                ongkir = Math.ceil(dist) * localFeeOngkir;
+            } else {
+                clusters.forEach(c => {
+                    let d = c.maxDistToBuyer;
+                    if(isNaN(d) || d < 1) d = 1;
+                    ongkir += Math.ceil(d) * localFeeOngkir;
+                });
+            }
+            
+            // Cek apakah single-drop atau multi-drop
+            let isMultiStore = clusters.length > 1;
+            let appliedMaxOngkir = isMultiStore ? localMaxOngkirMulti : localMaxOngkir;
+
+            if (appliedMaxOngkir > 0 && ongkir > appliedMaxOngkir) ongkir = appliedMaxOngkir;
+            return isNaN(ongkir) ? localFeeOngkir : ongkir;
+        }
+
         async function fetchSystemSettings() {
             try {
-                const res = await fetch(GAS_WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getAdminSettings', type: 'admin_settings' }) });
-                const json = await res.json();
-                if(json.status === 'success' && json.data) {
-                    localFeeOngkir = parseInt(json.data.fee_ongkir) || 2000;
-                    localFeeLayanan = parseInt(json.data.fee_layanan) || 1000;
+                const promises = [
+                    fetch(`${GAS_WEB_APP_URL}?action=getData&type=users_sellers`).then(r => r.json()),
+                    fetch(GAS_WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getAdminSettings', type: 'admin_settings' }) }).then(r => r.json())
+                ];
+                
+                const [resSellers, resSettings] = await Promise.all(promises);
+
+                if(resSellers.status === 'success') ALL_SELLERS = resSellers.data || [];
+                
+                if(resSettings.status === 'success' && resSettings.data) {
+                    localFeeOngkir = parseInt(resSettings.data.fee_ongkir) || 2000;
+                    localFeeLayanan = parseInt(resSettings.data.fee_layanan) || 1000;
+                    localMaxOngkir = parseInt(resSettings.data.max_ongkir) || 50000;
+                    localMaxOngkirMulti = parseInt(resSettings.data.max_ongkir_multi) || 75000;
                 }
-            } catch(e) {}
+            } catch(e) {
+                console.error("Gagal menarik pengaturan sistem");
+            }
         }
 
         // --- UPDATE PENDAPATAN DASHBOARD ---
@@ -685,19 +754,17 @@
             let todayIncome = 0;
             let todayCount = 0;
             
-            const myHistory = allOrders.filter(order => order.status.includes('Selesai') && order.status.includes(DRIVER_DATA.full_name));
+            // Filter dengan pengecekan aman agar tidak error jika kolom kosong
+            const myHistory = allOrders.filter(order => order && order.status && String(order.status).includes('Selesai') && String(order.status).includes(DRIVER_DATA.full_name));
             
             myHistory.forEach(o => {
                 let orderDate = "Unknown";
                 if(o.timestamp) {
-                    orderDate = o.timestamp.split(',')[0].trim().split(' ')[0];
+                    orderDate = String(o.timestamp).split(',')[0].trim().split(' ')[0];
                 }
-                if(orderDate === todayStr || o.timestamp.includes(todayStr)) {
+                if(orderDate === todayStr || (o.timestamp && String(o.timestamp).includes(todayStr))) {
                     todayCount++;
-                    let dist = getDistanceFromLatLonInKm(o.buyer_lat, o.buyer_lng, o.seller_lat, o.seller_lng);
-                    if(isNaN(dist) || dist < 1) dist = 1;
-                    let ongkir = Math.ceil(dist) * localFeeOngkir;
-                    todayIncome += ongkir;
+                    todayIncome += calculateOngkirMultiStore(o);
                 }
             });
 
@@ -1131,7 +1198,8 @@
                     if(!isBackground && !cachedData) container.innerHTML = '<div class="text-center py-5 text-red-500 font-bold">Belum ada data pesanan.</div>';
                 }
             } catch (error) {
-                if(!isBackground && !cachedData) container.innerHTML = '<div class="text-center py-5 text-red-500 font-bold">Koneksi terputus.</div>';
+                console.error("Fetch Error:", error);
+                if(!isBackground && !cachedData) container.innerHTML = '<div class="text-center py-5 text-red-500 font-bold">Koneksi terputus atau data error.</div>';
             }
         }
 
@@ -1139,7 +1207,8 @@
             const container = document.getElementById('new-orders-container');
             if(!document.getElementById('onlineToggle').checked) return;
 
-            availableOrders = allOrders.filter(order => order.status === 'Menunggu Kurir');
+            // Memastikan data valid (Pencegah Error Javascript)
+            availableOrders = allOrders.filter(order => order && order.status === 'Menunggu Kurir');
             
             if(availableOrders.length === 0) {
                 if(!isBackground || container.innerHTML.includes('order-card')) {
@@ -1158,10 +1227,16 @@
 
             let html = '';
             availableOrders.forEach(order => {
-                let dist = getDistanceFromLatLonInKm(order.buyer_lat, order.buyer_lng, order.seller_lat, order.seller_lng);
-                if(isNaN(dist) || dist < 1) dist = 1;
-                let estimatedOngkir = Math.ceil(dist) * localFeeOngkir;
+                let estimatedOngkir = calculateOngkirMultiStore(order);
                 let grandTotal = parseInt(order.total_price) || 0;
+
+                // Ekstrak jarak ke buyer saja agar tidak perlu kalkulasi rumit untuk UI awal
+                const bLat = parseFloat(order.buyer_lat || order.lat);
+                const bLng = parseFloat(order.buyer_lng || order.lng);
+                const sLat = parseFloat(order.seller_lat);
+                const sLng = parseFloat(order.seller_lng);
+                let dist = getDistanceFromLatLonInKm(bLat, bLng, sLat, sLng);
+                if(isNaN(dist) || dist < 1) dist = 1;
 
                 html += `
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-4 transform hover:-translate-y-1 hover:shadow-md transition-all duration-300 order-card" id="order-card-${order.order_id}">
@@ -1180,8 +1255,8 @@
                             <div class="flex gap-4 items-start z-10">
                                 <div class="w-6 h-6 rounded-full bg-brandPrimary text-white flex items-center justify-center flex-shrink-0 shadow-md border border-white"><i class="fas fa-store text-[10px]"></i></div>
                                 <div>
-                                    <div class="font-extrabold text-sm text-gray-800 leading-tight">${order.outlet}</div>
-                                    <div class="text-[11px] font-semibold text-gray-500 mt-0.5">Barang: ${order.qty || 1}x ${order.product_name}</div>
+                                    <div class="font-extrabold text-sm text-gray-800 leading-tight">${order.outlet || '-'}</div>
+                                    <div class="text-[11px] font-semibold text-gray-500 mt-0.5">Barang: ${order.qty || 1}x ${order.product_name || '-'}</div>
                                 </div>
                             </div>
                             <div class="flex gap-4 items-start z-10">
@@ -1323,17 +1398,15 @@
         async function renderActiveOrder() {
             if(!activeOrderData) return;
             
-            document.getElementById('active-outlet-name').innerText = activeOrderData.outlet;
+            document.getElementById('active-outlet-name').innerText = activeOrderData.outlet || '-';
             document.getElementById('active-outlet-address').innerText = `Mencari alamat toko...`; 
             document.getElementById('active-product-details').innerHTML = `<i class="fas fa-shopping-bag text-brandPrimary mr-1"></i> Pesanan: ${activeOrderData.qty || 1}x ${activeOrderData.product_name}`;
             document.getElementById('active-customer-name').innerText = `Mencari nama...`;
             document.getElementById('active-customer-address').innerText = `Mencari alamat tujuan...`; 
 
             // Hitung estimasi ongkir & Breakdown Biaya
-            let dist = getDistanceFromLatLonInKm(activeOrderData.buyer_lat, activeOrderData.buyer_lng, activeOrderData.seller_lat, activeOrderData.seller_lng);
-            if(isNaN(dist) || dist < 1) dist = 1;
+            let currentOngkir = calculateOngkirMultiStore(activeOrderData);
             
-            let currentOngkir = Math.ceil(dist) * localFeeOngkir;
             let currentLayanan = localFeeLayanan;
             let grandTotal = parseInt(activeOrderData.total_price) || 0;
             let subtotalProduct = grandTotal - currentOngkir - currentLayanan;
@@ -1345,8 +1418,8 @@
             document.getElementById('active-total-price').innerText = `Rp ${grandTotal.toLocaleString('id-ID')}`;
 
             let sellerLat = null, sellerLng = null;
-            let buyerLat = activeOrderData.lat; 
-            let buyerLng = activeOrderData.lng; 
+            let buyerLat = activeOrderData.buyer_lat || activeOrderData.lat; 
+            let buyerLng = activeOrderData.buyer_lng || activeOrderData.lng; 
 
             try {
                 const resBuyer = await fetch(`${GAS_WEB_APP_URL}?action=getData&type=users_buyers`);
@@ -1367,7 +1440,9 @@
                 const resSeller = await fetch(`${GAS_WEB_APP_URL}?action=getData&type=users_sellers`);
                 const jsonSeller = await resSeller.json();
                 if(jsonSeller.status === 'success' && jsonSeller.data) {
-                    const seller = jsonSeller.data.find(s => s.store_name === activeOrderData.outlet);
+                    // Cari penjual pertama jika ini pesanan multi-toko
+                    const firstSeller = activeOrderData.outlet ? activeOrderData.outlet.split(',')[0] : '';
+                    const seller = jsonSeller.data.find(s => s.store_name === firstSeller);
                     if(seller) {
                         document.getElementById('active-outlet-address').innerText = seller.store_address || "Alamat detail tidak tersedia";
                         document.getElementById('btn-call-seller').href = `tel:${seller.phone}`;
@@ -1533,13 +1608,16 @@
                     if(!isBackground && !cachedData) container.innerHTML = '<div class="text-center py-6 text-gray-400 font-bold">Gagal memuat riwayat.</div>';
                 }
             } catch (error) {
-                if(!isBackground && !cachedData) container.innerHTML = '<div class="text-center py-6 text-red-500 font-bold">Koneksi terputus.</div>';
+                console.error("Fetch Error:", error);
+                if(!isBackground && !cachedData) container.innerHTML = '<div class="text-center py-6 text-red-500 font-bold">Koneksi terputus atau data error.</div>';
             }
         }
 
         function processHistoryOrders(allOrders, isBackground) {
             const container = document.getElementById('history-container');
-            const myHistory = allOrders.filter(order => order.status.includes('Selesai') && order.status.includes(DRIVER_DATA.full_name));
+            
+            // Filter dengan pengecekan aman agar tidak error jika kolom kosong
+            const myHistory = allOrders.filter(order => order && order.status && String(order.status).includes('Selesai') && String(order.status).includes(DRIVER_DATA.full_name));
             
             if(myHistory.length === 0) {
                 if(!isBackground || container.innerHTML.includes('order-id')) {
@@ -1554,16 +1632,14 @@
 
             let html = '';
             myHistory.reverse().forEach(order => {
-                let dist = getDistanceFromLatLonInKm(order.buyer_lat, order.buyer_lng, order.seller_lat, order.seller_lng);
-                if(isNaN(dist) || dist < 1) dist = 1;
-                let ongkir = Math.ceil(dist) * localFeeOngkir;
+                let ongkir = calculateOngkirMultiStore(order);
 
                 html += `
                     <div class="bg-white rounded-2xl p-4 mb-3 border border-gray-100 shadow-sm flex justify-between items-center transition hover:shadow-md">
                         <div class="flex items-center gap-4 w-3/4">
                             <div class="w-10 h-10 rounded-full bg-green-50 border border-green-100 text-green-500 flex items-center justify-center flex-shrink-0 shadow-inner"><i class="fas fa-check drop-shadow-sm"></i></div>
                             <div class="truncate w-full">
-                                <div class="font-extrabold text-sm truncate text-gray-800">${order.outlet}</div>
+                                <div class="font-extrabold text-sm truncate text-gray-800">${order.outlet || '-'}</div>
                                 <div class="text-[10px] font-semibold text-gray-500 truncate mt-0.5"><span class="order-id">ID: ${order.order_id}</span> • Selesai</div>
                             </div>
                         </div>
