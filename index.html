@@ -120,9 +120,6 @@
                         <div id="cart-map" class="w-full h-40 bg-gray-200 rounded-lg mb-3 border-2 border-white shadow-sm z-0"></div>
                         <input type="hidden" id="cartLat" required>
                         <input type="hidden" id="cartLng" required>
-                        <button type="button" onclick="getLocationBuyer('cartLat', 'cartLng', 'cart-map', 'cartAddress', recalculateCartTotal)" class="btn-3d w-full bg-gradient-to-b from-[#4299e1] to-[#2b6cb0] text-white px-4 py-3 rounded-xl hover:from-[#3182ce] hover:to-[#2c5282] transition flex items-center justify-center gap-2 text-sm font-bold shadow-[0_4px_0_0_#1e3a8a] mt-2">
-                            <i class="fas fa-crosshairs drop-shadow-md text-lg"></i> Deteksi Ulang GPS
-                        </button>
                     </div>
                 </form>
             </div>
@@ -225,10 +222,6 @@
                         
                         <input type="hidden" id="checkoutLat" required>
                         <input type="hidden" id="checkoutLng" required>
-                        
-                        <button type="button" onclick="getLocationBuyer('checkoutLat', 'checkoutLng', 'checkout-map', 'checkoutAddress', recalculateSingleCheckoutTotal)" class="btn-3d w-full bg-gradient-to-b from-[#4299e1] to-[#2b6cb0] text-white px-4 py-3 rounded-xl hover:from-[#3182ce] hover:to-[#2c5282] transition flex items-center justify-center gap-2 text-sm font-bold shadow-[0_4px_0_0_#1e3a8a] mt-2">
-                            <i class="fas fa-crosshairs drop-shadow-md text-lg"></i> Deteksi Ulang GPS
-                        </button>
                     </div>
                 </form>
             </div>
@@ -290,6 +283,10 @@
                 <div class="mt-4 flex flex-col gap-3">
                     <button onclick="toggleEditProfileBuyer()" class="btn-3d w-full bg-blue-50 text-blue-600 border-2 border-blue-200 py-3 rounded-xl font-bold hover:bg-blue-100 transition flex items-center justify-center gap-2 shadow-[0_3px_0_0_#bfdbfe]">
                         <i class="fas fa-user-edit"></i> Edit Profil
+                    </button>
+                    <!-- Tombol Manual Install PWA -->
+                    <button onclick="acceptInstallPrompt()" class="btn-3d w-full bg-white text-brandPrimary border-2 border-brandPrimary py-3 rounded-xl font-bold hover:bg-orange-50 transition flex items-center justify-center gap-2 shadow-[0_3px_0_0_#ee4d2d]">
+                        <i class="fas fa-download"></i> Instal ke Layar Utama
                     </button>
                     <button onclick="handleLogout()" class="btn-3d w-full bg-red-50 text-red-600 border-2 border-red-200 py-3 rounded-xl font-bold hover:bg-red-100 transition flex items-center justify-center gap-2 shadow-[0_3px_0_0_#fecaca]">
                         <i class="fas fa-sign-out-alt"></i> Log Out
@@ -530,17 +527,6 @@
 
     <!-- MAIN CONTENT -->
     <main class="max-w-6xl mx-auto md:mt-6 px-0 md:px-4">
-        
-        <!-- Banner Carousel (Sembunyikan Default - Muncul Jika Ada Data) -->
-        <div id="banner-carousel" class="hidden gap-3 mb-4 md:mb-6 bg-white md:bg-transparent p-3 md:p-0">
-            <div class="w-full md:w-2/3">
-                <img id="main-banner-img" src="https://placehold.co/800x300/ee4d2d/white?text=PROMO+FOODCOURT" alt="Banner Main" class="w-full h-36 sm:h-48 md:h-64 object-cover rounded-2xl md:shadow-[0_8px_20px_rgba(0,0,0,0.1)] bg-gray-200 border border-gray-100">
-            </div>
-            <div class="hidden md:flex w-1/3 flex-col gap-3">
-                <img id="sub-banner-1-img" src="https://placehold.co/400x145/ffb3a7/white?text=Gratis+Ongkir+Outlet" alt="Banner Sub 1" class="w-full h-[122px] object-cover rounded-2xl shadow-[0_4px_10px_rgba(0,0,0,0.05)] border border-gray-100">
-                <img id="sub-banner-2-img" src="https://placehold.co/400x145/ffb3a7/white?text=Diskon+Makan+Siang" alt="Banner Sub 2" class="w-full h-[122px] object-cover rounded-2xl shadow-[0_4px_10px_rgba(0,0,0,0.05)] border border-gray-100">
-            </div>
-        </div>
 
         <!-- Quick Menus (Kategori Bulat) Terkoneksi Database dengan Desain 3D -->
         <div class="bg-white rounded-none md:rounded-2xl md:shadow-sm p-4 mb-4 md:mb-6 overflow-x-auto hide-scrollbar border-b md:border border-gray-100">
@@ -713,24 +699,20 @@
         const auth = firebase.auth();
         const googleProvider = new firebase.auth.GoogleAuthProvider();
 
-        // --- PWA SETUP (Single File Murni) ---
+        // --- PWA SETUP (MENGGUNAKAN ID UNIK) ---
         const pwaManifest = {
+            "id": "foodcourt-buyer-app-v1", // ID UNIK (Sangat Penting)
             "name": "FoodCourt App",
             "short_name": "FoodCourt",
-            "start_url": window.location.href,
+            "start_url": window.location.pathname + "?mode=pwa",
             "display": "standalone",
             "background_color": "#f5f5f5",
             "theme_color": "#ee4d2d",
             "icons": [
                 {
-                    "src": "https://placehold.co/192x192/ee4d2d/white?text=FC",
+                    "src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ee4d2d'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>",
                     "sizes": "192x192",
-                    "type": "image/png"
-                },
-                {
-                    "src": "https://placehold.co/512x512/ee4d2d/white?text=FC",
-                    "sizes": "512x512",
-                    "type": "image/png"
+                    "type": "image/svg+xml"
                 }
             ]
         };
@@ -753,36 +735,68 @@
             navigator.serviceWorker.register(swUrl).catch(err => console.log('PWA SW err:', err));
         }
 
+        // --- SISTEM NOTIFIKASI BACKGROUND PWA ---
+        function requestNotificationPermission() {
+            if ('Notification' in window) {
+                if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+                    Notification.requestPermission();
+                }
+            }
+        }
+
+        function triggerSystemNotification(title, bodyText) {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                navigator.serviceWorker.ready.then(function(registration) {
+                    registration.showNotification(title, {
+                        body: bodyText,
+                        icon: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ee4d2d'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>",
+                        vibrate: [200, 100, 200],
+                        tag: 'fcbuyer-notif'
+                    });
+                });
+            }
+        }
+
+        // --- PWA INSTALLATION PROMPT (ANTI-UNINSTALL BUG) ---
         let deferredPrompt;
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
+            
+            if(localStorage.getItem('fcbuyer_pwa_status') === 'installed') {
+                localStorage.removeItem('fcbuyer_pwa_status');
+                localStorage.removeItem('fcbuyer_pwa_time');
+            }
         });
 
         function checkAndShowInstallPrompt(forceNow = false) {
             if (!deferredPrompt) return; 
             if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) return;
 
-            const lastPrompt = localStorage.getItem('foodcourt_pwa_time');
+            const lastPrompt = localStorage.getItem('fcbuyer_pwa_time');
             const now = new Date().getTime();
             const interval = 86400000; 
 
             if (forceNow || !lastPrompt || (now - lastPrompt > interval)) {
                 const m = document.getElementById('pwa-install-modal');
-                m.classList.remove('hidden');
-                setTimeout(() => { 
-                    m.classList.remove('opacity-0'); 
-                    m.children[0].classList.remove('scale-95'); 
-                }, 10);
+                if(m) {
+                    m.classList.remove('hidden');
+                    setTimeout(() => { 
+                        m.classList.remove('opacity-0'); 
+                        m.children[0].classList.remove('scale-95'); 
+                    }, 10);
+                }
             }
         }
 
         function dismissInstallPrompt() {
             const m = document.getElementById('pwa-install-modal');
-            m.classList.add('opacity-0'); 
-            m.children[0].classList.add('scale-95');
-            setTimeout(() => { m.classList.add('hidden'); }, 300);
-            localStorage.setItem('foodcourt_pwa_time', new Date().getTime());
+            if(m) {
+                m.classList.add('opacity-0'); 
+                m.children[0].classList.add('scale-95');
+                setTimeout(() => { m.classList.add('hidden'); }, 300);
+            }
+            localStorage.setItem('fcbuyer_pwa_time', new Date().getTime());
         }
 
         async function acceptInstallPrompt() {
@@ -791,14 +805,15 @@
                 deferredPrompt.prompt();
                 const { outcome } = await deferredPrompt.userChoice;
                 if (outcome === 'accepted') {
-                    localStorage.setItem('foodcourt_pwa_time', new Date().getTime() + (365 * 24 * 60 * 60 * 1000)); 
+                    localStorage.setItem('fcbuyer_pwa_status', 'installed'); 
                 } else {
-                    localStorage.setItem('foodcourt_pwa_time', new Date().getTime());
+                    localStorage.setItem('fcbuyer_pwa_time', new Date().getTime());
                 }
                 deferredPrompt = null;
+            } else {
+                showCustomAlert("Aplikasi sudah terinstal, atau browser Anda tidak mendukung fitur ini.", "info");
             }
         }
-
 
         // --- CUSTOM MODAL SYSTEM ---
         function openModalAnim() {
@@ -861,12 +876,14 @@
         let currentSearchQuery = '';
         let activeTrackOrderId = null; 
 
-        // VARIABEL PERHITUNGAN BIAYA (Ditarik otomatis dari Admin Settings)
+        // VARIABEL PERHITUNGAN BIAYA (Akan diisi STRICT dari Database, tidak ada nilai palsu)
         let ALL_SELLERS = []; 
-        let FEE_ONGKIR = 2000;
-        let FEE_LAYANAN = 1000;
-        let MAX_DISTANCE = 15;
-        let MAX_ONGKIR = 50000;
+        let FEE_ONGKIR = 0;
+        let FEE_LAYANAN = 0;
+        let MAX_DISTANCE = 0;
+        let MAX_ONGKIR = 0;
+        let MAX_ONGKIR_MULTI = 0;
+        let IS_SYSTEM_READY = false;
 
         // --- PETA REGISTRASI PEMBELI ---
         let regMapBuyer = null;
@@ -877,6 +894,30 @@
             if (!regMapBuyer) {
                 regMapBuyer = L.map('reg-map-buyer').setView([lat, lng], 15);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(regMapBuyer);
+                
+                // Tambahkan Ikon Lokasi Saya di dalam Peta
+                const locateBtn = L.control({position: 'bottomright'});
+                locateBtn.onAdd = function () {
+                    const div = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+                    div.style.backgroundColor = 'white';
+                    div.style.width = '34px';
+                    div.style.height = '34px';
+                    div.style.cursor = 'pointer';
+                    div.style.display = 'flex';
+                    div.style.alignItems = 'center';
+                    div.style.justifyContent = 'center';
+                    div.title = 'Lokasi Saya';
+                    div.innerHTML = '<i class="fas fa-crosshairs text-blue-500 text-lg"></i>';
+                    div.onclick = function(e) {
+                        e.stopPropagation();
+                        div.innerHTML = '<i class="fas fa-spinner fa-spin text-blue-500 text-lg"></i>';
+                        getLocationBuyerReg();
+                        setTimeout(() => { div.innerHTML = '<i class="fas fa-crosshairs text-blue-500 text-lg"></i>'; }, 2000);
+                    }
+                    return div;
+                };
+                locateBtn.addTo(regMapBuyer);
+
                 regMarkerBuyer = L.marker([lat, lng], {draggable: true}).addTo(regMapBuyer);
                 
                 regMarkerBuyer.on('dragend', function() {
@@ -941,16 +982,21 @@
                 
                 const [resSellers, resSettings] = await Promise.all(promises);
 
-                if(resSellers.status === 'success') ALL_SELLERS = resSellers.data || [];
+                if(resSellers.status === 'success') {
+                    ALL_SELLERS = resSellers.data || [];
+                }
                 
                 if(resSettings.status === 'success' && resSettings.data) {
-                    FEE_ONGKIR = parseInt(resSettings.data.fee_ongkir) || 2000;
-                    FEE_LAYANAN = parseInt(resSettings.data.fee_layanan) || 1000;
-                    MAX_DISTANCE = parseInt(resSettings.data.max_distance) || 15;
-                    MAX_ONGKIR = parseInt(resSettings.data.max_ongkir) || 50000;
+                    FEE_ONGKIR = parseInt(resSettings.data.fee_ongkir) || 0;
+                    FEE_LAYANAN = parseInt(resSettings.data.fee_layanan) || 0;
+                    MAX_DISTANCE = parseInt(resSettings.data.max_distance) || 0;
+                    MAX_ONGKIR = parseInt(resSettings.data.max_ongkir) || 0;
+                    MAX_ONGKIR_MULTI = parseInt(resSettings.data.max_ongkir_multi) || 0;
+                    IS_SYSTEM_READY = true;
                 }
             } catch(e) {
                 console.log("Gagal memuat pengaturan sistem.");
+                IS_SYSTEM_READY = false;
             }
         }
 
@@ -1013,6 +1059,7 @@
         }
 
         function showCart() {
+            if (!IS_SYSTEM_READY) return showCustomAlert("Sistem sedang memuat pengaturan dari server. Harap tunggu sebentar lalu coba lagi.", "error");
             if (!loggedInUser) return showAuth('login');
             
             document.getElementById('cart-overlay').classList.remove('hidden');
@@ -1037,122 +1084,150 @@
 
             let html = '';
             
-            cartItems.forEach((item, index) => {
-                let itemQty = item.qty || 1;
-                let subtotal = item.price * itemQty;
-                const priceFormatted = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(subtotal);
-                html += `
-                    <div class="flex justify-between items-center border border-gray-100 p-3 rounded-xl shadow-sm bg-white">
-                        <div class="flex-1">
-                            <div class="font-extrabold text-sm text-gray-800 line-clamp-1">${item.name}</div>
-                            <div class="text-xs font-semibold text-gray-500 mt-0.5"><i class="fas fa-store text-brandPrimary mr-1"></i> ${item.seller}</div>
-                            <div class="text-brandPrimary font-black text-sm mt-1.5">${priceFormatted} <span class="text-[10px] text-gray-400 font-medium bg-gray-100 px-1 rounded">(@Rp${item.price/1000}k)</span></div>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <div class="flex items-center border-2 border-gray-100 rounded-lg p-0.5 bg-gray-50">
-                                <button type="button" onclick="updateCartItemQty(${index}, -1)" class="w-7 h-7 flex items-center justify-center bg-white rounded shadow-sm text-gray-600 hover:text-brandPrimary font-bold">-</button>
-                                <span class="w-6 text-center text-sm font-black">${itemQty}</span>
-                                <button type="button" onclick="updateCartItemQty(${index}, 1)" class="w-7 h-7 flex items-center justify-center bg-white rounded shadow-sm text-gray-600 hover:text-brandPrimary font-bold">+</button>
+            // --- PEMISAHAN VISUAL ANTARA REGULER DAN GRATIS ONGKIR ---
+            let regularItems = cartItems.filter(i => i.category !== 'gratis_ongkir');
+            let gratisItems = cartItems.filter(i => i.category === 'gratis_ongkir');
+
+            if (regularItems.length > 0) {
+                html += `<div class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 mt-1 px-1"><i class="fas fa-box"></i> Produk Reguler</div>`;
+                regularItems.forEach((item) => {
+                    let index = cartItems.indexOf(item); 
+                    let itemQty = item.qty || 1;
+                    let subtotal = item.price * itemQty;
+                    const priceFormatted = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(subtotal);
+                    html += `
+                        <div class="flex justify-between items-center border border-gray-100 p-3 rounded-xl shadow-sm bg-white mb-2">
+                            <div class="flex-1">
+                                <div class="font-extrabold text-sm text-gray-800 line-clamp-1">${item.name}</div>
+                                <div class="text-xs font-semibold text-gray-500 mt-0.5"><i class="fas fa-store text-brandPrimary mr-1"></i> ${item.seller}</div>
+                                <div class="text-brandPrimary font-black text-sm mt-1.5">${priceFormatted} <span class="text-[10px] text-gray-400 font-medium bg-gray-100 px-1 rounded">(@Rp${item.price/1000}k)</span></div>
                             </div>
-                            <button type="button" onclick="removeCartItem(${index})" class="text-red-500 bg-red-50 w-9 h-9 rounded-full flex items-center justify-center hover:bg-red-100 transition shadow-sm border border-red-100"><i class="fas fa-trash"></i></button>
+                            <div class="flex items-center gap-3">
+                                <div class="flex items-center border-2 border-gray-100 rounded-lg p-0.5 bg-gray-50">
+                                    <button type="button" onclick="updateCartItemQty(${index}, -1)" class="w-7 h-7 flex items-center justify-center bg-white rounded shadow-sm text-gray-600 hover:text-brandPrimary font-bold">-</button>
+                                    <span class="w-6 text-center text-sm font-black">${itemQty}</span>
+                                    <button type="button" onclick="updateCartItemQty(${index}, 1)" class="w-7 h-7 flex items-center justify-center bg-white rounded shadow-sm text-gray-600 hover:text-brandPrimary font-bold">+</button>
+                                </div>
+                                <button type="button" onclick="removeCartItem(${index})" class="text-red-500 bg-red-50 w-9 h-9 rounded-full flex items-center justify-center hover:bg-red-100 transition shadow-sm border border-red-100"><i class="fas fa-trash"></i></button>
+                            </div>
                         </div>
-                    </div>
-                `;
-            });
+                    `;
+                });
+            }
+
+            if (gratisItems.length > 0) {
+                html += `<div class="text-[10px] font-black text-green-500 uppercase tracking-widest mb-2 mt-4 px-1 flex items-center gap-1"><i class="fas fa-shipping-fast"></i> Produk Gratis Ongkir</div>`;
+                gratisItems.forEach((item) => {
+                    let index = cartItems.indexOf(item); 
+                    let itemQty = item.qty || 1;
+                    let subtotal = item.price * itemQty;
+                    const priceFormatted = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(subtotal);
+                    html += `
+                        <div class="flex justify-between items-center border border-green-100 p-3 rounded-xl shadow-sm bg-green-50/30 mb-2">
+                            <div class="flex-1">
+                                <div class="font-extrabold text-sm text-gray-800 line-clamp-1">${item.name}</div>
+                                <div class="text-xs font-semibold text-gray-500 mt-0.5"><i class="fas fa-store text-brandPrimary mr-1"></i> ${item.seller}</div>
+                                <div class="text-green-600 font-black text-sm mt-1.5">${priceFormatted} <span class="text-[10px] text-gray-400 font-medium bg-white border border-gray-100 px-1 rounded">(@Rp${item.price/1000}k)</span></div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="flex items-center border-2 border-green-100 rounded-lg p-0.5 bg-white">
+                                    <button type="button" onclick="updateCartItemQty(${index}, -1)" class="w-7 h-7 flex items-center justify-center bg-green-50 rounded text-green-600 hover:text-green-800 font-bold">-</button>
+                                    <span class="w-6 text-center text-sm font-black">${itemQty}</span>
+                                    <button type="button" onclick="updateCartItemQty(${index}, 1)" class="w-7 h-7 flex items-center justify-center bg-green-50 rounded text-green-600 hover:text-green-800 font-bold">+</button>
+                                </div>
+                                <button type="button" onclick="removeCartItem(${index})" class="text-red-500 bg-white w-9 h-9 rounded-full flex items-center justify-center hover:bg-red-50 transition shadow-sm border border-red-100"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
             
             container.innerHTML = html;
 
             document.getElementById('cartAddress').value = loggedInUser.address || '';
-            let startLat = loggedInUser.lat || -7.147500; 
-            let startLng = loggedInUser.lng || 112.604400;
+            let startLat = loggedInUser.lat || ""; 
+            let startLng = loggedInUser.lng || "";
             
-            document.getElementById('cartLat').value = startLat;
-            document.getElementById('cartLng').value = startLng;
+            document.getElementById('cartLat').value = startLat || -7.147500;
+            document.getElementById('cartLng').value = startLng || 112.604400;
 
             setTimeout(() => { 
-                initInteractiveMap('cart-map', 'cartLat', 'cartLng', 'cartAddress', startLat, startLng, recalculateCartTotal); 
+                initInteractiveMap('cart-map', 'cartLat', 'cartLng', 'cartAddress', startLat || -7.147500, startLng || 112.604400, recalculateCartTotal); 
                 recalculateCartTotal(); 
+
+                if (!loggedInUser.lat || !loggedInUser.lng) {
+                    autoGetLocationBuyer('cartLat', 'cartLng', 'cart-map', 'cartAddress', recalculateCartTotal);
+                }
             }, 100);
         }
 
-        // Kalkulasi Keranjang Dinamis (Multi-Toko Cluster & Gratis Ongkir)
+        // Kalkulasi Keranjang Dinamis (Pemisahan Tagihan Reguler vs Gratis Ongkir)
         function recalculateCartTotal() {
             if(cartItems.length === 0) return;
+
+            let regularItems = cartItems.filter(i => i.category !== 'gratis_ongkir');
+            let gratisItems = cartItems.filter(i => i.category === 'gratis_ongkir');
 
             let subtotal = cartItems.reduce((sum, item) => sum + (item.price * (item.qty || 1)), 0);
             
             const bLat = parseFloat(document.getElementById('cartLat').value);
             const bLng = parseFloat(document.getElementById('cartLng').value);
 
-            // --- MULTI-SELLER CLUSTERING LOGIC ---
-            let uniqueSellers = [...new Set(cartItems.map(i => i.seller))];
-            let clusters = [];
             let absoluteMaxDistance = 0;
 
-            uniqueSellers.forEach(sellerName => {
-                const sInfo = ALL_SELLERS.find(s => s.store_name === sellerName);
-                if(sInfo && sInfo.lat && sInfo.lng) {
-                    let sLat = parseFloat(sInfo.lat);
-                    let sLng = parseFloat(sInfo.lng);
-                    let distToBuyer = getDistanceFromLatLonInKm(bLat, bLng, sLat, sLng);
-                    
-                    if (distToBuyer > absoluteMaxDistance) absoluteMaxDistance = distToBuyer;
+            // Fungsi helper untuk menghitung ongkir per tipe pesanan
+            function getClustersOngkir(items) {
+                let uniqueSellers = [...new Set(items.map(i => i.seller))];
+                let clusters = [];
+                uniqueSellers.forEach(sellerName => {
+                    const sInfo = ALL_SELLERS.find(s => s.store_name === sellerName);
+                    if(sInfo && sInfo.lat && sInfo.lng) {
+                        let sLat = parseFloat(sInfo.lat);
+                        let sLng = parseFloat(sInfo.lng);
+                        let distToBuyer = getDistanceFromLatLonInKm(bLat, bLng, sLat, sLng);
+                        if (distToBuyer > absoluteMaxDistance) absoluteMaxDistance = distToBuyer;
 
-                    // Cek apakah ada produk gratis ongkir di toko ini
-                    let hasGratisOngkir = cartItems.some(i => i.seller === sellerName && i.category === 'gratis_ongkir');
-
-                    let addedToCluster = false;
-                    for (let cluster of clusters) {
-                        let distToCluster = getDistanceFromLatLonInKm(sLat, sLng, cluster.lat, cluster.lng);
-                        if (distToCluster <= 0.3) { // Jika Jarak Antar Toko <= 300 meter, gabung 1 Ongkir
-                            cluster.sellers.push(sellerName);
-                            if (distToBuyer > cluster.maxDistToBuyer) {
-                                cluster.maxDistToBuyer = distToBuyer;
+                        let addedToCluster = false;
+                        for (let cluster of clusters) {
+                            if (getDistanceFromLatLonInKm(sLat, sLng, cluster.lat, cluster.lng) <= 0.3) {
+                                cluster.sellers.push(sellerName);
+                                if (distToBuyer > cluster.maxDistToBuyer) cluster.maxDistToBuyer = distToBuyer;
+                                addedToCluster = true;
+                                break;
                             }
-                            if (hasGratisOngkir) cluster.isGratisOngkir = true;
-                            addedToCluster = true;
-                            break;
+                        }
+                        if (!addedToCluster) {
+                            clusters.push({ lat: sLat, lng: sLng, sellers: [sellerName], maxDistToBuyer: distToBuyer });
                         }
                     }
-                    if (!addedToCluster) {
-                        clusters.push({
-                            lat: sLat,
-                            lng: sLng,
-                            sellers: [sellerName],
-                            maxDistToBuyer: distToBuyer,
-                            isGratisOngkir: hasGratisOngkir
-                        });
-                    }
-                }
-            });
-
-            let ongkir = 0;
-            let actualOngkir = 0;
-
-            if (clusters.length === 0) {
-                absoluteMaxDistance = 1;
-                actualOngkir = FEE_ONGKIR;
-                ongkir = FEE_ONGKIR;
-                if (cartItems.some(i => i.category === 'gratis_ongkir')) ongkir = 0;
-            } else {
-                clusters.forEach(cluster => {
-                    let d = cluster.maxDistToBuyer;
-                    if (d < 1) d = 1; // Minimal 1 KM
-                    
-                    let clusterOngkir = Math.ceil(d) * FEE_ONGKIR;
-                    actualOngkir += clusterOngkir;
-                    
-                    if (!cluster.isGratisOngkir) {
-                        ongkir += clusterOngkir;
-                    }
                 });
+
+                let ongkir = 0;
+                if (clusters.length === 0 && items.length > 0) {
+                    ongkir = FEE_ONGKIR; // Fallback jika GPS toko tidak ditemukan
+                } else {
+                    clusters.forEach(cluster => {
+                        let d = cluster.maxDistToBuyer;
+                        if (d < 1) d = 1; // Minimal 1 KM
+                        ongkir += Math.ceil(d) * FEE_ONGKIR;
+                    });
+                }
+                
+                let appliedMaxOngkir = clusters.length > 1 ? MAX_ONGKIR_MULTI : MAX_ONGKIR;
+                if (appliedMaxOngkir > 0 && ongkir > appliedMaxOngkir) ongkir = appliedMaxOngkir;
+                
+                return { ongkir, numClusters: clusters.length };
             }
 
-            // Mentok Maksimal Ongkir
-            if (MAX_ONGKIR > 0 && ongkir > MAX_ONGKIR) ongkir = MAX_ONGKIR;
-            if (MAX_ONGKIR > 0 && actualOngkir > MAX_ONGKIR) actualOngkir = MAX_ONGKIR;
+            // Hitung secara terpisah!
+            let regularResult = getClustersOngkir(regularItems);
+            let gratisResult = getClustersOngkir(gratisItems);
+
+            let buyerOngkir = regularResult.ongkir; // Ongkir yang Wajib dibayar pembeli
+            let sellerOngkir = gratisResult.ongkir; // Ongkir asli yang dicoret (Toko yang bayar)
+            let actualTotalOngkir = buyerOngkir + sellerOngkir; 
             
-            const grandTotal = subtotal + ongkir + FEE_LAYANAN;
+            const grandTotal = subtotal + buyerOngkir + FEE_LAYANAN;
 
             const warningEl = document.getElementById('cart-distance-warning');
             const btnSubmit = document.getElementById('btnSubmitCart');
@@ -1170,24 +1245,26 @@
 
             document.getElementById('cart-subtotal').innerText = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(subtotal);
             
+            let totalClusters = regularResult.numClusters + gratisResult.numClusters;
             let distanceText = `~${Math.ceil(absoluteMaxDistance)} km`;
-            if (clusters.length > 1) {
-                distanceText = `${clusters.length} Titik Jemput`;
+            if (totalClusters > 1) {
+                distanceText = `${totalClusters} Titik Jemput`;
             }
             document.getElementById('cart-distance').innerText = distanceText;
             
-            // Tampilkan ongkir dicoret jika gratis ongkir
-            if (ongkir < actualOngkir) {
-                document.getElementById('cart-ongkir').innerHTML = `<span class="line-through text-gray-400 mr-1 text-[10px]">Rp ${actualOngkir.toLocaleString('id-ID')}</span> <span class="text-green-500">Rp ${ongkir.toLocaleString('id-ID')}</span>`;
+            // Tampilkan ongkir dicoret jika ada ongkir yang ditanggung toko
+            if (sellerOngkir > 0) {
+                document.getElementById('cart-ongkir').innerHTML = `<span class="line-through text-gray-400 mr-1 text-[10px]">Rp ${actualTotalOngkir.toLocaleString('id-ID')}</span> <span class="text-green-500 font-black">Rp ${buyerOngkir.toLocaleString('id-ID')}</span>`;
             } else {
-                document.getElementById('cart-ongkir').innerText = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(ongkir);
+                document.getElementById('cart-ongkir').innerText = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(buyerOngkir);
             }
             
             document.getElementById('cart-layanan').innerText = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(FEE_LAYANAN);
             document.getElementById('cart-total-price').innerText = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(grandTotal);
 
-            // Simpan ke elemen form agar bisa diakses saat submit
+            // Simpan ke form
             document.getElementById('cartForm').dataset.grandTotal = grandTotal;
+            document.getElementById('cartForm').dataset.buyerOngkir = buyerOngkir; // Simpan nominal yang khusus dibayar buyer
         }
 
         function updateCartItemQty(index, change) {
@@ -1223,50 +1300,81 @@
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
             btn.disabled = true;
 
-            const combinedNames = cartItems.map(i => `${i.qty || 1}x ${i.name}`).join(", ");
-            const totalQty = cartItems.reduce((sum, item) => sum + (item.qty || 1), 0);
-            const combinedSellers = [...new Set(cartItems.map(i => i.seller))].join(", ");
-
-            const grandTotal = parseInt(document.getElementById('cartForm').dataset.grandTotal);
+            const buyerOngkir = parseInt(document.getElementById('cartForm').dataset.buyerOngkir) || 0;
 
             const address = document.getElementById('cartAddress').value;
             const lat = document.getElementById('cartLat').value;
             const lng = document.getElementById('cartLng').value;
-
-            // Untuk multi-seller, database admin/kurir bisa mengambil salah satu lat/lng (kita ambil seller pertama saja untuk patokan)
-            let sellerLat = "", sellerLng = "";
-            if(cartItems.length > 0) {
-                const sInfo = ALL_SELLERS.find(s => s.store_name === cartItems[0].seller);
-                if(sInfo) { sellerLat = sInfo.lat; sellerLng = sInfo.lng; }
-            }
-
-            const orderId = "ORD-" + Math.floor(Math.random() * 1000000);
             const timestamp = new Date().toLocaleString('id-ID');
-            
+
+            // Eksekusi Pemisahan Pembuatan Pesanan
+            let gratisItems = cartItems.filter(i => i.category === 'gratis_ongkir');
+            let regularItems = cartItems.filter(i => i.category !== 'gratis_ongkir');
+
+            const getSellerLatLng = (sellerName) => {
+                const sInfo = ALL_SELLERS.find(s => s.store_name === sellerName);
+                return sInfo ? { lat: sInfo.lat, lng: sInfo.lng } : { lat: "", lng: "" };
+            };
+
             loggedInUser.address = address;
             loggedInUser.lat = lat;
             loggedInUser.lng = lng;
             localStorage.setItem('foodcourt_buyer_login', JSON.stringify(loggedInUser));
-            
-            // Struktur Data: ['order_id', 'user_id', 'product_name', 'qty', 'total_price', 'status', 'outlet', 'timestamp', 'driver_id', 'buyer_lat', 'buyer_lng', 'seller_lat', 'seller_lng']
-            const rowData = [ orderId, loggedInUser.user_id, combinedNames, totalQty, grandTotal, "Menunggu Konfirmasi", combinedSellers, timestamp, "", lat, lng, sellerLat, sellerLng ];
+
+            let ordersData = [];
+            let remainingLayanan = FEE_LAYANAN; // Dikenakan 1x saja meskipun dibagi 2 antaran
+
+            // 1. Proses Pesanan Regular (Tagihan Ongkir Asli dibebankan ke sini)
+            if (regularItems.length > 0) {
+                let subtotal = regularItems.reduce((sum, i) => sum + (i.price * (i.qty || 1)), 0);
+                let combinedNames = regularItems.map(i => `${i.qty || 1}x ${i.name}`).join(", ");
+                let totalQty = regularItems.reduce((sum, i) => sum + (i.qty || 1), 0);
+                let combinedSellers = [...new Set(regularItems.map(i => i.seller))].join(", ");
+                let sLoc = getSellerLatLng(regularItems[0].seller);
+                
+                let gTotal = subtotal + buyerOngkir + remainingLayanan;
+                remainingLayanan = 0; // Saldo layanan habis terpakai
+
+                const orderId = "ORD-" + Math.floor(Math.random() * 1000000);
+                ordersData.push([ orderId, loggedInUser.user_id, combinedNames, totalQty, gTotal, "Menunggu Konfirmasi", combinedSellers, timestamp, "", lat, lng, sLoc.lat, sLoc.lng ]);
+            }
+
+            // 2. Proses Pesanan Gratis Ongkir (Subdisi Toko, Ongkir Buyer = 0)
+            if (gratisItems.length > 0) {
+                let subtotal = gratisItems.reduce((sum, i) => sum + (i.price * (i.qty || 1)), 0);
+                let combinedNames = gratisItems.map(i => `${i.qty || 1}x ${i.name}`).join(", ");
+                let totalQty = gratisItems.reduce((sum, i) => sum + (i.qty || 1), 0);
+                let combinedSellers = [...new Set(gratisItems.map(i => i.seller))].join(", ");
+                let sLoc = getSellerLatLng(gratisItems[0].seller);
+                
+                let gTotal = subtotal + remainingLayanan; // Ongkir = Rp 0
+
+                const orderId = "ORD-" + Math.floor(Math.random() * 1000000);
+                let prefixedNames = "[GRATIS ONGKIR] " + combinedNames; 
+                ordersData.push([ orderId, loggedInUser.user_id, prefixedNames, totalQty, gTotal, "Menunggu Konfirmasi", combinedSellers, timestamp, "", lat, lng, sLoc.lat, sLoc.lng ]);
+            }
 
             try {
-                const response = await fetch(GAS_WEB_APP_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: 'insertData', type: 'orders', rowData: rowData })
+                // Tembak Data Pesanan Secara Paralel ke Database
+                let promises = ordersData.map(rowData => {
+                    return fetch(GAS_WEB_APP_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({ action: 'insertData', type: 'orders', rowData: rowData })
+                    }).then(r => r.json());
                 });
-                const res = await response.json();
-                
-                if(res.status === 'success') {
-                    await showCustomAlert("Semua pesanan di keranjang berhasil dibuat!\nToko akan segera mengonfirmasi pesanan Anda.", "success");
+
+                let results = await Promise.all(promises);
+                let allSuccess = results.every(r => r.status === 'success');
+
+                if(allSuccess) {
+                    await showCustomAlert("Semua pesanan berhasil dibuat!\nToko akan segera mengonfirmasi pesanan Anda.", "success");
                     hideCart();
                     cartItems = [];
                     localStorage.removeItem('foodcourt_cart');
                     updateCartCount();
                     syncOrdersSilently();
                 } else {
-                    await showCustomAlert("Gagal membuat pesanan.", "error");
+                    await showCustomAlert("Beberapa pesanan gagal dibuat. Periksa koneksi Anda.", "error");
                 }
             } catch(error) {
                 await showCustomAlert("Koneksi gagal. Pastikan internet Anda stabil.", "error");
@@ -1302,6 +1410,27 @@
                     attribution: '&copy; OpenStreetMap'
                 }).addTo(maps[mapId]);
 
+                // Tambahkan Ikon Lokasi Saya di dalam Peta (Ala Grab/Gojek)
+                const locateBtn = L.control({position: 'bottomright'});
+                locateBtn.onAdd = function () {
+                    const div = L.DomUtil.create('div', 'leaflet-bar leaflet-control bg-white flex items-center justify-center cursor-pointer hover:bg-gray-100');
+                    div.style.width = '34px';
+                    div.style.height = '34px';
+                    div.title = 'Lokasi Saya';
+                    div.innerHTML = '<i class="fas fa-crosshairs text-blue-500 text-lg"></i>';
+                    div.onclick = function(e) {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        div.innerHTML = '<i class="fas fa-spinner fa-spin text-blue-500 text-lg"></i>';
+                        getLocationBuyer(latInputId, lngInputId, mapId, addressInputId, function() {
+                            div.innerHTML = '<i class="fas fa-crosshairs text-blue-500 text-lg"></i>';
+                            if(typeof recalculateCallback === 'function') recalculateCallback();
+                        });
+                    }
+                    return div;
+                };
+                locateBtn.addTo(maps[mapId]);
+
                 markers[mapId] = L.marker([lat, lng], {draggable: true}).addTo(maps[mapId]);
                 
                 markers[mapId].on('dragend', function() {
@@ -1323,7 +1452,7 @@
             setTimeout(() => { maps[mapId].invalidateSize(); }, 200);
         }
 
-        function autoGetLocationBuyer(latInputId, lngInputId, mapId, addressInputId) {
+        function autoGetLocationBuyer(latInputId, lngInputId, mapId, addressInputId, recalculateCallback) {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(function(position) {
                     const lat = position.coords.latitude.toFixed(6);
@@ -1339,8 +1468,23 @@
 
                     document.getElementById(addressInputId).value = "Mendapatkan alamat sesuai GPS saat ini...";
                     reverseGeocode(lat, lng, addressInputId);
+
+                    // Selalu hitung ulang ongkir saat lokasi otomatis ditemukan
+                    if(typeof recalculateCallback === 'function') recalculateCallback();
+
                 }, function(error) {
-                    console.log("GPS otomatis gagal, menggunakan fallback.");
+                    console.log("GPS otomatis gagal, menggunakan fallback PPS Gresik.");
+                    // Fallback otomatis ke Perumahan PPS Gresik
+                    const dLat = -7.147500, dLng = 112.604400;
+                    document.getElementById(latInputId).value = dLat;
+                    document.getElementById(lngInputId).value = dLng;
+
+                    if (maps[mapId] && markers[mapId]) {
+                        maps[mapId].setView([dLat, dLng], 15);
+                        markers[mapId].setLatLng([dLat, dLng]);
+                    }
+                    if(typeof recalculateCallback === 'function') recalculateCallback();
+
                 }, { timeout: 10000, enableHighAccuracy: true });
             }
         }
@@ -1377,6 +1521,10 @@
         let currentSingleSeller = "";
 
         async function showCheckout(productName, price, sellerName, category = '') {
+            if (!IS_SYSTEM_READY) {
+                await showCustomAlert("Sistem sedang memuat pengaturan dari server. Harap tunggu sebentar lalu coba lagi.", "error");
+                return;
+            }
             if (!loggedInUser) {
                 await showCustomAlert("Silakan Log In terlebih dahulu untuk melakukan pesanan.", "error");
                 showAuth('login');
@@ -1398,15 +1546,20 @@
             document.getElementById('checkoutAddress').value = loggedInUser.address || '';
             
             // Titik Default diubah ke Perumahan PPS Gresik
-            let startLat = loggedInUser.lat || -7.147500; 
-            let startLng = loggedInUser.lng || 112.604400;
+            let startLat = loggedInUser.lat || ""; 
+            let startLng = loggedInUser.lng || "";
             
-            document.getElementById('checkoutLat').value = startLat;
-            document.getElementById('checkoutLng').value = startLng;
+            document.getElementById('checkoutLat').value = startLat || -7.147500;
+            document.getElementById('checkoutLng').value = startLng || 112.604400;
 
             setTimeout(() => { 
-                initInteractiveMap('checkout-map', 'checkoutLat', 'checkoutLng', 'checkoutAddress', startLat, startLng, recalculateSingleCheckoutTotal); 
+                initInteractiveMap('checkout-map', 'checkoutLat', 'checkoutLng', 'checkoutAddress', startLat || -7.147500, startLng || 112.604400, recalculateSingleCheckoutTotal); 
                 recalculateSingleCheckoutTotal();
+
+                // Jika belum punya koordinat, lacak otomatis GPS saat ini
+                if (!loggedInUser.lat || !loggedInUser.lng) {
+                    autoGetLocationBuyer('checkoutLat', 'checkoutLng', 'checkout-map', 'checkoutAddress', recalculateSingleCheckoutTotal);
+                }
             }, 100);
         }
 
@@ -1489,6 +1642,7 @@
 
             const prodName = document.getElementById('checkoutProduct').dataset.name;
             const sellerName = document.getElementById('checkoutProduct').dataset.seller;
+            const isGratisOngkir = document.getElementById('checkoutProduct').dataset.category === 'gratis_ongkir';
             const qty = parseInt(document.getElementById('checkoutQty').value);
             
             const grandTotal = parseInt(document.getElementById('singleCheckoutForm').dataset.grandTotal);
@@ -1509,7 +1663,9 @@
             loggedInUser.lng = lng;
             localStorage.setItem('foodcourt_buyer_login', JSON.stringify(loggedInUser));
             
-            const rowData = [ orderId, loggedInUser.user_id, prodName, qty, grandTotal, "Menunggu Konfirmasi", sellerName, timestamp, "", lat, lng, sellerLat, sellerLng ];
+            let finalProdName = isGratisOngkir ? "[GRATIS ONGKIR] " + prodName : prodName;
+
+            const rowData = [ orderId, loggedInUser.user_id, finalProdName, qty, grandTotal, "Menunggu Konfirmasi", sellerName, timestamp, "", lat, lng, sellerLat, sellerLng ];
 
             try {
                 const response = await fetch(GAS_WEB_APP_URL, {
@@ -1547,6 +1703,14 @@
                     const currentHash = JSON.stringify(activeOrders.map(o => o.order_id + o.status));
                     const lastSeenHash = localStorage.getItem('foodcourt_seen_orders_hash');
                     
+                    // --- TRIGGER PUSH NOTIFICATION (JIKA HP DI MINIMIZE) ---
+                    if (lastSeenHash && lastSeenHash !== currentHash) {
+                        if (document.visibilityState === 'hidden') {
+                            triggerSystemNotification("Update Pesanan! 🍔", "Status pesanan Anda telah diperbarui. Segera cek aplikasi FoodCourt.");
+                        }
+                    }
+                    localStorage.setItem('foodcourt_seen_orders_hash', currentHash);
+                    
                     document.querySelectorAll('.order-badge').forEach(el => {
                         el.innerText = activeOrders.length;
                         if(activeOrders.length > 0 && currentHash !== lastSeenHash) {
@@ -1557,7 +1721,6 @@
                     });
 
                     if (!document.getElementById('notif-overlay').classList.contains('hidden')) {
-                        localStorage.setItem('foodcourt_seen_orders_hash', currentHash);
                         document.querySelectorAll('.order-badge').forEach(el => el.classList.add('hidden'));
                         showNotifications(true); 
                     }
@@ -1721,8 +1884,7 @@
                 const card = `
                 <div class="bg-white rounded-2xl border border-gray-100 hover:border-orange-200 transition-all duration-300 shadow-[0_4px_10px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_20px_rgba(238,77,45,0.15)] relative flex flex-col h-full overflow-hidden transform hover:-translate-y-1 group">
                     <div class="relative overflow-hidden">
-                        <img src="${product.img}" alt="${product.name}" loading="lazy" decoding="async" class="w-full aspect-square object-cover transition-transform duration-500 group-hover:scale-105" onerror="this.src='https://placehold.co/300x300/e0e0e0/333?text=Makanan'">
-                        <div class="absolute top-0 left-0 bg-gradient-to-r from-brandPrimary to-[#ff7337] text-white text-[9px] md:text-[10px] font-bold px-2 py-0.5 rounded-br-lg shadow-md">Terlaris</div>
+                        <img src="${product.img}" alt="${product.name}" loading="lazy" decoding="async" class="w-full aspect-square object-cover transition-transform duration-500 group-hover:scale-105" onerror="this.src='https://placehold.co/300x300/f3f4f6/a1a1aa?text=Tidak+Ada+Foto'">
                     </div>
 
                     <div class="p-2.5 flex flex-col flex-grow bg-gradient-to-b from-white to-gray-50/50">
@@ -1731,7 +1893,6 @@
                         </div>
                         
                         <div class="mt-auto pt-1">
-                            <div class="text-[8px] md:text-[9px] text-brandPrimary border border-brandPrimary/50 inline-block px-1.5 rounded-sm mb-1 bg-orange-50/80 font-semibold shadow-sm">Promo Spesial</div>
                             <div class="text-brandPrimary font-extrabold text-sm md:text-base drop-shadow-sm">Rp${new Intl.NumberFormat('id-ID').format(product.price)}</div>
                             <div class="flex items-center justify-between text-[9px] md:text-[10px] text-gray-500 mt-1">
                                 <div class="flex text-yellow-400 text-[8px] drop-shadow-sm">
@@ -1948,7 +2109,6 @@
         async function fetchFlashPromoFromGAS(isBackground = false) {
             const container = document.getElementById('flash-sale-container');
             const section = document.getElementById('flash-sale-section');
-            const bannerCarousel = document.getElementById('banner-carousel');
             
             if (!container || !section) return;
 
@@ -1973,11 +2133,6 @@
                         activePromo.forEach(p => p.categoryName = 'flash_promo');
                         localStorage.setItem('foodcourt_cached_flash', JSON.stringify(activePromo));
 
-                        if (bannerCarousel) {
-                            bannerCarousel.classList.remove('hidden');
-                            bannerCarousel.classList.add('flex');
-                        }
-                        
                         section.classList.remove('hidden');
                         
                         const newIds = activePromo.map(p => p.name + p.price).join(',');
@@ -1994,7 +2149,7 @@
                             const card = `
                             <div class="min-w-[150px] w-[150px] bg-white rounded-2xl border border-gray-100 hover:border-yellow-200 transition-all duration-300 flex flex-col overflow-hidden shrink-0 shadow-[0_4px_10px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_20px_rgba(234,179,8,0.2)] transform hover:-translate-y-1 group">
                                 <div class="relative overflow-hidden">
-                                    <img src="${promo.img}" loading="lazy" class="w-full h-[150px] object-cover transition-transform duration-500 group-hover:scale-105" onerror="this.src='https://placehold.co/200x200/ddd/555?text=Promo'">
+                                    <img src="${promo.img}" loading="lazy" class="w-full h-[150px] object-cover transition-transform duration-500 group-hover:scale-105" onerror="this.src='https://placehold.co/200x200/f3f4f6/a1a1aa?text=Tidak+Ada+Foto'">
                                     <div class="absolute top-0 right-0 bg-gradient-to-r from-yellow-400 to-yellow-300 text-brandPrimary text-[10px] font-black px-2 py-1 shadow-md rounded-bl-lg">PROMO</div>
                                 </div>
                                 <div class="p-2.5 flex flex-col flex-grow bg-gradient-to-b from-white to-yellow-50/30">
@@ -2228,7 +2383,6 @@
         }
 
         async function handleSellerCentreClick() {
-            // 1. JIKA BELUM LOGIN: Arahkan ke menu login pembeli terlebih dahulu
             if (!loggedInUser) {
                 showCustomAlert("Silakan Log In terlebih dahulu untuk membuka atau mengelola Toko Anda.", "info").then(() => {
                     showAuth('login');
@@ -2237,7 +2391,6 @@
             }
 
             try {
-                // Kita gunakan variabel ALL_SELLERS yang sudah dimuat di awal agar instan
                 if (ALL_SELLERS && ALL_SELLERS.length > 0) {
                     const matchedSeller = ALL_SELLERS.find(seller => 
                         seller.email === loggedInUser.email || 
@@ -2245,16 +2398,13 @@
                     );
 
                     if (matchedSeller) {
-                        // 2. JIKA SUDAH PUNYA TOKO: Auto-Login ke dasbor seller
                         localStorage.setItem('foodcourt_seller_login', JSON.stringify(matchedSeller));
                         goToSellerPage(false);
                     } else {
-                        // 3. JIKA BELUM PUNYA TOKO: Lempar ke menu daftar seller dengan data prefill
                         localStorage.setItem('foodcourt_prefill_seller_reg', JSON.stringify(loggedInUser));
                         goToSellerPage(true); 
                     }
                 } else {
-                    // Fallback jika database toko masih benar-benar kosong
                     localStorage.setItem('foodcourt_prefill_seller_reg', JSON.stringify(loggedInUser));
                     goToSellerPage(true);
                 }
@@ -2286,8 +2436,19 @@
                 viewRegister.classList.remove('hidden');
                 viewRegister.classList.add('flex');
                 title.innerText = 'Daftar';
-                // Delay render peta dihapus agar tidak muncul pop-up izin lokasi saat buka menu daftar
-                // setTimeout(() => { getLocationBuyerReg(); }, 500); 
+                
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(pos => {
+                        document.getElementById('buyerRegLat').value = pos.coords.latitude.toFixed(6);
+                        document.getElementById('buyerRegLng').value = pos.coords.longitude.toFixed(6);
+                    }, err => {
+                        document.getElementById('buyerRegLat').value = "-7.147500";
+                        document.getElementById('buyerRegLng').value = "112.604400";
+                    }, { timeout: 10000, enableHighAccuracy: true });
+                } else {
+                    document.getElementById('buyerRegLat').value = "-7.147500";
+                    document.getElementById('buyerRegLng').value = "112.604400";
+                }
             } else if (viewType === 'forgot') {
                 viewForgot.classList.remove('hidden');
                 viewForgot.classList.add('flex');
@@ -2342,6 +2503,7 @@
                     syncOrdersSilently();
                     
                     setTimeout(() => checkAndShowInstallPrompt(true), 1500);
+                    requestNotificationPermission();
 
                 } else {
                     await showCustomAlert(res.message, "error");
@@ -2364,7 +2526,6 @@
             const password = document.getElementById('buyerRegPass').value;
             
             const address = document.getElementById('buyerRegAddress').value || "";
-            // Default ke titik PPS Gresik jika tidak ada GPS
             const lat = document.getElementById('buyerRegLat').value || "-7.147500";
             const lng = document.getElementById('buyerRegLng').value || "112.604400";
 
@@ -2423,6 +2584,7 @@
                         updateAuthUI(); 
                         hideAuth();
                         syncOrdersSilently();
+                        requestNotificationPermission();
                         await showCustomAlert("Berhasil masuk dengan Akun Google!", "success");
                     } else {
                         await showCustomAlert(res.message, "error");
@@ -2436,7 +2598,6 @@
             .catch(async (error) => {
                 console.error("Firebase Auth Error:", error);
                 if (error.code !== 'auth/popup-closed-by-user') {
-                    // Menampilkan pesan error spesifik dari Firebase
                     await showCustomAlert("Autentikasi Google gagal:\n\n" + (error.message || error.code), "error");
                 }
             });
@@ -2495,7 +2656,8 @@
             startBackgroundSync();
             if(loggedInUser) {
                 syncOrdersSilently();
-                checkAndShowInstallPrompt(); 
+                setTimeout(() => checkAndShowInstallPrompt(), 2000); 
+                requestNotificationPermission();
             }
         });
     </script>
