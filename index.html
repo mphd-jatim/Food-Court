@@ -79,15 +79,16 @@
         </div>
     </div>
 
-    <!-- ================= CUSTOM MODAL NOTIFICATION ================= -->
+    <!-- ================= CUSTOM MODAL NOTIFICATION (AUTO-TOAST) ================= -->
     <div id="customModal" class="hidden fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 transition-opacity duration-300 md:max-w-md md:mx-auto">
         <div class="bg-white rounded-3xl shadow-[0_15px_50px_rgba(0,0,0,0.3)] w-full max-w-sm overflow-hidden flex flex-col transform scale-95 transition-transform duration-300 border border-white/20" id="customModalContent">
             <div id="modalHeader" class="bg-gradient-to-r from-brandPrimary to-[#ff7337] text-white p-5 font-black text-lg flex items-center gap-3">
                 <i id="modalIcon" class="fas fa-info-circle text-2xl drop-shadow-md"></i> <span id="modalTitle" class="drop-shadow-md">Informasi</span>
             </div>
             <div class="p-6 bg-gray-50 flex flex-col items-center text-center">
-                <p id="modalMessage" class="text-gray-700 text-sm font-semibold mb-6 leading-relaxed whitespace-pre-line w-full"></p>
-                <div class="flex justify-center gap-3 w-full mt-2">
+                <p id="modalMessage" class="text-gray-700 text-sm font-semibold mb-2 leading-relaxed whitespace-pre-line w-full"></p>
+                <!-- Tombol OK disembunyikan agar notifikasi auto-close tanpa diklik -->
+                <div class="flex justify-center gap-3 w-full mt-4 hidden" id="modalBtnContainer">
                     <button id="modalBtnCancel" class="btn-3d hidden flex-1 py-3 bg-white border-2 border-gray-200 text-gray-600 rounded-xl font-bold hover:bg-gray-100 shadow-[0_3px_0_0_#e5e7eb] transition">Batal</button>
                     <button id="modalBtnConfirm" class="btn-3d flex-1 py-3 bg-gradient-to-b from-[#f36b4e] to-brandPrimary text-white rounded-xl font-bold hover:from-[#f05c3d] hover:to-brandPrimaryHover shadow-[0_4px_0_0_#be3118] transition">OK</button>
                 </div>
@@ -848,7 +849,7 @@
                 } else if (type === 'error') {
                     header.className = "bg-gradient-to-r from-red-600 to-red-500 text-white p-5 font-black text-lg flex items-center gap-3";
                     icon.className = "fas fa-exclamation-circle text-2xl drop-shadow-sm";
-                    title.innerText = "Gagal";
+                    title.innerText = "Perhatian";
                 } else {
                     header.className = "bg-gradient-to-r from-brandPrimary to-[#ff7337] text-white p-5 font-black text-lg flex items-center gap-3";
                     icon.className = "fas fa-info-circle text-2xl drop-shadow-sm";
@@ -856,11 +857,17 @@
                 }
 
                 document.getElementById('modalMessage').innerText = message;
-                document.getElementById('modalBtnCancel').classList.add('hidden');
-                document.getElementById('modalBtnConfirm').innerText = "OK";
+                
+                const btnContainer = document.getElementById('modalBtnContainer');
+                if (btnContainer) btnContainer.classList.add('hidden');
                 
                 openModalAnim();
-                document.getElementById('modalBtnConfirm').onclick = () => { closeModalAnim(); resolve(true); };
+                
+                // Notifikasi Auto-Tutup setelah 2 Detik (Tanpa perlu klik OK)
+                setTimeout(() => {
+                    closeModalAnim();
+                    resolve(true);
+                }, 2000);
             });
         }
 
