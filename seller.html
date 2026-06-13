@@ -13,6 +13,16 @@
     <!-- Tambahan: Library Leaflet untuk Peta Interaktif -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Firebase SDK (Untuk Google Login) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
+    <!-- PWA THEME COLOR -->
+    <meta name="theme-color" content="#ee4d2d">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
     <script>
         tailwind.config = {
             theme: {
@@ -38,11 +48,33 @@
 </head>
 <body class="bg-bgMain font-sans text-gray-800 h-screen flex flex-col overflow-hidden relative">
 
-    <!-- ================= CUSTOM MODAL (MENGATASI ERROR IFRAME) ================= -->
+    <!-- ================= PWA INSTALL PROMPT MODAL ================= -->
+    <div id="pwa-install-modal" class="hidden fixed inset-0 z-[300] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 transition-opacity duration-300 md:max-w-md md:mx-auto">
+        <div class="bg-white rounded-3xl shadow-[0_15px_50px_rgba(0,0,0,0.3)] w-full max-w-sm overflow-hidden flex flex-col transform scale-95 transition-transform duration-300 border border-white/20">
+            <div class="bg-gradient-to-r from-brandPrimary to-[#ff7337] text-white p-5 font-black text-lg flex items-center gap-3">
+                <i class="fas fa-download text-2xl drop-shadow-md"></i> <span class="drop-shadow-md">Instal Seller Centre</span>
+            </div>
+            <div class="p-6 bg-gray-50 flex flex-col items-center text-center">
+                <div class="w-20 h-20 bg-orange-100 rounded-3xl flex items-center justify-center text-brandPrimary text-4xl shadow-inner border border-orange-200 mb-4 transform -rotate-6">
+                    <i class="fas fa-store drop-shadow-sm"></i>
+                </div>
+                <h3 class="font-extrabold text-gray-800 text-lg mb-2 tracking-tight">Pantau Toko Lebih Mudah!</h3>
+                <p class="text-gray-600 text-xs font-semibold mb-6 leading-relaxed w-full px-2">Instal aplikasi FoodCourt Seller di layar utama (Homescreen) HP Anda agar notifikasi pesanan masuk otomatis berbunyi meskipun aplikasi di-minimize.</p>
+                <div class="flex justify-center gap-3 w-full mt-2">
+                    <button onclick="dismissInstallPrompt()" class="btn-3d flex-1 py-3.5 bg-white border-2 border-gray-200 text-gray-500 rounded-xl font-bold hover:bg-gray-100 shadow-[0_3px_0_0_#e5e7eb] transition text-sm">Nanti Saja</button>
+                    <button onclick="acceptInstallPrompt()" class="btn-3d flex-[1.5] py-3.5 bg-gradient-to-b from-[#f36b4e] to-brandPrimary text-white rounded-xl font-bold hover:from-[#f05c3d] hover:to-brandPrimaryHover shadow-[0_4px_0_0_#be3118] transition text-sm flex items-center justify-center gap-2">
+                        <i class="fas fa-home"></i> Instal Sekarang
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= CUSTOM MODAL ================= -->
     <div id="customModal" class="hidden fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col transform scale-95 transition-transform duration-300" id="customModalContent">
             <div id="modalHeader" class="bg-brandPrimary text-white p-4 font-extrabold text-lg flex items-center gap-2">
-                <i class="fas fa-info-circle"></i> <span>Informasi</span>
+                <i class="fas fa-info-circle"></i> <span id="modalTitle">Informasi</span>
             </div>
             <div class="p-6">
                 <p id="modalMessage" class="text-gray-700 text-sm md:text-base mb-5 leading-relaxed whitespace-pre-line"></p>
@@ -55,7 +87,7 @@
         </div>
     </div>
 
-    <!-- ================= ORDER DETAIL (RINCIAN PESANAN) OVERLAY ================= -->
+    <!-- ================= ORDER DETAIL OVERLAY ================= -->
     <div id="order-detail-overlay" class="hidden fixed inset-0 z-[150] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
             <div class="bg-brandPrimary text-white p-4 font-extrabold text-lg flex justify-between items-center shrink-0">
@@ -196,7 +228,7 @@
                     <div class="relative z-10">
                         <label class="block text-xs font-bold text-gray-700 mb-1">Alamat Lengkap Toko *</label>
                         <textarea id="regStoreAddress" required placeholder="Klik peta, tombol lokasi, atau geser pin merah untuk mengisi otomatis..." class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg outline-none focus:border-brandPrimary bg-white text-sm h-20 resize-none text-gray-800"></textarea>
-                        <p class="text-[10px] text-gray-500 mt-1">Anda dapat <b>menggeser pin merah di peta</b> agar lebih presisi. Alamat akan terisi otomatis, namun Anda dapat mengeditnya jika kurang detail (seperti menambahkan nomor ruko).</p>
+                        <p class="text-[10px] text-gray-500 mt-1">Anda dapat <b>menggeser pin merah di peta</b> agar lebih presisi. Alamat akan terisi otomatis.</p>
                     </div>
                 </div>
 
@@ -342,6 +374,11 @@
                 <div class="px-3 mt-6 mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Pengaturan</div>
                 <a href="#" onclick="switchTab('profile')" id="menu-profile" class="block py-3 px-4 rounded-xl text-sm text-gray-600 hover:bg-orange-50 hover:text-brandPrimary transition flex items-center gap-3 font-bold mb-1">
                     <i class="fas fa-store-alt w-5 text-center text-lg drop-shadow-sm"></i> Profil Outlet
+                </a>
+                
+                <!-- Tombol Install Desktop -->
+                <a href="#" onclick="acceptInstallPrompt()" class="block py-3 px-4 rounded-xl text-sm text-brandPrimary bg-orange-50 hover:bg-orange-100 transition flex items-center gap-3 font-bold mb-1">
+                    <i class="fas fa-download w-5 text-center text-lg drop-shadow-sm"></i> Instal ke Layar Utama
                 </a>
 
                 <button onclick="handleSellerLogout()" class="btn-3d w-full mt-auto block py-3 px-4 rounded-xl text-sm text-red-600 bg-red-50 hover:bg-red-100 transition flex items-center justify-center gap-2 font-bold shadow-[0_3px_0_0_#fca5a5]">
@@ -622,7 +659,12 @@
                         </div>
                     </div>
 
-                    <button onclick="handleSellerLogout()" class="btn-3d w-full mt-8 bg-red-100 text-red-600 py-3.5 rounded-xl font-bold text-lg hover:bg-red-200 shadow-[0_4px_0_0_#fca5a5] flex justify-center items-center gap-2">
+                    <!-- Tombol Install Manual untuk Mobile -->
+                    <button onclick="acceptInstallPrompt()" class="btn-3d w-full mt-6 bg-white text-brandPrimary border-2 border-brandPrimary py-3.5 rounded-xl font-bold text-sm hover:bg-orange-50 shadow-[0_4px_0_0_#ee4d2d] flex justify-center items-center gap-2 md:hidden">
+                        <i class="fas fa-download"></i> Instal Aplikasi ke HP
+                    </button>
+
+                    <button onclick="handleSellerLogout()" class="btn-3d w-full mt-4 md:mt-8 bg-red-100 text-red-600 py-3.5 rounded-xl font-bold text-lg hover:bg-red-200 shadow-[0_4px_0_0_#fca5a5] flex justify-center items-center gap-2">
                         <i class="fas fa-power-off"></i> Keluar / Log Out Toko
                     </button>
                 </div>
@@ -730,7 +772,141 @@
 
     <!-- JAVASCRIPT LOGIC -->
     <script>
-        // --- CUSTOM MODAL SYSTEM (MENGATASI BLOKIR IFRAME) ---
+        // --- FIREBASE CONFIGURATION (GOOGLE LOGIN) ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyAkiF2oITWNJYX1rdYc-EyIeiZiNukifTM",
+            authDomain: "foodcourt-74dbb.firebaseapp.com",
+            projectId: "foodcourt-74dbb",
+            storageBucket: "foodcourt-74dbb.firebasestorage.app",
+            messagingSenderId: "447304027735",
+            appId: "1:447304027735:web:de7ad6bca69ac58c3edd12",
+            measurementId: "G-7E66ZVWGRP"
+        };
+        
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const auth = firebase.auth();
+        const googleProvider = new firebase.auth.GoogleAuthProvider();
+
+        // --- PWA SETUP (MENGGUNAKAN ID UNIK SELLER) ---
+        const pwaManifest = {
+            "id": "foodcourt-seller-app-v1", // ID UNIK PENJUAL (TIDAK BENTROK)
+            "name": "FoodCourt Seller Centre",
+            "short_name": "FCSeller",
+            "start_url": window.location.pathname + "?mode=pwa",
+            "display": "standalone",
+            "background_color": "#f6f6f6",
+            "theme_color": "#ee4d2d",
+            "icons": [
+                {
+                    "src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ee4d2d'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>",
+                    "sizes": "192x192",
+                    "type": "image/svg+xml"
+                }
+            ]
+        };
+        const manifestBlob = new Blob([JSON.stringify(pwaManifest)], {type: 'application/json'});
+        const manifestURL = URL.createObjectURL(manifestBlob);
+        const linkManifest = document.createElement('link');
+        linkManifest.rel = 'manifest';
+        linkManifest.href = manifestURL;
+        document.head.appendChild(linkManifest);
+
+        const swContent = `
+            self.addEventListener('install', e => self.skipWaiting());
+            self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
+            self.addEventListener('fetch', e => {}); 
+        `;
+        const swBlob = new Blob([swContent], {type: 'application/javascript'});
+        const swUrl = URL.createObjectURL(swBlob);
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register(swUrl).catch(err => console.log('PWA SW err:', err));
+        }
+
+        // --- SISTEM NOTIFIKASI BACKGROUND PWA ---
+        function requestNotificationPermission() {
+            if ('Notification' in window) {
+                if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+                    Notification.requestPermission();
+                }
+            }
+        }
+
+        function triggerSystemNotification(title, bodyText) {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                navigator.serviceWorker.ready.then(function(registration) {
+                    registration.showNotification(title, {
+                        body: bodyText,
+                        icon: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ee4d2d'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>",
+                        vibrate: [200, 100, 200],
+                        tag: 'fcseller-notif' 
+                    });
+                });
+            }
+        }
+
+        // --- PWA INSTALLATION PROMPT (ANTI-UNINSTALL BUG) ---
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            // Kunci Optimasi: Deteksi Uninstall dan hapus Cache Status Instalasi
+            if(localStorage.getItem('fcseller_pwa_status') === 'installed') {
+                localStorage.removeItem('fcseller_pwa_status');
+                localStorage.removeItem('fcseller_pwa_time');
+            }
+        });
+
+        function checkAndShowInstallPrompt(forceNow = false) {
+            if (!deferredPrompt) return; 
+            if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) return;
+
+            const lastPrompt = localStorage.getItem('fcseller_pwa_time');
+            const now = new Date().getTime();
+            const interval = 86400000; 
+
+            if (forceNow || !lastPrompt || (now - lastPrompt > interval)) {
+                const m = document.getElementById('pwa-install-modal');
+                if(m) {
+                    m.classList.remove('hidden');
+                    setTimeout(() => { 
+                        m.classList.remove('opacity-0'); 
+                        m.children[0].classList.remove('scale-95'); 
+                    }, 10);
+                }
+            }
+        }
+
+        function dismissInstallPrompt() {
+            const m = document.getElementById('pwa-install-modal');
+            if(m) {
+                m.classList.add('opacity-0'); 
+                m.children[0].classList.add('scale-95');
+                setTimeout(() => { m.classList.add('hidden'); }, 300);
+            }
+            localStorage.setItem('fcseller_pwa_time', new Date().getTime());
+        }
+
+        async function acceptInstallPrompt() {
+            dismissInstallPrompt();
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    localStorage.setItem('fcseller_pwa_status', 'installed'); 
+                } else {
+                    localStorage.setItem('fcseller_pwa_time', new Date().getTime());
+                }
+                deferredPrompt = null;
+            } else {
+                showCustomAlert("Aplikasi sudah terinstal, atau browser Anda tidak mendukung fitur ini.", "Informasi");
+            }
+        }
+
+        // --- CUSTOM MODAL SYSTEM ---
         function openModalAnim() {
             const m = document.getElementById('customModal');
             const c = document.getElementById('customModalContent');
@@ -750,7 +926,7 @@
 
         function showCustomAlert(message, title = "Informasi") {
             return new Promise((resolve) => {
-                document.getElementById('modalHeader').innerHTML = `<i class="fas fa-info-circle"></i> <span>${title}</span>`;
+                document.getElementById('modalHeader').innerHTML = `<i class="fas fa-info-circle"></i> <span id="modalTitle">${title}</span>`;
                 document.getElementById('modalMessage').innerText = message;
                 document.getElementById('modalInput').classList.add('hidden');
                 document.getElementById('modalBtnCancel').classList.add('hidden');
@@ -763,7 +939,7 @@
 
         function showCustomConfirm(message, title = "Konfirmasi") {
             return new Promise((resolve) => {
-                document.getElementById('modalHeader').innerHTML = `<i class="fas fa-question-circle"></i> <span>${title}</span>`;
+                document.getElementById('modalHeader').innerHTML = `<i class="fas fa-question-circle"></i> <span id="modalTitle">${title}</span>`;
                 document.getElementById('modalMessage').innerText = message;
                 document.getElementById('modalInput').classList.add('hidden');
                 document.getElementById('modalBtnCancel').classList.remove('hidden');
@@ -777,7 +953,7 @@
 
         function showCustomPrompt(message, defaultValue = "", title = "Input Data") {
             return new Promise((resolve) => {
-                document.getElementById('modalHeader').innerHTML = `<i class="fas fa-edit"></i> <span>${title}</span>`;
+                document.getElementById('modalHeader').innerHTML = `<i class="fas fa-edit"></i> <span id="modalTitle">${title}</span>`;
                 document.getElementById('modalMessage').innerText = message;
                 
                 const inputEl = document.getElementById('modalInput');
@@ -803,25 +979,27 @@
                 regMap.invalidateSize();
                 return;
             }
-            // Titik Awal Default: Perumahan PPS Gresik
             regMap = L.map('regMap').setView([-7.147500, 112.604400], 15);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap contributors'
-            }).addTo(regMap);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(regMap);
 
             regMap.on('click', function(e) {
                 setRegMarker(e.latlng.lat, e.latlng.lng);
             });
+            
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    setRegMarker(position.coords.latitude, position.coords.longitude);
+                }, function(error) {
+                    console.log("GPS awal gagal");
+                }, { timeout: 10000, enableHighAccuracy: true });
+            }
         }
 
         function setRegMarker(lat, lng) {
             if (regMarker) {
                 regMarker.setLatLng([lat, lng]);
             } else {
-                // Tambahkan opsi draggable: true agar marker bisa digeser
                 regMarker = L.marker([lat, lng], { draggable: true }).addTo(regMap);
-                
-                // Tambahkan event 'dragend' untuk update koordinat saat marker selesai digeser
                 regMarker.on('dragend', function(e) {
                     const position = regMarker.getLatLng();
                     updateCoordinatesAndAddress(position.lat, position.lng);
@@ -832,11 +1010,9 @@
         }
 
         function updateCoordinatesAndAddress(lat, lng) {
-            // Set Hidden Inputs
             document.getElementById('regLat').value = lat;
             document.getElementById('regLng').value = lng;
             
-            // Reverse Geocoding untuk Address Otomatis
             fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
                 .then(response => response.json())
                 .then(data => {
@@ -859,8 +1035,7 @@
                     btn.innerHTML = originalText;
                     btn.disabled = false;
                 }, function(error) {
-                    window.alert("Gagal mendapatkan lokasi GPS. Pastikan izin lokasi diaktifkan di pengaturan browser atau perangkat Anda.");
-                    // Fallback Set marker ke PPS Gresik jika diizinkan tapi error
+                    window.alert("Gagal mendapatkan lokasi GPS. Pastikan izin lokasi diaktifkan.");
                     setRegMarker(-7.147500, 112.604400);
                     btn.innerHTML = originalText;
                     btn.disabled = false;
@@ -876,7 +1051,6 @@
         let editMap, editMarker;
 
         function initEditMap(lat, lng) {
-            // Default ke titik awal Perumahan PPS Gresik jika belum ada koordinat
             const startLat = lat || -7.147500;
             const startLng = lng || 112.604400;
 
@@ -887,17 +1061,22 @@
             }
             
             editMap = L.map('editMap').setView([startLat, startLng], 15);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap contributors'
-            }).addTo(editMap);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(editMap);
 
             editMap.on('click', function(e) {
                 setEditMarker(e.latlng.lat, e.latlng.lng, true);
             });
 
-            // Set marker awal jika data koordinat sudah ada
             if (lat && lng) {
                 setEditMarker(lat, lng, false);
+            } else {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(function(position) {
+                        setEditMarker(position.coords.latitude, position.coords.longitude, true);
+                    }, function(error) {
+                        console.log("GPS awal gagal");
+                    }, { timeout: 10000, enableHighAccuracy: true });
+                }
             }
         }
 
@@ -916,7 +1095,6 @@
             if (fetchAddress) {
                 updateEditCoordinatesAndAddress(lat, lng);
             } else {
-                // Update input hidden saja tanpa menarik API Address
                 document.getElementById('editLat').value = lat;
                 document.getElementById('editLng').value = lng;
             }
@@ -936,7 +1114,6 @@
                 .catch(err => console.error("Gagal menarik alamat:", err));
         }
 
-        // --- PASSWORD VISIBILITY TOGGLE ---
         function togglePasswordVisibility(inputId, btnEl) {
             const input = document.getElementById(inputId);
             const icon = btnEl.querySelector('i');
@@ -958,7 +1135,6 @@
         let sellerOrders = []; 
         let syncInterval;
 
-        // Tambahan: Variabel Global untuk Grafik Chart.js
         let salesChart = null;
         let salesDataByDate = {};
         let totalChartQty = 0;
@@ -1004,6 +1180,10 @@
                     loadProfileData();
 
                     startBackgroundSync();
+                    
+                    // Trigger Instalasi Modal & Izin Notifikasi
+                    setTimeout(() => checkAndShowInstallPrompt(), 3000);
+                    requestNotificationPermission();
                     return; 
                 } catch (e) {
                     localStorage.removeItem('foodcourt_seller_login');
@@ -1025,7 +1205,7 @@
                     document.getElementById('regEmail').value = buyer.email || '';
                     document.getElementById('regPhone').value = buyer.phone || '';
                     localStorage.removeItem('foodcourt_prefill_seller_reg');
-                    showCustomAlert("Sesi Tersambung! Kami telah mengisi data pendaftaran sesuai dengan profil pembeli Anda.");
+                    showCustomAlert("Sesi Tersambung! Kami telah mengisi data pendaftaran sesuai dengan profil Anda.");
                     return;
                 } catch (e) { }
             }
@@ -1057,7 +1237,6 @@
             activeView.classList.remove('hidden');
             activeView.classList.add('flex');
 
-            // Inisialisasi Peta saat form registrasi terbuka
             if (viewId === 'register') {
                 setTimeout(() => {
                     if(typeof initRegMap === 'function') initRegMap();
@@ -1098,6 +1277,9 @@
                     loadProfileData();
 
                     startBackgroundSync();
+
+                    setTimeout(() => checkAndShowInstallPrompt(), 3000);
+                    requestNotificationPermission();
                 } else {
                     window.alert(res.message);
                 }
@@ -1108,6 +1290,66 @@
                 btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Masuk';
                 btn.disabled = false;
             }
+        }
+
+        function loginWithGoogle() {
+            auth.signInWithPopup(googleProvider)
+            .then(async (result) => {
+                const user = result.user;
+                
+                try {
+                    const response = await fetch(GAS_WEB_APP_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({ 
+                            action: 'googleLogin', 
+                            type: 'users_sellers', 
+                            userType: 'users_sellers', 
+                            email: user.email, 
+                            name: user.displayName 
+                        })
+                    });
+                    const res = await response.json();
+                    
+                    if (res.status === 'success') {
+                        SELLER_OUTLET_NAME = res.user.store_name; 
+                        SELLER_DATA = res.user; 
+                        
+                        localStorage.setItem('foodcourt_seller_login', JSON.stringify(SELLER_DATA));
+                        document.getElementById('header-store-name').innerText = SELLER_OUTLET_NAME;
+
+                        document.getElementById('auth-container').classList.add('hidden');
+                        document.getElementById('app-container').classList.remove('hidden');
+                        document.getElementById('app-container').classList.add('flex');
+
+                        loadSellerProducts();
+                        loadSellerOrders();
+                        loadProfileData();
+                        startBackgroundSync();
+                        
+                        setTimeout(() => checkAndShowInstallPrompt(), 3000);
+                        requestNotificationPermission();
+
+                        await showCustomAlert("Berhasil masuk dengan Akun Google!", "Keberhasilan");
+
+                    } else if (res.status === 'not_found') {
+                        await showCustomAlert("Email belum terdaftar sebagai Toko. Silakan lengkapi formulir pendaftaran ini.", "Perhatian");
+                        switchAuthView('register');
+                        document.getElementById('regEmail').value = user.email;
+                        document.getElementById('regOwnerName').value = user.displayName;
+                        document.getElementById('regStoreName').value = user.displayName + " Store";
+                    } else {
+                        await showCustomAlert(res.message, "Gagal");
+                    }
+                } catch(e) {
+                    await showCustomAlert("Gagal terhubung ke database.", "Gagal");
+                }
+            })
+            .catch(async (error) => {
+                console.error("Firebase Auth Error:", error);
+                if (error.code !== 'auth/popup-closed-by-user') {
+                    await showCustomAlert("Autentikasi Google gagal:\n\n" + (error.message || error.code), "Gagal");
+                }
+            });
         }
 
         async function handleRegister(e) {
@@ -1142,7 +1384,6 @@
             const bankAccount = document.getElementById('regBankAccount') ? document.getElementById('regBankAccount').value : "-";
 
             try {
-                // 1. Kompres dan Upload KTP ke Google Drive
                 const ktpBase64 = await compressImage(ktpFile, 800, 800, 0.7);
                 const uploadPayload = {
                     action: 'uploadImage',
@@ -1162,7 +1403,6 @@
                 }
                 const ktpUrl = uploadResult.url;
 
-                // 2. Simpan Data Pendaftaran ke Database
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan Data...';
                 const newId = "SEL-" + Math.floor(Math.random() * 100000);
                 const rowData = [
@@ -1261,6 +1501,26 @@
                 
                 if (json.status === 'success' && json.data && json.data.length > 0) {
                     sellerOrders = json.data.filter(o => o.outlet === SELLER_OUTLET_NAME);
+                    
+                    // --- PUSH NOTIFICATION LOGIC (Latar Belakang) ---
+                    const activeOrders = sellerOrders.filter(o => !o.status.includes('Selesai') && !o.status.includes('Batal'));
+                    const currentHash = JSON.stringify(activeOrders.map(o => o.order_id + o.status));
+                    const lastSeenHash = localStorage.getItem('foodcourt_seller_seen_orders_hash');
+                    
+                    if (isBackground && lastSeenHash && lastSeenHash !== currentHash) {
+                        if (document.visibilityState === 'hidden') {
+                            const hasNewOrder = activeOrders.some(o => o.status === 'Menunggu Konfirmasi' && (!lastSeenHash.includes(o.order_id)));
+                            if (hasNewOrder) {
+                                triggerSystemNotification("Pesanan Baru! 🏪", "Ada pesanan baru menunggu konfirmasi Anda.");
+                            } else {
+                                triggerSystemNotification("Update Pesanan", "Status pesanan atau kurir telah diperbarui.");
+                            }
+                        }
+                    }
+                    if (currentHash !== lastSeenHash) {
+                        localStorage.setItem('foodcourt_seller_seen_orders_hash', currentHash);
+                    }
+
                     updateDashboardStats();
                     const activeTab = document.querySelector('#order-tabs .tab-active');
                     filterOrdersSilently(activeTab ? activeTab.innerText.trim() : 'Semua');
@@ -1762,7 +2022,6 @@
                 return;
             }
 
-            // Konfirmasi dihapus: Setelah input, langsung proses ke database
             try {
                 const tbody = document.getElementById('product-table-body');
                 tbody.innerHTML = `<tr><td colspan="5" class="text-center py-10 text-brandPrimary font-bold"><i class="fas fa-spinner fa-spin text-2xl mb-2"></i><br>Memperbarui harga produk...</td></tr>`;
@@ -1822,52 +2081,6 @@
             } finally {
                 loadSellerProducts(); 
             }
-        }
-
-        function appendProductToTable(newId, name, price, img, category) {
-            const tbody = document.getElementById('product-table-body');
-            const formattedPrice = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(price);
-            let displayCategory = category ? category.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) : '-';
-            
-            const safeName = encodeURIComponent(name);
-
-            const placeholder = tbody.querySelector('td[colspan="5"]');
-            if(placeholder) tbody.innerHTML = '';
-
-            const tr = document.createElement('tr');
-            tr.className = "border-b-2 hover:bg-gray-50 transition bg-green-50 font-semibold"; 
-            tr.innerHTML = `
-                <td class="p-4 flex items-center gap-3">
-                    <img src="${img}" class="w-12 h-12 md:w-14 md:h-14 object-cover rounded-lg border-2 border-gray-100 shadow-sm" onerror="this.src='https://placehold.co/100x100/e0e0e0/333?text=Img'">
-                    <div class="flex flex-col">
-                        <span class="text-[10px] font-bold text-brandPrimary bg-orange-50 border border-orange-200 px-1.5 py-0.5 rounded w-fit mb-1">${newId}</span>
-                        <span class="text-gray-800 line-clamp-2 w-32 md:w-full">${name}</span>
-                    </div>
-                </td>
-                <td class="p-4 text-gray-500 text-xs">
-                    <span class="bg-gray-100 px-2 py-1 rounded border border-gray-200">${displayCategory}</span>
-                </td>
-                <td class="p-4">
-                    <div class="text-brandPrimary font-extrabold text-sm md:text-base">${formattedPrice}</div>
-                    <div class="text-xs text-gray-400 mt-1">0 Terjual</div>
-                </td>
-                <td class="p-4 align-middle text-center">
-                    <button id="btn-status-${newId}" onclick="toggleProductStatus('${newId}', '${category}', 'Aktif')" class="btn-3d px-3 py-1 rounded-full text-[10px] font-bold shadow-[0_2px_0_0_rgba(0,0,0,0.1)] bg-green-100 text-green-600 border border-green-200">
-                        AKTIF
-                    </button>
-                </td>
-                <td class="p-4 text-right align-middle">
-                    <div class="flex flex-col gap-1.5 items-end">
-                        <button type="button" onclick="editProductPrice(this)" data-id="${newId}" data-name="${safeName}" data-price="${price}" data-category="${category}" class="btn-3d bg-blue-50 text-blue-600 border border-blue-200 px-3 py-1.5 rounded-lg shadow-[0_2px_0_0_#bfdbfe] hover:bg-blue-100 text-xs font-bold w-full md:w-32 flex items-center justify-center gap-1"><i class="fas fa-edit"></i> Setting Harga</button>
-                        <button type="button" onclick="deleteProduct(this)" data-id="${newId}" data-category="${category}" class="btn-3d bg-red-50 text-red-600 border border-red-200 px-3 py-1.5 rounded-lg shadow-[0_2px_0_0_#fecaca] hover:bg-red-100 text-xs font-bold w-full md:w-32 flex items-center justify-center gap-1"><i class="fas fa-trash"></i> Hapus</button>
-                    </div>
-                </td>
-            `;
-            tbody.insertBefore(tr, tbody.firstChild);
-
-            setTimeout(() => {
-                tr.classList.remove('bg-green-50');
-            }, 3000);
         }
 
         function compressImage(file, maxWidth, maxHeight, quality) {
@@ -2061,7 +2274,6 @@
 
             if(SELLER_DATA.lat && SELLER_DATA.lng) {
                 document.getElementById('profLocation').innerText = `${SELLER_DATA.lat}, ${SELLER_DATA.lng}`;
-                // Set hidden inputs untuk default fallback Edit Profil
                 document.getElementById('profLat').value = SELLER_DATA.lat;
                 document.getElementById('profLng').value = SELLER_DATA.lng;
             } else {
@@ -2092,7 +2304,6 @@
                 document.getElementById('editLat').value = SELLER_DATA.lat || '';
                 document.getElementById('editLng').value = SELLER_DATA.lng || '';
 
-                // Render Map untuk Edit Profil
                 setTimeout(() => {
                     initEditMap(SELLER_DATA.lat, SELLER_DATA.lng);
                 }, 300);
@@ -2131,13 +2342,12 @@
         async function submitEditProfile(e) {
             e.preventDefault();
             
-            // Validasi Wajib GPS ditambahkan di sini
             const latValue = document.getElementById('editLat').value;
             const lngValue = document.getElementById('editLng').value;
             
             if(!latValue || !lngValue) {
                 window.alert("Mohon maaf, Anda WAJIB mengunci Titik Lokasi Peta (GPS) sebelum bisa menyimpan profil. Silakan klik tombol biru 'Dapatkan Lokasi Saat Ini'.");
-                return; // Membatalkan pengiriman data
+                return;
             }
             
             const btn = document.getElementById('btnSaveProfile');
