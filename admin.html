@@ -16,8 +16,8 @@
             theme: {
                 extend: {
                     colors: {
-                        shopee: '#ee4d2d',
-                        shopeeHover: '#d73211',
+                        brandPrimary: '#ee4d2d',
+                        brandPrimaryHover: '#d73211',
                     }
                 }
             }
@@ -35,7 +35,7 @@
     <!-- ================= LOADING OVERLAY ================= -->
     <div id="loading-overlay" class="hidden fixed inset-0 z-[150] bg-black/50 backdrop-blur-sm justify-center items-center">
         <div class="bg-white p-6 rounded-2xl shadow-2xl text-center flex flex-col items-center transform scale-105">
-            <div class="w-12 h-12 rounded-full border-4 border-gray-100 border-t-shopee animate-spin mb-3"></div>
+            <div class="w-12 h-12 rounded-full border-4 border-gray-100 border-t-brandPrimary animate-spin mb-3"></div>
             <p class="text-sm font-extrabold text-gray-700 mt-2" id="loading-text">Memuat Data Server...</p>
         </div>
     </div>
@@ -51,8 +51,9 @@
                 <p class="text-xs text-gray-500 font-semibold mb-8">Pusat Kendali Sistem FoodCourt</p>
                 
                 <form onsubmit="handleAdminLogin(event)" class="flex flex-col gap-4">
-                    <div>
-                        <input type="password" id="adminPass" required placeholder="Masukkan PIN Admin" class="w-full px-4 py-3.5 border-2 border-gray-100 rounded-xl outline-none focus:border-red-500 bg-gray-50 font-black text-center tracking-widest shadow-inner transition text-lg">
+                    <div class="relative">
+                        <input type="password" id="adminPass" required placeholder="Masukkan PIN Admin" class="w-full px-4 py-3.5 border-2 border-gray-100 rounded-xl outline-none focus:border-red-500 bg-gray-50 font-black text-center tracking-widest shadow-inner transition text-lg pr-10">
+                        <button type="button" onclick="togglePinVisibility('adminPass', this)" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"><i class="fas fa-eye"></i></button>
                     </div>
                     <div class="text-right mt-1">
                         <button type="button" onclick="switchAuthView('forgot')" class="text-xs text-red-500 font-bold hover:text-red-700 transition">Lupa PIN?</button>
@@ -172,7 +173,7 @@
 
                 <!-- GRAFIK & RINCIAN TOKO -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                    <!-- Grafik Pendapatan Harian (Kiri, lebih lebar) -->
+                    <!-- Grafik Pendapatan Harian -->
                     <div class="lg:col-span-2 bg-white p-5 md:p-6 rounded-3xl shadow-sm border border-gray-100">
                         <h2 class="font-black text-gray-800 mb-4 flex items-center gap-2"><i class="fas fa-chart-area text-blue-500"></i> Pergerakan Pemasukan Harian</h2>
                         <div class="w-full h-64">
@@ -180,7 +181,7 @@
                         </div>
                     </div>
 
-                    <!-- Leaderboard Rincian per Toko (Kanan) -->
+                    <!-- Leaderboard Rincian per Toko -->
                     <div class="bg-white p-5 md:p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col max-h-[350px]">
                         <h2 class="font-black text-gray-800 mb-4 flex items-center justify-between border-b pb-3">
                             <span class="flex items-center gap-2"><i class="fas fa-trophy text-yellow-500"></i> Pemasukan per Toko</span>
@@ -212,9 +213,27 @@
                             </div>
                         </div>
 
+                        <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
+                            <label class="block text-xs font-black text-indigo-800 mb-1 uppercase tracking-wider"><i class="fas fa-shield-alt mr-1"></i> Maksimal Ongkir (1 Toko)</label>
+                            <p class="text-[10px] text-indigo-600 font-semibold mb-3">Batas mentok tarif kurir jika pesan dari 1 toko.</p>
+                            <div class="flex items-center">
+                                <span class="bg-white border-y-2 border-l-2 border-white text-gray-500 font-bold px-4 py-3 rounded-l-xl">Rp</span>
+                                <input type="number" id="setMaxOngkir" required class="w-full px-4 py-3 border-2 border-white rounded-r-xl outline-none focus:border-indigo-500 font-black text-gray-800 shadow-inner">
+                            </div>
+                        </div>
+                        
+                        <div class="bg-teal-50 p-4 rounded-xl border border-teal-100">
+                            <label class="block text-xs font-black text-teal-800 mb-1 uppercase tracking-wider"><i class="fas fa-boxes mr-1"></i> Maksimal Ongkir (Multi-Toko)</label>
+                            <p class="text-[10px] text-teal-600 font-semibold mb-3">Batas mentok tarif jika pesanan lebih dari 1 toko.</p>
+                            <div class="flex items-center">
+                                <span class="bg-white border-y-2 border-l-2 border-white text-gray-500 font-bold px-4 py-3 rounded-l-xl">Rp</span>
+                                <input type="number" id="setMaxOngkirMulti" required class="w-full px-4 py-3 border-2 border-white rounded-r-xl outline-none focus:border-teal-500 font-black text-gray-800 shadow-inner">
+                            </div>
+                        </div>
+
                         <div class="bg-orange-50 p-4 rounded-xl border border-orange-100">
                             <label class="block text-xs font-black text-orange-800 mb-1 uppercase tracking-wider"><i class="fas fa-server mr-1"></i> Biaya Layanan Aplikasi</label>
-                            <p class="text-[10px] text-orange-600 font-semibold mb-3">Biaya perawatan operasional.</p>
+                            <p class="text-[10px] text-orange-600 font-semibold mb-3">Biaya perawatan operasional aplikasi.</p>
                             <div class="flex items-center">
                                 <span class="bg-white border-y-2 border-l-2 border-white text-gray-500 font-bold px-4 py-3 rounded-l-xl">Rp</span>
                                 <input type="number" id="setLayanan" required class="w-full px-4 py-3 border-2 border-white rounded-r-xl outline-none focus:border-brandPrimary font-black text-gray-800 shadow-inner">
@@ -222,8 +241,8 @@
                         </div>
 
                         <div class="bg-purple-50 p-4 rounded-xl border border-purple-100 md:col-span-2 shadow-inner">
-                            <label class="block text-xs font-black text-purple-800 mb-1 uppercase tracking-wider"><i class="fas fa-route mr-1"></i> Jarak Maksimal Pengantaran (KM)</label>
-                            <p class="text-[10px] text-purple-600 font-semibold mb-3">Pesanan akan ditolak otomatis dan tombol checkout dikunci jika jarak pembeli ke toko melebihi batas ini.</p>
+                            <label class="block text-xs font-black text-purple-800 mb-1 uppercase tracking-wider"><i class="fas fa-route mr-1"></i> Jarak Maksimal Pengantaran</label>
+                            <p class="text-[10px] text-purple-600 font-semibold mb-3">Pesanan ditolak otomatis jika melebihi batas ini.</p>
                             <div class="flex items-center">
                                 <input type="number" id="setMaxDistance" required class="w-full px-4 py-3 border-2 border-white rounded-l-xl outline-none focus:border-purple-500 font-black text-gray-800 shadow-inner">
                                 <span class="bg-white border-y-2 border-r-2 border-white text-gray-500 font-bold px-4 py-3 rounded-r-xl">KM</span>
@@ -245,11 +264,11 @@
                             
                             <div class="relative mb-2">
                                 <input type="password" id="setAdminPin" required placeholder="PIN Anda" class="w-full px-4 py-3 border-2 border-white rounded-xl outline-none focus:border-red-400 font-black tracking-widest text-center text-gray-800 shadow-inner pr-10">
-                                <button type="button" onclick="togglePinVisibility('setAdminPin')" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"><i class="fas fa-eye"></i></button>
+                                <button type="button" onclick="togglePinVisibility('setAdminPin', this)" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"><i class="fas fa-eye"></i></button>
                             </div>
                             <div class="relative">
                                 <input type="password" id="confirmAdminPin" required placeholder="Konfirmasi PIN" class="w-full px-4 py-3 border-2 border-white rounded-xl outline-none focus:border-red-400 font-black tracking-widest text-center text-gray-800 shadow-inner pr-10">
-                                <button type="button" onclick="togglePinVisibility('confirmAdminPin')" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"><i class="fas fa-eye"></i></button>
+                                <button type="button" onclick="togglePinVisibility('confirmAdminPin', this)" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"><i class="fas fa-eye"></i></button>
                             </div>
                             
                             <p id="pin-error-msg" class="text-[10px] text-red-500 font-bold mt-1.5 hidden animate-pulse"><i class="fas fa-exclamation-triangle"></i> Konfirmasi PIN tidak cocok!</p>
@@ -257,7 +276,7 @@
                     </div>
 
                     <div class="mt-8 pt-6 border-t border-gray-100 flex justify-end">
-                        <button type="submit" id="btnSaveSettings" class="btn-3d w-full md:w-auto bg-gradient-to-b from-[#f36b4e] to-[#ee4d2d] text-white px-8 py-3.5 rounded-xl font-black shadow-[0_4px_0_0_#be3118] hover:from-[#f05c3d] hover:to-[#d73211] transition flex items-center justify-center gap-2"><i class="fas fa-save"></i> SIMPAN PENGATURAN</button>
+                        <button type="submit" id="btnSaveSettings" class="btn-3d w-full md:w-auto bg-gradient-to-b from-[#f36b4e] to-brandPrimary text-white px-8 py-3.5 rounded-xl font-black shadow-[0_4px_0_0_#be3118] hover:from-[#f05c3d] hover:to-brandPrimaryHover transition flex items-center justify-center gap-2"><i class="fas fa-save"></i> SIMPAN PENGATURAN</button>
                     </div>
                 </form>
             </section>
@@ -333,6 +352,8 @@
         
         let localFeeLayanan = 1000;
         let localFeeOngkir = 2000;
+        let localMaxOngkir = 50000;
+        let localMaxOngkirMulti = 75000; // Variabel baru
         let adminIncomeChart = null;
 
         // Fungsi Haversine untuk kalkulasi ongkir di dashboard admin
@@ -347,6 +368,63 @@
             return R * c; 
         }
         function deg2rad(deg) { return deg * (Math.PI/180) }
+
+        // Kalkulator Ongkir Multi-Toko (Kluster Jarak 300 meter)
+        function calculateOngkirMultiStore(order) {
+            if (!order || !order.outlet) return localFeeOngkir;
+            
+            // Menggunakan fallback data lama agar tidak menjadi NaN
+            const bLat = parseFloat(order.buyer_lat || order.lat || 0);
+            const bLng = parseFloat(order.buyer_lng || order.lng || 0);
+            
+            let sellers = String(order.outlet).split(', ');
+            let clusters = [];
+            
+            sellers.forEach(sellerName => {
+                const sInfo = ALL_SELLERS.find(s => s.store_name === sellerName);
+                if(sInfo && sInfo.lat && sInfo.lng) {
+                    let sLat = parseFloat(sInfo.lat);
+                    let sLng = parseFloat(sInfo.lng);
+                    let distToBuyer = getDistanceFromLatLonInKm(bLat, bLng, sLat, sLng);
+
+                    if (!isNaN(distToBuyer)) {
+                        let added = false;
+                        for(let cluster of clusters) {
+                            if(getDistanceFromLatLonInKm(sLat, sLng, cluster.lat, cluster.lng) <= 0.3) { // Radius 300 Meter
+                                if (distToBuyer > cluster.maxDistToBuyer) cluster.maxDistToBuyer = distToBuyer;
+                                added = true; break;
+                            }
+                        }
+                        if(!added) {
+                            clusters.push({lat: sLat, lng: sLng, maxDistToBuyer: distToBuyer});
+                        }
+                    }
+                }
+            });
+
+            let ongkir = 0;
+            if(clusters.length === 0) {
+                let sLatFallback = parseFloat(order.seller_lat || 0);
+                let sLngFallback = parseFloat(order.seller_lng || 0);
+                let dist = getDistanceFromLatLonInKm(bLat, bLng, sLatFallback, sLngFallback);
+                if(isNaN(dist) || dist < 1) dist = 1;
+                ongkir = Math.ceil(dist) * localFeeOngkir;
+            } else {
+                clusters.forEach(c => {
+                    let d = c.maxDistToBuyer;
+                    if(isNaN(d) || d < 1) d = 1;
+                    ongkir += Math.ceil(d) * localFeeOngkir;
+                });
+            }
+            
+            // Cek apakah single-drop atau multi-drop
+            let isMultiStore = clusters.length > 1;
+            let appliedMaxOngkir = isMultiStore ? localMaxOngkirMulti : localMaxOngkir;
+
+            if (appliedMaxOngkir > 0 && ongkir > appliedMaxOngkir) ongkir = appliedMaxOngkir;
+            
+            return isNaN(ongkir) ? localFeeOngkir : ongkir;
+        }
 
         // --- INIT SAAT HALAMAN DIMUAT ---
         document.addEventListener('DOMContentLoaded', () => {
@@ -382,6 +460,20 @@
             const activeView = document.getElementById('view-' + viewId);
             activeView.classList.remove('hidden');
             activeView.classList.add('flex');
+        }
+
+        function togglePinVisibility(inputId, btnEl) {
+            const inputEl = document.getElementById(inputId);
+            const icon = btnEl.querySelector('i');
+            if (inputEl.type === "password") {
+                inputEl.type = "text";
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                inputEl.type = "password";
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
         }
 
         async function handleAdminLogin(e) {
@@ -491,6 +583,8 @@
                 if(resSettings.status === 'success' && resSettings.data) {
                     const set = resSettings.data;
                     document.getElementById('setOngkir').value = set.fee_ongkir || 2000;
+                    document.getElementById('setMaxOngkir').value = set.max_ongkir || 50000;
+                    document.getElementById('setMaxOngkirMulti').value = set.max_ongkir_multi || 75000;
                     document.getElementById('setLayanan').value = set.fee_layanan || 1000;
                     document.getElementById('setMaxDistance').value = set.max_distance || 15;
                     document.getElementById('setAdminEmail').value = set.admin_email || '';
@@ -499,6 +593,8 @@
                     
                     localFeeLayanan = parseInt(set.fee_layanan) || 1000;
                     localFeeOngkir = parseInt(set.fee_ongkir) || 2000;
+                    localMaxOngkir = parseInt(set.max_ongkir) || 50000;
+                    localMaxOngkirMulti = parseInt(set.max_ongkir_multi) || 75000;
                 }
 
                 updateDashboardStats();
@@ -564,10 +660,11 @@
                     totalAppIncome += localFeeLayanan; 
                     ordersCount++;
 
-                    // Kalkulasi Pendapatan Ongkir
-                    let dist = getDistanceFromLatLonInKm(o.buyer_lat, o.buyer_lng, o.seller_lat, o.seller_lng);
-                    if(isNaN(dist) || dist < 1) dist = 1;
-                    totalOngkirIncome += (Math.ceil(dist) * localFeeOngkir);
+                    // Kalkulasi Pendapatan Ongkir Multi-Toko
+                    let calculatedOngkir = calculateOngkirMultiStore(o);
+                    if (!isNaN(calculatedOngkir)) {
+                        totalOngkirIncome += calculatedOngkir;
+                    }
 
                     if(!incomeByDate[justDate]) incomeByDate[justDate] = 0;
                     incomeByDate[justDate] += localFeeLayanan;
@@ -806,21 +903,6 @@
             }
         }
 
-        function togglePinVisibility(inputId) {
-            const inputEl = document.getElementById(inputId);
-            const icon = inputEl.nextElementSibling.querySelector('i');
-            
-            if (inputEl.type === "password") {
-                inputEl.type = "text";
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
-            } else {
-                inputEl.type = "password";
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
-            }
-        }
-
         async function saveSettings(e) {
             e.preventDefault();
             
@@ -841,6 +923,8 @@
             
             const settingsObj = {
                 fee_ongkir: document.getElementById('setOngkir').value,
+                max_ongkir: document.getElementById('setMaxOngkir').value,
+                max_ongkir_multi: document.getElementById('setMaxOngkirMulti').value,
                 fee_layanan: document.getElementById('setLayanan').value,
                 max_distance: document.getElementById('setMaxDistance').value,
                 admin_email: document.getElementById('setAdminEmail').value,
@@ -858,6 +942,8 @@
                     alert("Profil Admin & Pengaturan Tarif berhasil disimpan secara permanen!");
                     localFeeLayanan = parseInt(settingsObj.fee_layanan) || 1000;
                     localFeeOngkir = parseInt(settingsObj.fee_ongkir) || 2000;
+                    localMaxOngkir = parseInt(settingsObj.max_ongkir) || 50000;
+                    localMaxOngkirMulti = parseInt(settingsObj.max_ongkir_multi) || 75000;
                     updateDashboardStats(); 
                 } else {
                     alert("Gagal menyimpan: " + res.message);
