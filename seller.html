@@ -48,6 +48,17 @@
 </head>
 <body class="bg-bgMain font-sans text-gray-800 h-screen flex flex-col overflow-hidden relative">
 
+    <!-- ================= SUSPEND OVERLAY (REAL-TIME LOCK) ================= -->
+    <div id="suspend-overlay" class="hidden fixed inset-0 z-[999] bg-black/95 backdrop-blur-md flex-col justify-center items-center p-6 text-center">
+        <i class="fas fa-user-lock text-red-500 text-7xl mb-6 animate-pulse"></i>
+        <h1 class="text-3xl font-black text-white mb-2 tracking-tight">Toko Dibekukan</h1>
+        <p class="text-gray-300 font-semibold mb-8 text-sm max-w-sm">Mohon maaf, akun toko Anda saat ini sedang di-suspend oleh Admin. Akses ke Dashboard dihentikan sementara. Silakan hubungi Admin untuk informasi lebih lanjut.</p>
+        <a href="https://wa.me/6282233828384?text=Halo%20Admin%20FoodCourt,%20mengapa%20akun%20toko%20saya%20di-suspend?" target="_blank" class="btn-3d bg-brandPrimary text-white px-8 py-3.5 rounded-xl font-bold shadow-[0_4px_0_0_#be3118] flex items-center justify-center gap-2 mb-4 w-full max-w-xs hover:bg-brandPrimaryHover">
+            <i class="fab fa-whatsapp text-xl"></i> Hubungi Admin
+        </a>
+        <button onclick="handleSellerLogout(true)" class="text-gray-400 font-bold hover:text-white transition underline text-sm py-2">Keluar Akun</button>
+    </div>
+
     <!-- ================= PWA INSTALL PROMPT MODAL ================= -->
     <div id="pwa-install-modal" class="hidden fixed inset-0 z-[300] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 transition-opacity duration-300 md:max-w-md md:mx-auto">
         <div class="bg-white rounded-3xl shadow-[0_15px_50px_rgba(0,0,0,0.3)] w-full max-w-sm overflow-hidden flex flex-col transform scale-95 transition-transform duration-300 border border-white/20">
@@ -1328,7 +1339,7 @@
                     document.getElementById('regEmail').value = buyer.email || '';
                     document.getElementById('regPhone').value = buyer.phone || '';
                     localStorage.removeItem('foodcourt_prefill_seller_reg');
-                    showCustomAlert("Sesi Tersambung! Kami telah mengisi data pendaftaran sesuai dengan profil Anda.");
+                    showCustomAlert("Sesi Tersambung! Kami telah mengisi data pendaftaran sesuai dengan profil Anda.", "Berhasil");
                     return;
                 } catch (e) { }
             }
@@ -1338,12 +1349,14 @@
             }
         }
 
-        async function handleSellerLogout() {
-            if (await showCustomConfirm("Apakah Anda yakin ingin keluar dari Toko Anda?", "Keluar Akun")) {
+        async function handleSellerLogout(force = false) {
+            if (force || await showCustomConfirm("Apakah Anda yakin ingin keluar dari Toko Anda?", "Keluar Akun")) {
                 localStorage.removeItem('foodcourt_seller_login');
                 SELLER_DATA = null;
                 SELLER_OUTLET_NAME = "";
                 if(syncInterval) clearInterval(syncInterval);
+                document.getElementById('suspend-overlay').classList.add('hidden');
+                document.getElementById('suspend-overlay').classList.remove('flex');
                 window.location.reload();
             }
         }
@@ -1384,6 +1397,13 @@
                 const res = await response.json();
                 
                 if(res.status === 'success') {
+                    if (res.user.status === 'Suspend' || res.user.status === 'Nonaktif') {
+                        await showCustomAlert("Akun Toko Anda sedang dibekukan. Silakan hubungi Admin.", "Perhatian");
+                        btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Masuk';
+                        btn.disabled = false;
+                        return;
+                    }
+
                     SELLER_OUTLET_NAME = res.user.store_name; 
                     SELLER_DATA = res.user; 
                     
@@ -1434,6 +1454,11 @@
                     const res = await response.json();
                     
                     if (res.status === 'success') {
+                        if (res.user.status === 'Suspend' || res.user.status === 'Nonaktif') {
+                            await showCustomAlert("Akun Toko Anda sedang dibekukan. Silakan hubungi Admin.", "Perhatian");
+                            return;
+                        }
+
                         SELLER_OUTLET_NAME = res.user.store_name; 
                         SELLER_DATA = res.user; 
                         
@@ -1592,6 +1617,19 @@
             if(syncIcon) syncIcon.classList.add('fa-spin', 'text-brandPrimary');
 
             try {
+                // CHECK ACCOUNT STATUS (SUSPEND PROTECTION)
+                const resStatus = await fetch(`${GAS_WEB_APP_URL}?action=getData&type=users_sellers`).then(r => r.json());
+                if (resStatus.status === 'success' && resStatus.data) {
+                    const myAccount = resStatus.data.find(s => s.seller_id === SELLER_DATA.seller_id);
+                    if (myAccount && (myAccount.status === 'Suspend' || myAccount.status === 'Nonaktif')) {
+                        document.getElementById('suspend-overlay').classList.remove('hidden');
+                        document.getElementById('suspend-overlay').classList.add('flex');
+                    } else {
+                        document.getElementById('suspend-overlay').classList.add('hidden');
+                        document.getElementById('suspend-overlay').classList.remove('flex');
+                    }
+                }
+
                 await loadSellerOrders(true);
                 await loadSellerProducts(true);
 
@@ -1626,8 +1664,9 @@
                     sellerOrders = json.data.filter(o => o.outlet === SELLER_OUTLET_NAME);
                     
                     // --- PUSH NOTIFICATION LOGIC (Latar Belakang) ---
-                    const activeOrders = sellerOrders.filter(o => !o.status.includes('Selesai') && !o.status.includes('Batal'));
-                    const currentHash = JSON.stringify(activeOrders.map(o => o.order_id + o.status));
+                    // Menggunakan (o.status || '') agar tidak crash jika status di database kosong
+                    const activeOrders = sellerOrders.filter(o => !(o.status || '').includes('Selesai') && !(o.status || '').includes('Batal'));
+                    const currentHash = JSON.stringify(activeOrders.map(o => o.order_id + (o.status || '')));
                     const lastSeenHash = localStorage.getItem('foodcourt_seller_seen_orders_hash');
                     
                     if (isBackground && lastSeenHash && lastSeenHash !== currentHash) {
@@ -1653,7 +1692,8 @@
                     container.innerHTML = '<div class="text-center py-10 text-gray-400 font-bold"><i class="fas fa-receipt text-4xl mb-3 opacity-30"></i><br>Belum ada pesanan masuk.</div>';
                 }
             } catch (e) {
-                if(!isBackground) container.innerHTML = '<div class="text-center py-10 text-red-500 font-bold">Gagal memuat pesanan. Periksa koneksi internet.</div>';
+                console.error("Error Load Seller Orders:", e);
+                if(!isBackground) container.innerHTML = `<div class="text-center py-10 text-red-500 font-bold">Gagal memuat pesanan. Periksa koneksi internet.<br><span class="text-[10px] font-normal text-gray-400">Error: ${e.message}</span></div>`;
             }
         }
 
@@ -1670,9 +1710,10 @@
             sellerOrders.forEach(o => {
                 let orderMonth = "";
                 let orderYear = "";
+                const safeStatus = o.status || '';
 
                 if(o.timestamp) {
-                    const datePart = o.timestamp.split(',')[0].trim().split(' ')[0];
+                    const datePart = String(o.timestamp).split(',')[0].trim().split(' ')[0];
                     if(datePart.includes('/')) {
                         const parts = datePart.split('/');
                         if(parts.length >= 3) {
@@ -1692,11 +1733,11 @@
                     return; 
                 }
 
-                if(o.status === 'Menunggu Konfirmasi' || o.status === 'Belum Bayar') {
+                if(safeStatus === 'Menunggu Konfirmasi' || safeStatus === 'Belum Bayar') {
                     newOrders++;
-                } else if(o.status === 'Menunggu Kurir' || o.status === 'Kurir Menuju Outlet') {
+                } else if(safeStatus === 'Menunggu Kurir' || safeStatus === 'Kurir Menuju Outlet') {
                     readyOrders++;
-                } else if(o.status.includes('Selesai')) {
+                } else if(safeStatus.includes('Selesai')) {
                     doneOrders++;
                     
                     let ongkir = getOrderOngkir(o);
@@ -1712,7 +1753,7 @@
                     totalChartQty += orderQty;
                     totalChartIncome += orderIncome;
 
-                    let justDate = o.timestamp ? o.timestamp.split(',')[0].split(' ')[0] : 'Tidak Diketahui';
+                    let justDate = o.timestamp ? String(o.timestamp).split(',')[0].split(' ')[0] : 'Tidak Diketahui';
 
                     if(!salesDataByDate[justDate]) {
                         salesDataByDate[justDate] = { totalIncome: 0, totalQty: 0, products: {} };
@@ -1720,11 +1761,12 @@
                     salesDataByDate[justDate].totalIncome += orderIncome;
                     salesDataByDate[justDate].totalQty += orderQty;
 
-                    if(!salesDataByDate[justDate].products[o.product_name]) {
-                        salesDataByDate[justDate].products[o.product_name] = { qty: 0, income: 0 };
+                    const prodName = o.product_name || 'Produk';
+                    if(!salesDataByDate[justDate].products[prodName]) {
+                        salesDataByDate[justDate].products[prodName] = { qty: 0, income: 0 };
                     }
-                    salesDataByDate[justDate].products[o.product_name].qty += orderQty;
-                    salesDataByDate[justDate].products[o.product_name].income += orderIncome;
+                    salesDataByDate[justDate].products[prodName].qty += orderQty;
+                    salesDataByDate[justDate].products[prodName].income += orderIncome;
                 }
             });
             
@@ -1831,22 +1873,23 @@
         function generateOrderCardHTML(order) {
             let actionBtn = '';
             let statusColor = 'text-gray-500';
+            const safeStatus = order.status || '';
 
-            if(order.status === 'Menunggu Konfirmasi') {
+            if(safeStatus === 'Menunggu Konfirmasi') {
                 statusColor = 'text-orange-500';
                 actionBtn = `<button onclick="updateOrder('${order.order_id}', 'Menunggu Kurir')" class="btn-3d w-full md:w-auto bg-brandPrimary text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow-[0_4px_0_0_#be3118] hover:bg-brandPrimaryHover transition flex items-center justify-center gap-2"><i class="fas fa-motorcycle"></i> Atur Pengiriman</button>`;
-            } else if (order.status === 'Menunggu Kurir') {
+            } else if (safeStatus === 'Menunggu Kurir') {
                 statusColor = 'text-blue-500';
                 actionBtn = `<button disabled class="w-full md:w-auto bg-gray-200 text-gray-500 px-6 py-2.5 rounded-lg text-sm font-bold cursor-not-allowed border-2 border-gray-300 flex items-center justify-center gap-2"><i class="fas fa-search"></i> Mencari Kurir...</button>`;
-            } else if (order.status.includes('Kurir') || order.status.includes('Diambil') || order.status.includes('Tujuan')) {
+            } else if (safeStatus.includes('Kurir') || safeStatus.includes('Diambil') || safeStatus.includes('Tujuan')) {
                 statusColor = 'text-blue-500';
                 actionBtn = `<button disabled class="w-full md:w-auto bg-blue-100 text-blue-600 px-6 py-2.5 rounded-lg text-sm font-bold border-2 border-blue-200 flex items-center justify-center gap-2"><i class="fas fa-box"></i> Dibawa Kurir</button>`;
-            } else if (order.status.includes('Selesai')) {
+            } else if (safeStatus.includes('Selesai')) {
                 statusColor = 'text-green-600';
                 actionBtn = `<button onclick="showOrderDetails('${order.order_id}')" class="btn-3d w-full md:w-auto border-2 border-gray-300 text-gray-600 px-6 py-2.5 rounded-lg text-sm font-bold hover:bg-gray-50 shadow-[0_3px_0_0_#d1d5db] transition flex items-center justify-center gap-2"><i class="fas fa-eye"></i> Rincian</button>`;
             } else {
                 statusColor = 'text-brandPrimary';
-                actionBtn = `<button disabled class="w-full md:w-auto bg-gray-100 text-gray-600 px-6 py-2.5 rounded-lg text-sm font-bold border-2 border-gray-200">${order.status}</button>`;
+                actionBtn = `<button disabled class="w-full md:w-auto bg-gray-100 text-gray-600 px-6 py-2.5 rounded-lg text-sm font-bold border-2 border-gray-200">${safeStatus}</button>`;
             }
 
             const ongkir = getOrderOngkir(order);
@@ -1862,7 +1905,7 @@
                         <div class="font-bold flex items-center gap-2 text-gray-700">
                             <i class="fas fa-user-circle text-gray-400 text-lg"></i> Pembeli ID: ${order.user_id}
                         </div>
-                        <div class="${statusColor} font-bold px-3 py-1 bg-white rounded-full shadow-sm border border-gray-100 text-xs">${order.status}</div>
+                        <div class="${statusColor} font-bold px-3 py-1 bg-white rounded-full shadow-sm border border-gray-100 text-xs">${safeStatus}</div>
                     </div>
                     <div class="p-4 flex flex-col md:flex-row gap-4 justify-between items-center bg-white">
                         <div class="flex gap-4 items-center w-full md:w-auto">
@@ -1879,7 +1922,7 @@
                             <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Pendapatan Bersih</div>
                             <div class="text-xl text-brandPrimary font-extrabold drop-shadow-sm mb-1">${formattedPrice}</div>
                             ${actionBtn}
-                            ${!order.status.includes('Selesai') ? `<button onclick="showOrderDetails('${order.order_id}')" class="text-xs font-bold text-blue-500 hover:text-blue-700 underline mt-2 cursor-pointer transition">Lihat Rincian Pesanan</button>` : ''}
+                            ${!safeStatus.includes('Selesai') ? `<button onclick="showOrderDetails('${order.order_id}')" class="text-xs font-bold text-blue-500 hover:text-blue-700 underline mt-2 cursor-pointer transition">Lihat Rincian Pesanan</button>` : ''}
                         </div>
                     </div>
                 </div>
@@ -1896,11 +1939,14 @@
 
             if(mappedStatus !== 'Semua') {
                 if(mappedStatus === 'Menunggu Kurir') {
-                    filtered = sellerOrders.filter(o => o.status === 'Menunggu Kurir' || o.status === 'Kurir Menuju Outlet' || o.status === 'Pesanan Diambil (Menuju Tujuan)');
+                    filtered = sellerOrders.filter(o => {
+                        const s = o.status || '';
+                        return s === 'Menunggu Kurir' || s === 'Kurir Menuju Outlet' || s === 'Pesanan Diambil (Menuju Tujuan)';
+                    });
                 } else if (mappedStatus === 'Selesai') {
-                    filtered = sellerOrders.filter(o => o.status.includes('Selesai'));
+                    filtered = sellerOrders.filter(o => (o.status || '').includes('Selesai'));
                 } else {
-                    filtered = sellerOrders.filter(o => o.status === mappedStatus);
+                    filtered = sellerOrders.filter(o => (o.status || '') === mappedStatus);
                 }
             }
 
@@ -1964,8 +2010,9 @@
             document.getElementById('order-detail-overlay').classList.remove('hidden');
             document.getElementById('order-detail-overlay').classList.add('flex');
             
+            const safeStatus = order.status || '';
             document.getElementById('detail-order-id').innerText = order.order_id;
-            document.getElementById('detail-order-status').innerText = order.status;
+            document.getElementById('detail-order-status').innerText = safeStatus;
             document.getElementById('detail-product').innerText = `${order.qty}x ${order.product_name}`;
             document.getElementById('detail-timestamp').innerText = order.timestamp || '-';
 
@@ -1985,10 +2032,10 @@
             document.getElementById('detail-buyer-address').innerText = 'Mencari alamat pengiriman...';
             
             let courierName = "Belum ada kurir";
-            if (order.status.includes('Diantar oleh')) {
-                const match = order.status.match(/Diantar oleh (.*)\)/);
+            if (safeStatus.includes('Diantar oleh')) {
+                const match = safeStatus.match(/Diantar oleh (.*)\)/);
                 if (match) courierName = match[1];
-            } else if (order.status !== 'Menunggu Konfirmasi' && order.status !== 'Belum Bayar' && order.status !== 'Menunggu Kurir') {
+            } else if (safeStatus !== 'Menunggu Konfirmasi' && safeStatus !== 'Belum Bayar' && safeStatus !== 'Menunggu Kurir') {
                 courierName = "Mitra Kurir FoodCourt Aktif";
             }
             document.getElementById('detail-courier-name').innerText = courierName;
@@ -1997,10 +2044,10 @@
             let s1 = "text-gray-400", s2 = "text-gray-400", s3 = "text-gray-400", s4 = "text-gray-400";
             let b1 = "bg-gray-200", b2 = "bg-gray-200", b3 = "bg-gray-200", b4 = "bg-gray-200";
 
-            if (order.status.includes("Konfirmasi") || order.status.includes("Belum")) { s1 = "text-brandPrimary font-bold"; b1 = "bg-brandPrimary border-brandPrimary"; }
-            else if (order.status.includes("Menunggu Kurir") || order.status.includes("Menuju Outlet")) { s1 = "text-brandPrimary font-bold"; b1 = "bg-brandPrimary border-brandPrimary"; s2 = "text-blue-500 font-bold"; b2 = "bg-blue-500 border-blue-500"; }
-            else if (order.status.includes("Tujuan") || order.status.includes("Diambil")) { s1 = "text-brandPrimary font-bold"; b1 = "bg-brandPrimary border-brandPrimary"; s2 = "text-blue-500 font-bold"; b2 = "bg-blue-500 border-blue-500"; s3 = "text-orange-500 font-bold"; b3 = "bg-orange-500 border-orange-500"; }
-            else if (order.status.includes("Selesai")) { s1 = "text-brandPrimary font-bold"; b1 = "bg-brandPrimary border-brandPrimary"; s2 = "text-blue-500 font-bold"; b2 = "bg-blue-500 border-blue-500"; s3 = "text-orange-500 font-bold"; b3 = "bg-orange-500 border-orange-500"; s4 = "text-green-600 font-bold"; b4 = "bg-green-600 border-green-600"; }
+            if (safeStatus.includes("Konfirmasi") || safeStatus.includes("Belum")) { s1 = "text-brandPrimary font-bold"; b1 = "bg-brandPrimary border-brandPrimary"; }
+            else if (safeStatus.includes("Menunggu Kurir") || safeStatus.includes("Menuju Outlet")) { s1 = "text-brandPrimary font-bold"; b1 = "bg-brandPrimary border-brandPrimary"; s2 = "text-blue-500 font-bold"; b2 = "bg-blue-500 border-blue-500"; }
+            else if (safeStatus.includes("Tujuan") || safeStatus.includes("Diambil")) { s1 = "text-brandPrimary font-bold"; b1 = "bg-brandPrimary border-brandPrimary"; s2 = "text-blue-500 font-bold"; b2 = "bg-blue-500 border-blue-500"; s3 = "text-orange-500 font-bold"; b3 = "bg-orange-500 border-orange-500"; }
+            else if (safeStatus.includes("Selesai")) { s1 = "text-brandPrimary font-bold"; b1 = "bg-brandPrimary border-brandPrimary"; s2 = "text-blue-500 font-bold"; b2 = "bg-blue-500 border-blue-500"; s3 = "text-orange-500 font-bold"; b3 = "bg-orange-500 border-orange-500"; s4 = "text-green-600 font-bold"; b4 = "bg-green-600 border-green-600"; }
 
             timeline.innerHTML = `
                 <div class="relative">
@@ -2158,12 +2205,12 @@
             
             newPrice = parseInt(newPrice);
             if (isNaN(newPrice) || newPrice <= 0) {
-                showCustomAlert("Harga tidak valid! Harap masukkan angka saja (tanpa titik/koma).", "error");
+                showCustomAlert("Harga tidak valid! Harap masukkan angka saja (tanpa titik/koma).", "Perhatian");
                 return;
             }
 
             if (newPrice === oldPrice) {
-                showCustomAlert("Harga baru tidak boleh sama dengan harga lama.", "error");
+                showCustomAlert("Harga baru tidak boleh sama dengan harga lama.", "Perhatian");
                 return;
             }
 
@@ -2183,12 +2230,12 @@
                 const result = await response.json();
                 
                 if (result.status === 'success') {
-                    showCustomAlert("Harga berhasil diubah!", "success");
+                    showCustomAlert("Harga berhasil diubah!", "Berhasil");
                 } else {
-                    showCustomAlert("Gagal mengubah harga: " + result.message, "error");
+                    showCustomAlert("Gagal mengubah harga: " + result.message, "Gagal");
                 }
             } catch (error) {
-                showCustomAlert("Koneksi ke server gagal.", "error");
+                showCustomAlert("Koneksi ke server gagal.", "Gagal");
             } finally {
                 loadSellerProducts(); 
             }
@@ -2217,12 +2264,12 @@
                 const result = await response.json();
                 
                 if (result.status === 'success') {
-                    showCustomAlert("Produk berhasil dihapus!", "success");
+                    showCustomAlert("Produk berhasil dihapus!", "Berhasil");
                 } else {
-                    showCustomAlert("Gagal menghapus produk: " + result.message, "error");
+                    showCustomAlert("Gagal menghapus produk: " + result.message, "Gagal");
                 }
             } catch (error) {
-                showCustomAlert("Koneksi ke server gagal.", "error");
+                showCustomAlert("Koneksi ke server gagal.", "Gagal");
             } finally {
                 loadSellerProducts(); 
             }
