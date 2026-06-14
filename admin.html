@@ -16,8 +16,11 @@
             theme: {
                 extend: {
                     colors: {
-                        brandPrimary: '#ee4d2d',
-                        brandPrimaryHover: '#d73211',
+                        brandPrimary: '#F25C05', /* Tangerine Orange: Segar, Bikin Lapar, Energetik */
+                        brandPrimaryHover: '#D94E04', /* Oranye Gelap untuk efek Hover */
+                        sidebarFrom: '#2E150F', /* Dark Mocha: Elegan, Premium, Nyaman */
+                        sidebarTo: '#170A07', /* Cokelat Sangat Gelap */
+                        bgMain: '#FDFCF0' /* Warm Vanilla: Bersih, hangat seperti warna roti/krim */
                     }
                 }
             }
@@ -30,9 +33,9 @@
         .btn-3d:active { transform: translateY(3px); box-shadow: 0 0px 0 0 transparent !important; }
     </style>
 </head>
-<body class="bg-[#f0f2f5] font-sans h-screen overflow-hidden flex selection:bg-orange-200 text-gray-800">
+<body class="bg-bgMain font-sans h-screen overflow-hidden flex selection:bg-orange-200 text-gray-800">
 
-    <!-- ================= LOADING OVERLAY ================= -->
+    <!-- ================= LOADING OVERLAY (Hanya untuk Muat Awal) ================= -->
     <div id="loading-overlay" class="hidden fixed inset-0 z-[150] bg-black/50 backdrop-blur-sm justify-center items-center">
         <div class="bg-white p-6 rounded-2xl shadow-2xl text-center flex flex-col items-center transform scale-105">
             <div class="w-12 h-12 rounded-full border-4 border-gray-100 border-t-brandPrimary animate-spin mb-3"></div>
@@ -40,18 +43,14 @@
         </div>
     </div>
 
-    <!-- ================= CUSTOM MODAL (AUTO-TOAST) ================= -->
-    <div id="customModal" class="hidden fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+    <!-- ================= CUSTOM MODAL (AUTO-TOAST SILENT) ================= -->
+    <div id="customModal" class="hidden fixed inset-0 z-[200] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 transition-opacity duration-300 pointer-events-none">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col transform scale-95 transition-transform duration-300" id="customModalContent">
             <div id="modalHeader" class="bg-brandPrimary text-white p-4 font-extrabold text-lg flex items-center gap-2">
                 <i class="fas fa-info-circle"></i> <span id="modalTitle">Informasi</span>
             </div>
             <div class="p-6 text-center">
-                <p id="modalMessage" class="text-gray-700 text-sm md:text-base mb-2 leading-relaxed whitespace-pre-line"></p>
-                <div class="flex justify-center gap-3 mt-4 hidden" id="modalBtnContainer">
-                    <button id="modalBtnCancel" class="btn-3d hidden flex-1 px-5 py-2.5 bg-white border-2 border-gray-200 text-gray-600 rounded-xl font-bold hover:bg-gray-50 shadow-[0_3px_0_0_#e5e7eb]">Batal</button>
-                    <button id="modalBtnConfirm" class="btn-3d flex-1 px-5 py-2.5 bg-brandPrimary text-white rounded-xl font-bold hover:bg-brandPrimaryHover shadow-[0_4px_0_0_#be3118]">OK</button>
-                </div>
+                <p id="modalMessage" class="text-gray-700 text-sm font-bold leading-relaxed whitespace-pre-line"></p>
             </div>
         </div>
     </div>
@@ -68,13 +67,13 @@
                 
                 <form onsubmit="handleAdminLogin(event)" class="flex flex-col gap-4">
                     <div class="relative">
-                        <input type="password" id="adminPass" required placeholder="Masukkan PIN Admin" class="w-full px-4 py-3.5 border-2 border-gray-100 rounded-xl outline-none focus:border-red-500 bg-gray-50 font-black text-center tracking-widest shadow-inner transition text-lg pr-10">
-                        <button type="button" onclick="togglePinVisibility('adminPass', this)" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"><i class="fas fa-eye"></i></button>
+                        <input type="password" id="adminPass" required placeholder="Masukkan PIN Admin" class="w-full px-4 py-3.5 border-2 border-gray-100 rounded-xl outline-none focus:border-brandPrimary bg-white font-black text-center tracking-widest shadow-inner transition text-lg pr-10">
+                        <button type="button" onclick="togglePinVisibility('adminPass', this)" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-brandPrimary focus:outline-none"><i class="fas fa-eye"></i></button>
                     </div>
                     <div class="text-right mt-1">
-                        <button type="button" onclick="switchAuthView('forgot')" class="text-xs text-red-500 font-bold hover:text-red-700 transition">Lupa PIN?</button>
+                        <button type="button" onclick="switchAuthView('forgot')" class="text-xs text-brandPrimary font-bold hover:text-brandPrimaryHover transition">Lupa PIN?</button>
                     </div>
-                    <button type="submit" id="btnLogin" class="btn-3d w-full bg-gradient-to-b from-[#ef4444] to-[#dc2626] text-white py-3.5 rounded-xl font-bold text-base hover:from-[#dc2626] hover:to-[#b91c1c] shadow-[0_5px_0_0_#991b1b] transition mt-2 tracking-wider">MASUK SISTEM</button>
+                    <button type="submit" id="btnLogin" class="btn-3d w-full bg-gradient-to-b from-[#ff7a2e] to-brandPrimary text-white py-3.5 rounded-xl font-bold text-base hover:from-brandPrimary hover:to-brandPrimaryHover shadow-[0_5px_0_0_#A83D02] transition mt-2 tracking-wider">MASUK SISTEM</button>
                 </form>
             </div>
         </div>
@@ -82,20 +81,20 @@
         <!-- FORGOT PIN VIEW -->
         <div id="view-forgot" class="hidden flex-col h-full justify-center items-center p-4">
             <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-8 border border-gray-100 text-center">
-                <button type="button" onclick="switchAuthView('login')" class="text-gray-500 mb-6 flex items-center gap-2 hover:text-red-500 w-fit font-bold bg-gray-100 px-4 py-2 rounded-full text-xs transition">
+                <button type="button" onclick="switchAuthView('login')" class="text-gray-500 mb-6 flex items-center gap-2 hover:text-brandPrimary w-fit font-bold bg-gray-100 px-4 py-2 rounded-full text-xs transition">
                     <i class="fas fa-arrow-left"></i> Kembali
                 </button>
-                <div class="w-16 h-16 bg-blue-50 rounded-full mx-auto flex justify-center items-center mb-4">
-                    <i class="fas fa-unlock-alt text-blue-500 text-3xl drop-shadow-sm"></i>
+                <div class="w-16 h-16 bg-orange-50 rounded-full mx-auto flex justify-center items-center mb-4 border border-orange-100">
+                    <i class="fas fa-unlock-alt text-brandPrimary text-3xl drop-shadow-sm"></i>
                 </div>
                 <h1 class="text-2xl font-black text-gray-800 tracking-tight mb-1">Lupa PIN?</h1>
                 <p class="text-xs text-gray-500 font-semibold mb-6">Masukkan email admin Anda yang terdaftar di sistem.</p>
                 
                 <form onsubmit="handleAdminForgot(event)" class="flex flex-col gap-4">
                     <div>
-                        <input type="email" id="forgotEmail" required placeholder="Email Admin Terdaftar" class="w-full px-4 py-3.5 border-2 border-gray-100 rounded-xl outline-none focus:border-blue-500 bg-gray-50 font-bold text-center shadow-inner transition text-sm">
+                        <input type="email" id="forgotEmail" required placeholder="Email Admin Terdaftar" class="w-full px-4 py-3.5 border-2 border-gray-100 rounded-xl outline-none focus:border-brandPrimary bg-white font-bold text-center shadow-inner transition text-sm">
                     </div>
-                    <button type="submit" id="btnForgot" class="btn-3d w-full bg-gradient-to-b from-[#3b82f6] to-[#2563eb] text-white py-3.5 rounded-xl font-bold text-base hover:from-[#2563eb] hover:to-[#1d4ed8] shadow-[0_5px_0_0_#1e3a8a] transition tracking-wider">KIRIM PIN KE EMAIL</button>
+                    <button type="submit" id="btnForgot" class="btn-3d w-full bg-gradient-to-b from-[#ff7a2e] to-brandPrimary text-white py-3.5 rounded-xl font-bold text-base hover:from-brandPrimary hover:to-brandPrimaryHover shadow-[0_5px_0_0_#A83D02] transition tracking-wider">KIRIM PIN KE EMAIL</button>
                 </form>
             </div>
         </div>
@@ -106,9 +105,9 @@
     <div id="app-container" class="hidden h-full w-full flex-col md:flex-row">
         
         <!-- SIDEBAR (Desktop) -->
-        <aside class="bg-gradient-to-b from-gray-900 to-gray-800 text-gray-300 w-full md:w-64 flex flex-row md:flex-col fixed bottom-0 md:relative z-50 md:z-auto h-16 md:h-full justify-around md:justify-start shadow-[0_-5px_15px_rgba(0,0,0,0.3)] md:shadow-2xl transition-all">
-            <div class="hidden md:flex flex-col items-center p-6 border-b border-gray-700 bg-black/20">
-                <img src="https://res.cloudinary.com/dmlllfubf/image/upload/v1781243016/Gemini_Generated_Image_bidjrobidjrobidj_wszrvn.png" alt="Logo" class="w-16 h-16 rounded-full object-contain border-2 border-gray-800 mb-3 shadow-lg bg-white p-1">
+        <aside class="bg-gradient-to-b from-sidebarFrom to-sidebarTo text-gray-300 w-full md:w-64 flex flex-row md:flex-col fixed bottom-0 md:relative z-50 md:z-auto h-16 md:h-full justify-around md:justify-start shadow-[0_-5px_15px_rgba(0,0,0,0.3)] md:shadow-2xl transition-all">
+            <div class="hidden md:flex flex-col items-center p-6 border-b border-white/10 bg-black/20">
+                <img src="https://res.cloudinary.com/dmlllfubf/image/upload/v1781243016/Gemini_Generated_Image_bidjrobidjrobidj_wszrvn.png" alt="Logo" class="w-16 h-16 rounded-full object-contain border-2 border-brandPrimary mb-3 shadow-lg bg-white p-1">
                 <div class="font-black text-white tracking-widest uppercase">Admin Foodcourt</div>
                 <div class="text-[10px] text-green-400 font-bold mt-1"><i class="fas fa-circle text-[8px]"></i> Server Online</div>
             </div>
@@ -126,7 +125,6 @@
                 <a href="javascript:void(0)" onclick="switchTab('drivers')" id="nav-drivers" class="nav-item flex flex-col md:flex-row items-center gap-1 md:gap-3 p-2 md:p-3 md:mx-3 rounded-xl text-gray-400 hover:bg-white/10 hover:text-white transition font-bold group flex-1 md:flex-none">
                     <i class="fas fa-motorcycle text-lg md:text-xl group-hover:scale-110 transition-transform"></i> <span class="text-[10px] md:text-sm">Mitra Kurir</span>
                 </a>
-                <!-- MENU BARU: PELANGGAN -->
                 <a href="javascript:void(0)" onclick="switchTab('buyers')" id="nav-buyers" class="nav-item flex flex-col md:flex-row items-center gap-1 md:gap-3 p-2 md:p-3 md:mx-3 rounded-xl text-gray-400 hover:bg-white/10 hover:text-white transition font-bold group flex-1 md:flex-none">
                     <i class="fas fa-users text-lg md:text-xl group-hover:scale-110 transition-transform"></i> <span class="text-[10px] md:text-sm">Pelanggan</span>
                 </a>
@@ -159,7 +157,7 @@
                             <div class="w-px h-5 bg-gray-300"></div>
                             <select id="admin-year-filter" onchange="updateDashboardStats()" class="bg-transparent text-gray-700 py-1 px-2 focus:outline-none font-bold cursor-pointer text-sm"></select>
                         </div>
-                        <button onclick="refreshAllData()" class="btn-3d bg-white border border-gray-200 text-gray-600 w-10 h-10 rounded-xl shadow-sm hover:bg-gray-50 flex items-center justify-center"><i class="fas fa-sync-alt" id="sync-spin"></i></button>
+                        <button onclick="refreshAllData(false)" class="btn-3d bg-white border border-gray-200 text-gray-600 w-10 h-10 rounded-xl shadow-sm hover:bg-gray-50 flex items-center justify-center"><i class="fas fa-sync-alt" id="sync-spin"></i></button>
                     </div>
                 </div>
                 
@@ -177,15 +175,15 @@
                         <div class="text-3xl font-black text-gray-800 flex items-center gap-2"><i class="fas fa-shopping-bag text-green-500 text-xl"></i> <span id="stat-orders">0</span></div>
                     </div>
                     
-                    <div class="bg-gradient-to-br from-blue-600 to-blue-800 p-5 rounded-2xl shadow-md border border-blue-700 flex flex-col text-white justify-between relative overflow-hidden">
-                        <i class="fas fa-truck-fast absolute -right-2 -bottom-2 text-5xl opacity-10"></i>
-                        <div class="text-[10px] font-bold text-blue-200 uppercase tracking-wider mb-2 relative z-10">Total Ongkir (Bulan Ini)</div>
+                    <div class="bg-gradient-to-br from-[#E28743] to-[#D94E04] p-5 rounded-2xl shadow-md border border-[#C64100] flex flex-col text-white justify-between relative overflow-hidden">
+                        <i class="fas fa-truck-fast absolute -right-2 -bottom-2 text-5xl opacity-20"></i>
+                        <div class="text-[10px] font-bold text-orange-100 uppercase tracking-wider mb-2 relative z-10">Total Ongkir (Bulan Ini)</div>
                         <div class="text-xl md:text-2xl font-black text-white drop-shadow-md relative z-10" id="stat-ongkir">Rp 0</div>
                     </div>
 
-                    <div class="bg-gradient-to-br from-gray-800 to-gray-900 p-5 rounded-2xl shadow-md border border-gray-700 flex flex-col text-white justify-between relative overflow-hidden col-span-2 md:col-span-1">
+                    <div class="bg-gradient-to-br from-sidebarFrom to-sidebarTo p-5 rounded-2xl shadow-md border border-[#170A07] flex flex-col text-white justify-between relative overflow-hidden col-span-2 md:col-span-1">
                         <i class="fas fa-chart-line absolute -right-2 -bottom-2 text-5xl opacity-10"></i>
-                        <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 relative z-10" id="label-income-time">Pemasukan App (Bulan Ini)</div>
+                        <div class="text-[10px] font-bold text-orange-200 uppercase tracking-wider mb-2 relative z-10" id="label-income-time">Pemasukan App (Bulan Ini)</div>
                         <div class="text-xl md:text-2xl font-black text-green-400 drop-shadow-md relative z-10" id="stat-income">Rp 0</div>
                     </div>
                 </div>
@@ -194,7 +192,7 @@
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
                     <!-- Grafik Pendapatan Harian -->
                     <div class="lg:col-span-2 bg-white p-5 md:p-6 rounded-3xl shadow-sm border border-gray-100">
-                        <h2 class="font-black text-gray-800 mb-4 flex items-center gap-2"><i class="fas fa-chart-area text-blue-500"></i> Pergerakan Pemasukan Harian</h2>
+                        <h2 class="font-black text-gray-800 mb-4 flex items-center gap-2"><i class="fas fa-chart-area text-brandPrimary"></i> Pergerakan Pemasukan Harian</h2>
                         <div class="w-full h-64">
                             <canvas id="adminIncomeChart"></canvas>
                         </div>
@@ -282,12 +280,12 @@
                             <p class="text-[10px] text-gray-500 font-semibold mb-3">Ketik PIN baru & konfirmasi untuk merubahnya.</p>
                             
                             <div class="relative mb-2">
-                                <input type="password" id="setAdminPin" required placeholder="PIN Anda" class="w-full px-4 py-3 border-2 border-white rounded-xl outline-none focus:border-red-400 font-black tracking-widest text-center text-gray-800 shadow-inner pr-10">
-                                <button type="button" onclick="togglePinVisibility('setAdminPin', this)" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"><i class="fas fa-eye"></i></button>
+                                <input type="password" id="setAdminPin" required placeholder="PIN Anda" class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl outline-none focus:border-brandPrimary font-black tracking-widest text-center text-gray-800 shadow-inner pr-10">
+                                <button type="button" onclick="togglePinVisibility('setAdminPin', this)" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-brandPrimary focus:outline-none"><i class="fas fa-eye"></i></button>
                             </div>
                             <div class="relative">
-                                <input type="password" id="confirmAdminPin" required placeholder="Konfirmasi PIN" class="w-full px-4 py-3 border-2 border-white rounded-xl outline-none focus:border-red-400 font-black tracking-widest text-center text-gray-800 shadow-inner pr-10">
-                                <button type="button" onclick="togglePinVisibility('confirmAdminPin', this)" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"><i class="fas fa-eye"></i></button>
+                                <input type="password" id="confirmAdminPin" required placeholder="Konfirmasi PIN" class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl outline-none focus:border-brandPrimary font-black tracking-widest text-center text-gray-800 shadow-inner pr-10">
+                                <button type="button" onclick="togglePinVisibility('confirmAdminPin', this)" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-brandPrimary focus:outline-none"><i class="fas fa-eye"></i></button>
                             </div>
                             
                             <p id="pin-error-msg" class="text-[10px] text-red-500 font-bold mt-1.5 hidden animate-pulse"><i class="fas fa-exclamation-triangle"></i> Konfirmasi PIN tidak cocok!</p>
@@ -295,7 +293,7 @@
                     </div>
 
                     <div class="mt-8 pt-6 border-t border-gray-100 flex justify-end">
-                        <button type="submit" id="btnSaveSettings" class="btn-3d w-full md:w-auto bg-gradient-to-b from-[#f36b4e] to-brandPrimary text-white px-8 py-3.5 rounded-xl font-black shadow-[0_4px_0_0_#be3118] hover:from-[#f05c3d] hover:to-brandPrimaryHover transition flex items-center justify-center gap-2"><i class="fas fa-save"></i> SIMPAN PENGATURAN</button>
+                        <button type="submit" id="btnSaveSettings" class="btn-3d w-full md:w-auto bg-gradient-to-b from-[#ff7a2e] to-brandPrimary text-white px-8 py-3.5 rounded-xl font-black shadow-[0_4px_0_0_#A83D02] hover:from-brandPrimary hover:to-brandPrimaryHover transition flex items-center justify-center gap-2"><i class="fas fa-save"></i> SIMPAN PENGATURAN</button>
                     </div>
                 </form>
             </section>
@@ -368,6 +366,32 @@
                     </div>
                 </div>
 
+                <!-- BUYER ANALYTICS DASHBOARD -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                        <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Pelanggan Aktif</div>
+                        <div class="text-3xl font-black text-brandPrimary" id="stat-active-buyers">0</div>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                        <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Total Transaksi Selesai</div>
+                        <div class="text-3xl font-black text-blue-500" id="stat-buyer-transactions">0</div>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                        <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Rata-rata Pengeluaran</div>
+                        <div class="text-3xl font-black text-green-500" id="stat-buyer-avg-spent">Rp 0</div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 mb-6 flex flex-col max-h-[350px]">
+                    <h2 class="font-black text-gray-800 mb-4 flex items-center gap-2 border-b pb-3">
+                        <i class="fas fa-crown text-yellow-500"></i> Top Pelanggan (Potensi Promo)
+                    </h2>
+                    <div class="flex-1 overflow-y-auto pr-2 hide-scrollbar" id="buyer-analytics-list">
+                        <!-- Top buyers diinjeksi via JS -->
+                    </div>
+                </div>
+
+                <!-- TABLE BUYERS -->
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse">
@@ -404,8 +428,9 @@
         let localMaxOngkir = 50000;
         let localMaxOngkirMulti = 75000;
         let adminIncomeChart = null;
+        let syncIntervalAdmin;
 
-        // --- CUSTOM MODAL SYSTEM (AUTO-TOAST) ---
+        // --- CUSTOM MODAL SYSTEM (AUTO-TOAST SILENT) ---
         function openModalAnim() {
             const m = document.getElementById('customModal');
             const c = document.getElementById('customModalContent');
@@ -428,36 +453,12 @@
                 document.getElementById('modalHeader').innerHTML = `<i class="fas fa-info-circle"></i> <span id="modalTitle">${title}</span>`;
                 document.getElementById('modalMessage').innerText = message;
                 
-                const btnContainer = document.getElementById('modalBtnContainer');
-                if (btnContainer) btnContainer.classList.add('hidden');
-                
                 openModalAnim();
 
                 setTimeout(() => {
                     closeModalAnim();
                     resolve(true);
                 }, 2000);
-            });
-        }
-
-        function showCustomConfirm(message, title = "Konfirmasi") {
-            return new Promise((resolve) => {
-                document.getElementById('modalHeader').innerHTML = `<i class="fas fa-question-circle"></i> <span id="modalTitle">${title}</span>`;
-                document.getElementById('modalMessage').innerText = message;
-                
-                const btnContainer = document.getElementById('modalBtnContainer');
-                if (btnContainer) btnContainer.classList.remove('hidden');
-                
-                const btnCancel = document.getElementById('modalBtnCancel');
-                if (btnCancel) btnCancel.classList.remove('hidden');
-                
-                const btnConfirm = document.getElementById('modalBtnConfirm');
-                if (btnConfirm) btnConfirm.innerText = "Ya, Lanjutkan";
-                
-                openModalAnim();
-                
-                btnConfirm.onclick = () => { closeModalAnim(); resolve(true); };
-                btnCancel.onclick = () => { closeModalAnim(); resolve(false); };
             });
         }
 
@@ -547,7 +548,14 @@
                 document.getElementById('app-container').classList.remove('hidden');
                 document.getElementById('app-container').classList.add('flex');
                 switchTab('dashboard');
-                refreshAllData();
+                
+                // Initial Load
+                refreshAllData(false);
+                
+                // Background Sync setiap 10 detik
+                syncIntervalAdmin = setInterval(() => {
+                    refreshAllData(true);
+                }, 10000);
             }
         });
 
@@ -596,12 +604,14 @@
                     document.getElementById('app-container').classList.remove('hidden');
                     document.getElementById('app-container').classList.add('flex');
                     switchTab('dashboard');
-                    refreshAllData();
+                    refreshAllData(false);
+                    
+                    syncIntervalAdmin = setInterval(() => refreshAllData(true), 10000);
                 } else {
-                    alert(res.message); 
+                    showCustomAlert(res.message, "Gagal"); 
                 }
             } catch (error) {
-                alert("Gagal menghubungi server. Pastikan koneksi internet stabil atau Apps Script sudah di-Deploy ulang.");
+                showCustomAlert("Gagal menghubungi server. Pastikan koneksi internet stabil.", "Gagal");
             } finally {
                 btn.innerHTML = 'MASUK SISTEM';
                 btn.disabled = false;
@@ -621,24 +631,22 @@
                     body: JSON.stringify({ action: 'adminForgotPin', type: 'admin_settings', email: email })
                 });
                 const res = await response.json();
-                alert(res.message);
+                showCustomAlert(res.message, res.status === 'success' ? 'Berhasil' : 'Gagal');
                 if(res.status === 'success') {
                     switchAuthView('login');
                     document.getElementById('forgotEmail').value = '';
                 }
             } catch (error) {
-                alert("Gagal menghubungi server.");
+                showCustomAlert("Gagal menghubungi server.", "Error");
             } finally {
                 btn.innerHTML = 'KIRIM PIN KE EMAIL';
                 btn.disabled = false;
             }
         }
 
-        async function handleLogout() {
-            if(await showCustomConfirm('Yakin ingin keluar dari Dashboard Admin?')) {
-                localStorage.removeItem('foodcourt_admin_auth');
-                window.location.reload();
-            }
+        function handleLogout() {
+            localStorage.removeItem('foodcourt_admin_auth');
+            window.location.reload();
         }
 
         function switchTab(tabId) {
@@ -661,18 +669,21 @@
             }
         }
 
-        async function refreshAllData() {
+        async function refreshAllData(isBackground = false) {
             const spin = document.getElementById('sync-spin');
-            spin.classList.add('fa-spin');
-            document.getElementById('loading-overlay').classList.remove('hidden');
-            document.getElementById('loading-overlay').classList.add('flex');
+            if(spin) spin.classList.add('fa-spin');
+            
+            if(!isBackground) {
+                document.getElementById('loading-overlay').classList.remove('hidden');
+                document.getElementById('loading-overlay').classList.add('flex');
+            }
 
             try {
                 const promises = [
                     fetch(`${GAS_WEB_APP_URL}?action=getData&type=users_sellers`).then(r => r.json()),
                     fetch(`${GAS_WEB_APP_URL}?action=getData&type=users_drivers`).then(r => r.json()),
                     fetch(`${GAS_WEB_APP_URL}?action=getData&type=orders`).then(r => r.json()),
-                    fetch(`${GAS_WEB_APP_URL}?action=getData&type=users_buyers`).then(r => r.json()), // Fetch pembeli
+                    fetch(`${GAS_WEB_APP_URL}?action=getData&type=users_buyers`).then(r => r.json()), 
                     fetch(GAS_WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getAdminSettings', type: 'admin_settings' }) }).then(r => r.json())
                 ];
                 
@@ -691,8 +702,11 @@
                     document.getElementById('setLayanan').value = set.fee_layanan || 1000;
                     document.getElementById('setMaxDistance').value = set.max_distance || 15;
                     document.getElementById('setAdminEmail').value = set.admin_email || '';
-                    document.getElementById('setAdminPin').value = set.admin_pin || '';
-                    document.getElementById('confirmAdminPin').value = set.admin_pin || '';
+                    // Jangan update input password jika background sync agar tidak menimpa ketikan user
+                    if(!isBackground) {
+                        document.getElementById('setAdminPin').value = set.admin_pin || '';
+                        document.getElementById('confirmAdminPin').value = set.admin_pin || '';
+                    }
                     
                     localFeeLayanan = parseInt(set.fee_layanan) || 1000;
                     localFeeOngkir = parseInt(set.fee_ongkir) || 2000;
@@ -701,19 +715,22 @@
                 }
 
                 updateDashboardStats();
+                updateBuyerAnalytics(); // Fungsi analitik pembeli
                 renderSellersTable();
                 renderDriversTable();
-                renderBuyersTable(); // Render tabel pembeli
+                renderBuyersTable(); 
 
                 const now = new Date();
                 document.getElementById('last-sync-time').innerText = `Update terakhir: ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
 
             } catch (error) {
-                alert("Gagal menarik data dari server.");
+                if(!isBackground) showCustomAlert("Gagal menarik data dari server.", "Error");
             } finally {
-                spin.classList.remove('fa-spin');
-                document.getElementById('loading-overlay').classList.add('hidden');
-                document.getElementById('loading-overlay').classList.remove('flex');
+                if(spin) spin.classList.remove('fa-spin');
+                if(!isBackground) {
+                    document.getElementById('loading-overlay').classList.add('hidden');
+                    document.getElementById('loading-overlay').classList.remove('flex');
+                }
             }
         }
 
@@ -788,6 +805,84 @@
             renderStoreBreakdown(incomeByStore);
         }
 
+        // --- DASHBOARD ANALITIK PEMBELI ---
+        function updateBuyerAnalytics() {
+            let activeCount = ALL_BUYERS.filter(b => b.status !== 'Suspend' && b.status !== 'Nonaktif').length;
+            document.getElementById('stat-active-buyers').innerText = activeCount;
+
+            let buyerStats = {}; 
+
+            let totalSpentAll = 0;
+            let totalOrdersAll = 0;
+
+            ALL_ORDERS.forEach(o => {
+                if(o.status.includes('Selesai')) {
+                    if(!buyerStats[o.user_id]) {
+                        buyerStats[o.user_id] = { totalSpent: 0, orderCount: 0 };
+                    }
+                    let orderTotal = parseInt(o.total_price) || 0;
+                    buyerStats[o.user_id].totalSpent += orderTotal;
+                    buyerStats[o.user_id].orderCount += 1;
+
+                    totalSpentAll += orderTotal;
+                    totalOrdersAll += 1;
+                }
+            });
+
+            document.getElementById('stat-buyer-transactions').innerText = totalOrdersAll;
+            let avgSpent = activeCount > 0 ? (totalSpentAll / activeCount) : 0;
+            document.getElementById('stat-buyer-avg-spent').innerText = `Rp ${Math.round(avgSpent).toLocaleString('id-ID')}`;
+
+            let combinedBuyers = ALL_BUYERS.map(b => {
+                let stats = buyerStats[b.user_id] || { totalSpent: 0, orderCount: 0 };
+                return {
+                    ...b,
+                    totalSpent: stats.totalSpent,
+                    orderCount: stats.orderCount
+                };
+            });
+
+            combinedBuyers.sort((a, b) => b.totalSpent - a.totalSpent);
+
+            const container = document.getElementById('buyer-analytics-list');
+            container.innerHTML = '';
+
+            if (combinedBuyers.length === 0) {
+                container.innerHTML = '<div class="text-center text-gray-400 font-bold py-10">Belum ada data pelanggan.</div>';
+                return;
+            }
+
+            combinedBuyers.forEach((b, index) => {
+                if(b.totalSpent === 0) return; // Hide zero spenders from leaderboard
+
+                let rankColor = 'text-gray-400';
+                let rankIcon = '';
+                if (index === 0) { rankColor = 'text-yellow-500'; rankIcon = '<i class="fas fa-crown"></i> '; }
+                else if (index === 1) { rankColor = 'text-gray-400'; rankIcon = '<i class="fas fa-medal"></i> '; }
+                else if (index === 2) { rankColor = 'text-amber-700'; rankIcon = '<i class="fas fa-medal"></i> '; }
+
+                let tier = "Reguler";
+                let tierColor = "bg-gray-100 text-gray-600";
+                if (b.totalSpent >= 1000000) { tier = "Sultan"; tierColor = "bg-purple-100 text-purple-700 border-purple-200"; }
+                else if (b.totalSpent >= 500000) { tier = "Loyal"; tierColor = "bg-blue-100 text-blue-700 border-blue-200"; }
+                else if (b.totalSpent >= 100000) { tier = "Aktif"; tierColor = "bg-green-100 text-green-700 border-green-200"; }
+
+                const html = `
+                    <div class="flex justify-between items-center py-3 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition px-2 rounded-xl">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 font-black ${rankColor} text-lg text-center">${rankIcon || (index+1)}</div>
+                            <div class="flex flex-col">
+                                <div class="font-extrabold text-gray-700 text-sm line-clamp-1">${b.username || 'Anonim'} <span class="text-[10px] px-1.5 py-0.5 rounded border ${tierColor} ml-1">${tier}</span></div>
+                                <div class="text-[10px] font-bold text-gray-400 mt-0.5"><i class="fas fa-shopping-bag"></i> ${b.orderCount} Pesanan Selesai</div>
+                            </div>
+                        </div>
+                        <div class="font-black text-brandPrimary text-sm">Rp ${b.totalSpent.toLocaleString('id-ID')}</div>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', html);
+            });
+        }
+
         function renderAdminChart(incomeByDate) {
             const ctx = document.getElementById('adminIncomeChart');
             if(!ctx) return;
@@ -804,10 +899,10 @@
                     datasets: [{
                         label: 'Pemasukan Aplikasi (Rp)',
                         data: data,
-                        borderColor: '#3b82f6', 
-                        backgroundColor: 'rgba(59, 130, 246, 0.15)',
+                        borderColor: '#F25C05', 
+                        backgroundColor: 'rgba(242, 92, 5, 0.15)',
                         borderWidth: 3,
-                        pointBackgroundColor: '#2563eb',
+                        pointBackgroundColor: '#D94E04',
                         pointBorderColor: '#ffffff',
                         pointBorderWidth: 2,
                         pointRadius: 5,
@@ -1001,20 +1096,29 @@
 
         async function toggleSuspend(userId, sheetType, currentStatus) {
             const newStatus = (currentStatus === 'Suspend' || currentStatus === 'Nonaktif') ? 'Aktif' : 'Suspend';
-            const actionText = newStatus === 'Suspend' ? 'Membekukan (Suspend)' : 'Mengaktifkan';
             
-            if(!(await showCustomConfirm(`Yakin ingin ${actionText} akun ini?`))) return;
-
-            document.getElementById('loading-overlay').classList.remove('hidden');
-            document.getElementById('loading-overlay').classList.add('flex');
-            document.getElementById('loading-text').innerText = "Memperbarui Database...";
+            // OPTIMISTIC UI: Langsung ubah warna tombol di layar tanpa loading panjang
+            if(sheetType === 'users_sellers') {
+                const idx = ALL_SELLERS.findIndex(s => s.seller_id === userId);
+                if(idx > -1) ALL_SELLERS[idx].status = newStatus;
+                renderSellersTable();
+            } else if(sheetType === 'users_drivers') {
+                const idx = ALL_DRIVERS.findIndex(d => d.driver_id === userId);
+                if(idx > -1) ALL_DRIVERS[idx].status = newStatus;
+                renderDriversTable();
+            } else if(sheetType === 'users_buyers') {
+                const idx = ALL_BUYERS.findIndex(b => b.user_id === userId);
+                if(idx > -1) ALL_BUYERS[idx].status = newStatus;
+                renderBuyersTable();
+            }
 
             try {
+                // Background execution
                 const response = await fetch(GAS_WEB_APP_URL, {
                     method: 'POST',
                     body: JSON.stringify({ 
                         action: 'updateAccountStatus', 
-                        type: 'admin_settings', 
+                        type: sheetType, 
                         userType: sheetType, 
                         userId: userId, 
                         newStatus: newStatus 
@@ -1023,29 +1127,13 @@
                 
                 const res = await response.json();
                 
-                if(res.status === 'success') {
-                    if(sheetType === 'users_sellers') {
-                        const idx = ALL_SELLERS.findIndex(s => s.seller_id === userId);
-                        if(idx > -1) ALL_SELLERS[idx].status = newStatus;
-                        renderSellersTable();
-                    } else if(sheetType === 'users_drivers') {
-                        const idx = ALL_DRIVERS.findIndex(d => d.driver_id === userId);
-                        if(idx > -1) ALL_DRIVERS[idx].status = newStatus;
-                        renderDriversTable();
-                    } else if(sheetType === 'users_buyers') {
-                        const idx = ALL_BUYERS.findIndex(b => b.user_id === userId);
-                        if(idx > -1) ALL_BUYERS[idx].status = newStatus;
-                        renderBuyersTable();
-                    }
-                    alert(res.message);
-                } else {
-                    alert("Gagal melakukan aksi: " + res.message);
+                if(res.status !== 'success') {
+                    showCustomAlert("Gagal melakukan aksi: " + res.message, "Error");
+                    refreshAllData(true); // Revert jika gagal
                 }
             } catch(e) {
-                alert("Gagal menghubungi server database.");
-            } finally {
-                document.getElementById('loading-overlay').classList.add('hidden');
-                document.getElementById('loading-overlay').classList.remove('flex');
+                showCustomAlert("Gagal menghubungi server database.", "Error");
+                refreshAllData(true); // Revert jika gagal
             }
         }
 
@@ -1073,7 +1161,7 @@
             }
 
             const btn = document.getElementById('btnSaveSettings');
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan ke Database...';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
             btn.disabled = true;
             
             const settingsObj = {
@@ -1094,17 +1182,17 @@
                 const res = await response.json();
                 
                 if(res.status === 'success') {
-                    alert("Profil Admin & Pengaturan Tarif berhasil disimpan secara permanen!");
+                    showCustomAlert("Profil Admin & Pengaturan Tarif berhasil disimpan secara permanen!", "Berhasil");
                     localFeeLayanan = parseInt(settingsObj.fee_layanan) || 1000;
                     localFeeOngkir = parseInt(settingsObj.fee_ongkir) || 2000;
                     localMaxOngkir = parseInt(settingsObj.max_ongkir) || 50000;
                     localMaxOngkirMulti = parseInt(settingsObj.max_ongkir_multi) || 75000;
                     updateDashboardStats(); 
                 } else {
-                    alert("Gagal menyimpan: " + res.message);
+                    showCustomAlert("Gagal menyimpan: " + res.message, "Gagal");
                 }
             } catch(error) {
-                alert("Koneksi internet terputus atau server gagal merespons.");
+                showCustomAlert("Koneksi internet terputus atau server gagal merespons.", "Gagal");
             } finally {
                 btn.innerHTML = '<i class="fas fa-save"></i> SIMPAN PENGATURAN';
                 btn.disabled = false;
