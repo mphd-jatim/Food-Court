@@ -970,16 +970,31 @@
             tbody.innerHTML = '';
             
             if(ALL_SELLERS.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="text-center py-6">Belum ada data toko</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center py-6 text-gray-400 font-bold">Belum ada data toko</td></tr>';
                 return;
             }
 
             ALL_SELLERS.forEach(s => {
                 const isSuspend = s.status === 'Suspend' || s.status === 'Nonaktif';
-                const badgeClass = isSuspend ? 'bg-red-100 text-red-600 border-red-200' : 'bg-green-100 text-green-700 border-green-200';
-                const btnColor = isSuspend ? 'bg-green-50 text-green-600 hover:bg-green-100 border-green-200' : 'bg-red-50 text-red-600 hover:bg-red-100 border-red-200';
-                const btnText = isSuspend ? 'Aktifkan' : 'Suspend';
-                const btnIcon = isSuspend ? 'fa-check' : 'fa-ban';
+                const isPending = s.status === 'Menunggu Validasi';
+                
+                let badgeClass = 'bg-green-100 text-green-700 border-green-200'; // Untuk Aktif
+                if (isSuspend) badgeClass = 'bg-red-100 text-red-600 border-red-200';
+                else if (isPending) badgeClass = 'bg-yellow-100 text-yellow-700 border-yellow-200';
+
+                let btnColor = 'bg-red-50 text-red-600 hover:bg-red-100 border-red-200'; // Default Suspend
+                let btnText = 'Suspend';
+                let btnIcon = 'fa-ban';
+
+                if (isSuspend) {
+                    btnColor = 'bg-green-50 text-green-600 hover:bg-green-100 border-green-200';
+                    btnText = 'Aktifkan';
+                    btnIcon = 'fa-check';
+                } else if (isPending) {
+                    btnColor = 'bg-blue-50 text-blue-600 hover:bg-blue-100 border-blue-200';
+                    btnText = 'Setujui';
+                    btnIcon = 'fa-user-check';
+                }
 
                 const tr = `
                 <tr class="hover:bg-gray-50 transition border-b border-gray-100 search-row">
@@ -1015,10 +1030,25 @@
 
             ALL_DRIVERS.forEach(d => {
                 const isSuspend = d.status === 'Suspend' || d.status === 'Nonaktif';
-                const badgeClass = isSuspend ? 'bg-red-100 text-red-600 border-red-200' : 'bg-green-100 text-green-700 border-green-200';
-                const btnColor = isSuspend ? 'bg-green-50 text-green-600 hover:bg-green-100 border-green-200' : 'bg-red-50 text-red-600 hover:bg-red-100 border-red-200';
-                const btnText = isSuspend ? 'Aktifkan' : 'Suspend';
-                const btnIcon = isSuspend ? 'fa-check' : 'fa-ban';
+                const isPending = d.status === 'Menunggu Validasi';
+                
+                let badgeClass = 'bg-green-100 text-green-700 border-green-200'; // Untuk Aktif
+                if (isSuspend) badgeClass = 'bg-red-100 text-red-600 border-red-200';
+                else if (isPending) badgeClass = 'bg-yellow-100 text-yellow-700 border-yellow-200';
+
+                let btnColor = 'bg-red-50 text-red-600 hover:bg-red-100 border-red-200'; // Default Suspend
+                let btnText = 'Suspend';
+                let btnIcon = 'fa-ban';
+
+                if (isSuspend) {
+                    btnColor = 'bg-green-50 text-green-600 hover:bg-green-100 border-green-200';
+                    btnText = 'Aktifkan';
+                    btnIcon = 'fa-check';
+                } else if (isPending) {
+                    btnColor = 'bg-blue-50 text-blue-600 hover:bg-blue-100 border-blue-200';
+                    btnText = 'Setujui';
+                    btnIcon = 'fa-user-check';
+                }
 
                 const tr = `
                 <tr class="hover:bg-gray-50 transition border-b border-gray-100 search-row">
@@ -1095,7 +1125,18 @@
         }
 
         async function toggleSuspend(userId, sheetType, currentStatus) {
-            const newStatus = (currentStatus === 'Suspend' || currentStatus === 'Nonaktif') ? 'Aktif' : 'Suspend';
+            let newStatus = 'Suspend';
+            let actionText = 'Membekukan (Suspend)';
+            
+            if (currentStatus === 'Suspend' || currentStatus === 'Nonaktif') {
+                newStatus = 'Aktif';
+                actionText = 'Mengaktifkan';
+            } else if (currentStatus === 'Menunggu Validasi') {
+                newStatus = 'Aktif';
+                actionText = 'Menyetujui (Approve)';
+            }
+            
+            if(!(await showCustomConfirm(`Yakin ingin ${actionText} akun ini?`, "Konfirmasi"))) return;
             
             // OPTIMISTIC UI: Langsung ubah warna tombol di layar tanpa loading panjang
             if(sheetType === 'users_sellers') {
