@@ -1053,6 +1053,14 @@
                 const res = await response.json();
                 
                 if(res.status === 'success') {
+                    // BLOK: Pengecekan Akun Menunggu Validasi
+                    if (res.user.status === 'Menunggu Validasi') {
+                        await showCustomAlert("Akun Anda sedang dalam tahap validasi (Maksimal 1x24 Jam). Mohon tunggu persetujuan Admin sebelum dapat masuk ke sistem.", "Perhatian");
+                        btn.innerHTML = 'LOG IN';
+                        btn.disabled = false;
+                        return;
+                    }
+
                     if (res.user.status === 'Suspend' || res.user.status === 'Nonaktif') {
                         await showCustomAlert("Akun Anda sedang dibekukan oleh Admin. Silakan hubungi Admin.", "error");
                         btn.innerHTML = 'LOG IN';
@@ -1166,8 +1174,9 @@
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin drop-shadow-md"></i> Menyimpan Data...';
                 const newId = "DRV-" + Math.floor(Math.random() * 100000);
                 
+                // BLOK: Status default diubah menjadi Menunggu Validasi
                 const rowData = [
-                    newId, name, nik, phone, email, pass, vehicle, plate, urlKtp, urlFace, "Aktif"
+                    newId, name, nik, phone, email, pass, vehicle, plate, urlKtp, urlFace, "Menunggu Validasi"
                 ];
                 
                 const response = await fetch(GAS_WEB_APP_URL, {
@@ -1177,7 +1186,7 @@
                 const res = await response.json();
                 
                 if(res.status === 'success') {
-                    await showCustomAlert("Registrasi Berhasil! Akun sedang direview, silakan login.", "success");
+                    await showCustomAlert("Registrasi Berhasil! Data Anda sedang divalidasi oleh tim kami (Maksimal 1x24 Jam). Silakan coba Log In secara berkala.", "success");
                     switchAuthView('login');
                     e.target.reset();
                 } else {
