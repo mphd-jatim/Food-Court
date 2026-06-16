@@ -1397,6 +1397,14 @@
                 const res = await response.json();
                 
                 if(res.status === 'success') {
+                    // BLOK: Pengecekan Akun Menunggu Validasi
+                    if (res.user.status === 'Menunggu Validasi') {
+                        await showCustomAlert("Akun Toko Anda sedang dalam tahap validasi (Maksimal 1x24 Jam). Mohon tunggu persetujuan Admin sebelum dapat masuk ke sistem.", "Perhatian");
+                        btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Masuk';
+                        btn.disabled = false;
+                        return;
+                    }
+
                     if (res.user.status === 'Suspend' || res.user.status === 'Nonaktif') {
                         await showCustomAlert("Akun Toko Anda sedang dibekukan. Silakan hubungi Admin.", "Perhatian");
                         btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Masuk';
@@ -1454,6 +1462,12 @@
                     const res = await response.json();
                     
                     if (res.status === 'success') {
+                        // BLOK: Pengecekan Akun Menunggu Validasi (Google Login)
+                        if (res.user.status === 'Menunggu Validasi') {
+                            await showCustomAlert("Akun Toko Anda sedang dalam tahap validasi (Maksimal 1x24 Jam). Mohon tunggu persetujuan Admin sebelum dapat masuk ke sistem.", "Perhatian");
+                            return;
+                        }
+
                         if (res.user.status === 'Suspend' || res.user.status === 'Nonaktif') {
                             await showCustomAlert("Akun Toko Anda sedang dibekukan. Silakan hubungi Admin.", "Perhatian");
                             return;
@@ -1553,8 +1567,10 @@
 
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan Data...';
                 const newId = "SEL-" + Math.floor(Math.random() * 100000);
+                
+                // BLOK: Status awal diubah menjadi "Menunggu Validasi"
                 const rowData = [
-                    newId, storeName, storeAddress, ownerName, nik, email, phone, password, bankName || "-", bankAccount || "-", ktpUrl, lat, lng
+                    newId, storeName, storeAddress, ownerName, nik, email, phone, password, bankName || "-", bankAccount || "-", ktpUrl, lat, lng, "Menunggu Validasi"
                 ];
 
                 const response = await fetch(GAS_WEB_APP_URL, {
@@ -1564,7 +1580,7 @@
                 const res = await response.json();
                 
                 if(res.status === 'success') {
-                    window.alert("Pendaftaran Toko Berhasil! Silakan masuk menggunakan Email dan Password yang baru saja Anda buat.");
+                    await showCustomAlert("Pendaftaran Toko Berhasil!\nData Anda sedang divalidasi oleh tim Admin (Maksimal 1x24 Jam). Silakan coba Log In secara berkala.", "Berhasil");
                     switchAuthView('login');
                     e.target.reset();
                 } else {
