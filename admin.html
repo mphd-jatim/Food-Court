@@ -16,11 +16,11 @@
             theme: {
                 extend: {
                     colors: {
-                        brandPrimary: '#F25C05', /* Tangerine Orange: Segar, Bikin Lapar, Energetik */
-                        brandPrimaryHover: '#D94E04', /* Oranye Gelap untuk efek Hover */
-                        sidebarFrom: '#2E150F', /* Dark Mocha: Elegan, Premium, Nyaman */
-                        sidebarTo: '#170A07', /* Cokelat Sangat Gelap */
-                        bgMain: '#FDFCF0' /* Warm Vanilla: Bersih, hangat seperti warna roti/krim */
+                        brandPrimary: '#F25C05', 
+                        brandPrimaryHover: '#D94E04', 
+                        sidebarFrom: '#2E150F', 
+                        sidebarTo: '#170A07', 
+                        bgMain: '#FDFCF0' 
                     }
                 }
             }
@@ -57,7 +57,6 @@
 
     <!-- ================= AUTHENTICATION VIEWS ================= -->
     <div id="auth-container" class="absolute inset-0 bg-white z-[100] flex flex-col w-full h-full overflow-y-auto">
-        
         <!-- LOGIN VIEW -->
         <div id="view-login" class="flex flex-col h-full justify-center items-center p-4">
             <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-8 border border-gray-100 text-center">
@@ -98,7 +97,6 @@
                 </form>
             </div>
         </div>
-
     </div>
 
     <!-- ================= MAIN DASHBOARD ================= -->
@@ -118,6 +116,9 @@
                 </a>
                 <a href="javascript:void(0)" onclick="switchTab('settings')" id="nav-settings" class="nav-item flex flex-col md:flex-row items-center gap-1 md:gap-3 p-2 md:p-3 md:mx-3 rounded-xl text-gray-400 hover:bg-white/10 hover:text-white transition font-bold group flex-1 md:flex-none">
                     <i class="fas fa-user-cog text-lg md:text-xl group-hover:scale-110 transition-transform"></i> <span class="text-[10px] md:text-sm">Profil & Tarif</span>
+                </a>
+                <a href="javascript:void(0)" onclick="switchTab('categories')" id="nav-categories" class="nav-item flex flex-col md:flex-row items-center gap-1 md:gap-3 p-2 md:p-3 md:mx-3 rounded-xl text-gray-400 hover:bg-white/10 hover:text-white transition font-bold group flex-1 md:flex-none">
+                    <i class="fas fa-tags text-lg md:text-xl group-hover:scale-110 transition-transform"></i> <span class="text-[10px] md:text-sm">Kategori</span>
                 </a>
                 <a href="javascript:void(0)" onclick="switchTab('sellers')" id="nav-sellers" class="nav-item flex flex-col md:flex-row items-center gap-1 md:gap-3 p-2 md:p-3 md:mx-3 rounded-xl text-gray-400 hover:bg-white/10 hover:text-white transition font-bold group flex-1 md:flex-none">
                     <i class="fas fa-store text-lg md:text-xl group-hover:scale-110 transition-transform"></i> <span class="text-[10px] md:text-sm">Mitra Toko</span>
@@ -190,7 +191,6 @@
 
                 <!-- GRAFIK & RINCIAN TOKO -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                    <!-- Grafik Pendapatan Harian -->
                     <div class="lg:col-span-2 bg-white p-5 md:p-6 rounded-3xl shadow-sm border border-gray-100">
                         <h2 class="font-black text-gray-800 mb-4 flex items-center gap-2"><i class="fas fa-chart-area text-brandPrimary"></i> Pergerakan Pemasukan Harian</h2>
                         <div class="w-full h-64">
@@ -198,103 +198,99 @@
                         </div>
                     </div>
 
-                    <!-- Leaderboard Rincian per Toko -->
                     <div class="bg-white p-5 md:p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col max-h-[350px]">
                         <h2 class="font-black text-gray-800 mb-4 flex items-center justify-between border-b pb-3">
                             <span class="flex items-center gap-2"><i class="fas fa-trophy text-yellow-500"></i> Pemasukan per Toko</span>
                         </h2>
                         <div class="flex-1 overflow-y-auto pr-2 hide-scrollbar" id="store-income-breakdown">
                             <!-- List toko diinjeksi via JS -->
-                            <div class="text-center text-gray-400 font-bold py-10">Memuat rincian...</div>
                         </div>
                     </div>
                 </div>
+            </section>
 
+            <!-- SECTION: KATEGORI PRODUK -->
+            <section id="section-categories" class="hidden">
+                <div class="flex flex-col md:flex-row justify-between md:items-center mb-6 gap-3">
+                    <div>
+                        <h1 class="text-2xl font-black text-gray-800 tracking-tight">Kategori Makanan</h1>
+                        <p class="text-sm font-bold text-gray-500 mt-1">Atur kategori yang tersedia untuk dipilih Toko saat menambah produk.</p>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 mb-6 flex flex-col md:flex-row gap-4 items-end">
+                    <div class="w-full md:flex-1">
+                        <label class="block text-xs font-black text-gray-800 mb-1 uppercase tracking-wider">Tambah Kategori Baru</label>
+                        <input type="text" id="newCatName" placeholder="Contoh: Seafood, Minuman Dingin..." class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl outline-none focus:border-brandPrimary font-bold text-gray-800 shadow-inner text-sm">
+                    </div>
+                    <button onclick="addNewCategory()" class="btn-3d w-full md:w-auto bg-gradient-to-b from-blue-500 to-blue-700 text-white px-8 py-3.5 rounded-xl font-black shadow-[0_4px_0_0_#1d4ed8] hover:from-blue-600 hover:to-blue-800 transition flex items-center justify-center gap-2"><i class="fas fa-plus"></i> Tambah Kategori</button>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-gray-50 text-gray-500 text-[10px] uppercase tracking-wider border-b border-gray-200">
+                                    <th class="p-4 font-black">Nama Kategori</th>
+                                    <th class="p-4 font-black">ID (Database)</th>
+                                    <th class="p-4 font-black text-center">Status</th>
+                                    <th class="p-4 font-black text-right">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="categories-tbody" class="text-sm divide-y divide-gray-100">
+                                <!-- Data render here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </section>
 
             <!-- SECTION: PENGATURAN -->
             <section id="section-settings" class="hidden">
-                <h1 class="text-2xl font-black text-gray-800 mb-2 tracking-tight">Profil & Pengaturan Sistem</h1>
-                <p class="text-sm font-bold text-gray-500 mb-6">Kelola tarif biaya dan kredensial akses profil admin Anda.</p>
-                
-                <form onsubmit="saveSettings(event)" class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 max-w-2xl">
-                    
-                    <h2 class="text-lg font-black text-gray-800 tracking-tight border-b border-gray-100 pb-2 mb-4">Skema Biaya & Tarif</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                        <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                            <label class="block text-xs font-black text-blue-800 mb-1 uppercase tracking-wider"><i class="fas fa-motorcycle mr-1"></i> Ongkir Dasar (Per KM)</label>
-                            <p class="text-[10px] text-blue-600 font-semibold mb-3">Tarif dasar pengiriman kurir.</p>
-                            <div class="flex items-center">
-                                <span class="bg-white border-y-2 border-l-2 border-white text-gray-500 font-bold px-4 py-3 rounded-l-xl">Rp</span>
-                                <input type="number" id="setOngkir" required class="w-full px-4 py-3 border-2 border-white rounded-r-xl outline-none focus:border-blue-500 font-black text-gray-800 shadow-inner">
-                            </div>
-                        </div>
-
-                        <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
-                            <label class="block text-xs font-black text-indigo-800 mb-1 uppercase tracking-wider"><i class="fas fa-shield-alt mr-1"></i> Maksimal Ongkir (1 Toko)</label>
-                            <p class="text-[10px] text-indigo-600 font-semibold mb-3">Batas mentok tarif kurir jika pesan dari 1 toko.</p>
-                            <div class="flex items-center">
-                                <span class="bg-white border-y-2 border-l-2 border-white text-gray-500 font-bold px-4 py-3 rounded-l-xl">Rp</span>
-                                <input type="number" id="setMaxOngkir" required class="w-full px-4 py-3 border-2 border-white rounded-r-xl outline-none focus:border-indigo-500 font-black text-gray-800 shadow-inner">
-                            </div>
-                        </div>
-                        
-                        <div class="bg-teal-50 p-4 rounded-xl border border-teal-100">
-                            <label class="block text-xs font-black text-teal-800 mb-1 uppercase tracking-wider"><i class="fas fa-boxes mr-1"></i> Maksimal Ongkir (Multi-Toko)</label>
-                            <p class="text-[10px] text-teal-600 font-semibold mb-3">Batas mentok tarif jika pesanan lebih dari 1 toko.</p>
-                            <div class="flex items-center">
-                                <span class="bg-white border-y-2 border-l-2 border-white text-gray-500 font-bold px-4 py-3 rounded-l-xl">Rp</span>
-                                <input type="number" id="setMaxOngkirMulti" required class="w-full px-4 py-3 border-2 border-white rounded-r-xl outline-none focus:border-teal-500 font-black text-gray-800 shadow-inner">
-                            </div>
-                        </div>
-
+                <h1 class="text-2xl font-black text-gray-800 mb-6">Pengaturan Sistem</h1>
+                <form onsubmit="saveSettings(event)" class="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 max-w-2xl shadow-sm">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                         <div class="bg-orange-50 p-4 rounded-xl border border-orange-100">
-                            <label class="block text-xs font-black text-orange-800 mb-1 uppercase tracking-wider"><i class="fas fa-server mr-1"></i> Biaya Layanan Aplikasi</label>
-                            <p class="text-[10px] text-orange-600 font-semibold mb-3">Biaya perawatan operasional aplikasi.</p>
-                            <div class="flex items-center">
-                                <span class="bg-white border-y-2 border-l-2 border-white text-gray-500 font-bold px-4 py-3 rounded-l-xl">Rp</span>
-                                <input type="number" id="setLayanan" required class="w-full px-4 py-3 border-2 border-white rounded-r-xl outline-none focus:border-brandPrimary font-black text-gray-800 shadow-inner">
-                            </div>
+                            <label class="block text-xs font-black text-orange-800 mb-1">Ongkir Dasar (Per KM)</label>
+                            <input type="number" id="setOngkir" required class="w-full px-3 py-2 rounded-lg outline-none font-bold text-gray-800 bg-white border border-gray-200">
+                            <p class="text-[10px] text-gray-500 mt-1.5 font-bold">Aktif saat ini: <span id="current-ongkir" class="text-brandPrimary">Rp 0</span></p>
                         </div>
-
-                        <div class="bg-purple-50 p-4 rounded-xl border border-purple-100 md:col-span-2 shadow-inner">
-                            <label class="block text-xs font-black text-purple-800 mb-1 uppercase tracking-wider"><i class="fas fa-route mr-1"></i> Jarak Maksimal Pengantaran</label>
-                            <p class="text-[10px] text-purple-600 font-semibold mb-3">Pesanan ditolak otomatis jika melebihi batas ini.</p>
-                            <div class="flex items-center">
-                                <input type="number" id="setMaxDistance" required class="w-full px-4 py-3 border-2 border-white rounded-l-xl outline-none focus:border-purple-500 font-black text-gray-800 shadow-inner">
-                                <span class="bg-white border-y-2 border-r-2 border-white text-gray-500 font-bold px-4 py-3 rounded-r-xl">KM</span>
-                            </div>
+                        <div class="bg-orange-50 p-4 rounded-xl border border-orange-100">
+                            <label class="block text-xs font-black text-orange-800 mb-1">Biaya Layanan App</label>
+                            <input type="number" id="setLayanan" required class="w-full px-3 py-2 rounded-lg outline-none font-bold text-gray-800 bg-white border border-gray-200">
+                            <p class="text-[10px] text-gray-500 mt-1.5 font-bold">Aktif saat ini: <span id="current-layanan" class="text-brandPrimary">Rp 0</span></p>
                         </div>
-                    </div>
-
-                    <h2 class="text-lg font-black text-gray-800 tracking-tight border-b border-gray-100 pb-2 mb-4">Profil & Keamanan Admin</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                            <label class="block text-xs font-black text-gray-800 mb-1 uppercase tracking-wider"><i class="fas fa-envelope mr-1"></i> Email Pemulihan (Recovery)</label>
-                            <p class="text-[10px] text-gray-500 font-semibold mb-3">Email untuk mengirim PIN jika lupa.</p>
-                            <input type="email" id="setAdminEmail" required placeholder="admin@contoh.com" class="w-full px-4 py-3 border-2 border-white rounded-xl outline-none focus:border-red-400 font-bold text-gray-800 shadow-inner text-sm">
+                        <div>
+                            <label class="block text-xs font-black text-gray-600 mb-1">Maks Ongkir (1 Toko)</label>
+                            <input type="number" id="setMaxOngkir" required class="w-full px-3 py-2 rounded-lg outline-none font-bold border border-gray-200">
+                            <p class="text-[10px] text-gray-500 mt-1.5 font-bold">Aktif saat ini: <span id="current-max-ongkir" class="text-brandPrimary">Rp 0</span></p>
                         </div>
-
-                        <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                            <label class="block text-xs font-black text-gray-800 mb-1 uppercase tracking-wider"><i class="fas fa-key mr-1"></i> Ganti PIN Akses</label>
-                            <p class="text-[10px] text-gray-500 font-semibold mb-3">Ketik PIN baru & konfirmasi untuk merubahnya.</p>
-                            
-                            <div class="relative mb-2">
-                                <input type="password" id="setAdminPin" required placeholder="PIN Anda" class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl outline-none focus:border-brandPrimary font-black tracking-widest text-center text-gray-800 shadow-inner pr-10">
-                                <button type="button" onclick="togglePinVisibility('setAdminPin', this)" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-brandPrimary focus:outline-none"><i class="fas fa-eye"></i></button>
-                            </div>
-                            <div class="relative">
-                                <input type="password" id="confirmAdminPin" required placeholder="Konfirmasi PIN" class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl outline-none focus:border-brandPrimary font-black tracking-widest text-center text-gray-800 shadow-inner pr-10">
-                                <button type="button" onclick="togglePinVisibility('confirmAdminPin', this)" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-brandPrimary focus:outline-none"><i class="fas fa-eye"></i></button>
-                            </div>
-                            
-                            <p id="pin-error-msg" class="text-[10px] text-red-500 font-bold mt-1.5 hidden animate-pulse"><i class="fas fa-exclamation-triangle"></i> Konfirmasi PIN tidak cocok!</p>
+                        <div>
+                            <label class="block text-xs font-black text-gray-600 mb-1">Maks Ongkir (Multi Toko)</label>
+                            <input type="number" id="setMaxOngkirMulti" required class="w-full px-3 py-2 rounded-lg outline-none font-bold border border-gray-200">
+                            <p class="text-[10px] text-gray-500 mt-1.5 font-bold">Aktif saat ini: <span id="current-max-ongkir-multi" class="text-brandPrimary">Rp 0</span></p>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-black text-gray-600 mb-1">Jarak Batas Maksimal Pengantaran (KM)</label>
+                            <input type="number" id="setMaxDistance" required class="w-full px-3 py-2 rounded-lg outline-none font-bold border border-gray-200">
+                            <p class="text-[10px] text-gray-500 mt-1.5 font-bold">Aktif saat ini: <span id="current-max-distance" class="text-brandPrimary">0 KM</span></p>
+                        </div>
+                        <div class="md:col-span-2 border-t pt-4 mt-2">
+                            <label class="block text-xs font-black text-gray-600 mb-1">Email Recovery Admin</label>
+                            <input type="email" id="setAdminEmail" required class="w-full px-3 py-2 rounded-lg border border-gray-200">
+                            <p class="text-[10px] text-gray-500 mt-1.5 font-bold">Email aktif: <span id="current-email" class="text-gray-800">-</span></p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-black text-gray-600 mb-1">PIN Akses Baru</label>
+                            <input type="password" id="setAdminPin" required class="w-full px-3 py-2 rounded-lg border border-gray-200 text-center tracking-widest font-black">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-black text-gray-600 mb-1">Konfirmasi PIN Akses</label>
+                            <input type="password" id="confirmAdminPin" required class="w-full px-3 py-2 rounded-lg border border-gray-200 text-center tracking-widest font-black">
                         </div>
                     </div>
-
-                    <div class="mt-8 pt-6 border-t border-gray-100 flex justify-end">
-                        <button type="submit" id="btnSaveSettings" class="btn-3d w-full md:w-auto bg-gradient-to-b from-[#ff7a2e] to-brandPrimary text-white px-8 py-3.5 rounded-xl font-black shadow-[0_4px_0_0_#A83D02] hover:from-brandPrimary hover:to-brandPrimaryHover transition flex items-center justify-center gap-2"><i class="fas fa-save"></i> SIMPAN PENGATURAN</button>
-                    </div>
+                    <p id="pin-error-msg" class="text-xs text-red-500 font-bold mb-4 hidden">Konfirmasi PIN tidak sesuai!</p>
+                    <div class="flex justify-end"><button type="submit" class="btn-3d bg-brandPrimary text-white px-6 py-2.5 rounded-xl font-bold shadow-[0_4px_0_0_#A83D02]">Simpan Konfigurasi</button></div>
                 </form>
             </section>
 
@@ -420,9 +416,23 @@
 
         let ALL_SELLERS = [];
         let ALL_DRIVERS = [];
-        let ALL_BUYERS = []; // Data pembeli
+        let ALL_BUYERS = []; 
         let ALL_ORDERS = [];
         
+        // --- DATA KATEGORI DINAMIS ---
+        let APP_CATEGORIES = [];
+        const DEFAULT_CATEGORIES = [
+            {id: 'makanan_berat', name: 'Makanan Berat', status: 'Aktif'},
+            {id: 'minuman', name: 'Minuman', status: 'Aktif'},
+            {id: 'jajanan', name: 'Jajanan', status: 'Aktif'},
+            {id: 'dessert', name: 'Dessert', status: 'Aktif'},
+            {id: 'flash_promo', name: 'Flash Promo', status: 'Aktif'},
+            {id: 'gratis_ongkir', name: 'Gratis Ongkir', status: 'Aktif'},
+            {id: 'vegan_sehat', name: 'Vegan / Sehat', status: 'Aktif'},
+            {id: 'menu_pedas', name: 'Menu Pedas', status: 'Aktif'},
+            {id: 'menu_lainnya', name: 'Menu Lainnya', status: 'Aktif'}
+        ];
+
         let localFeeLayanan = 1000;
         let localFeeOngkir = 2000;
         let localMaxOngkir = 50000;
@@ -555,7 +565,7 @@
                 // Background Sync setiap 10 detik
                 syncIntervalAdmin = setInterval(() => {
                     refreshAllData(true);
-                }, 10000);
+                }, 120000);
             }
         });
 
@@ -652,6 +662,7 @@
         function switchTab(tabId) {
             document.getElementById('section-dashboard').classList.add('hidden');
             document.getElementById('section-settings').classList.add('hidden');
+            document.getElementById('section-categories').classList.add('hidden');
             document.getElementById('section-sellers').classList.add('hidden');
             document.getElementById('section-drivers').classList.add('hidden');
             document.getElementById('section-buyers').classList.add('hidden');
@@ -670,14 +681,7 @@
         }
 
         async function refreshAllData(isBackground = false) {
-            const spin = document.getElementById('sync-spin');
-            if(spin) spin.classList.add('fa-spin');
-            
-            if(!isBackground) {
-                document.getElementById('loading-overlay').classList.remove('hidden');
-                document.getElementById('loading-overlay').classList.add('flex');
-            }
-
+            if(!isBackground) document.getElementById('loading-overlay').classList.remove('hidden');
             try {
                 const promises = [
                     fetch(`${GAS_WEB_APP_URL}?action=getData&type=users_sellers`).then(r => r.json()),
@@ -686,53 +690,180 @@
                     fetch(`${GAS_WEB_APP_URL}?action=getData&type=users_buyers`).then(r => r.json()), 
                     fetch(GAS_WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getAdminSettings', type: 'admin_settings' }) }).then(r => r.json())
                 ];
-                
-                const [resSellers, resDrivers, resOrders, resBuyers, resSettings] = await Promise.all(promises);
-
-                if(resSellers.status === 'success') ALL_SELLERS = resSellers.data || [];
-                if(resDrivers.status === 'success') ALL_DRIVERS = resDrivers.data || [];
-                if(resOrders.status === 'success') ALL_ORDERS = resOrders.data || [];
-                if(resBuyers.status === 'success') ALL_BUYERS = resBuyers.data || [];
-                
-                if(resSettings.status === 'success' && resSettings.data) {
-                    const set = resSettings.data;
-                    document.getElementById('setOngkir').value = set.fee_ongkir || 2000;
-                    document.getElementById('setMaxOngkir').value = set.max_ongkir || 50000;
-                    document.getElementById('setMaxOngkirMulti').value = set.max_ongkir_multi || 75000;
-                    document.getElementById('setLayanan').value = set.fee_layanan || 1000;
-                    document.getElementById('setMaxDistance').value = set.max_distance || 15;
-                    document.getElementById('setAdminEmail').value = set.admin_email || '';
-                    // Jangan update input password jika background sync agar tidak menimpa ketikan user
-                    if(!isBackground) {
-                        document.getElementById('setAdminPin').value = set.admin_pin || '';
-                        document.getElementById('confirmAdminPin').value = set.admin_pin || '';
-                    }
+                const [s, d, o, b, set] = await Promise.all(promises);
+                if(s.status==='success') ALL_SELLERS = s.data || [];
+                if(d.status==='success') ALL_DRIVERS = d.data || [];
+                if(o.status==='success') ALL_ORDERS = o.data || [];
+                if(b.status==='success') ALL_BUYERS = b.data || [];
+                if(set.status==='success' && set.data) {
+                    const data = set.data;
                     
-                    localFeeLayanan = parseInt(set.fee_layanan) || 1000;
-                    localFeeOngkir = parseInt(set.fee_ongkir) || 2000;
-                    localMaxOngkir = parseInt(set.max_ongkir) || 50000;
-                    localMaxOngkirMulti = parseInt(set.max_ongkir_multi) || 75000;
-                }
+                    // PEMBARUAN: Update teks informasi yang aktif saat ini (Selalu Update tiap Sync)
+                    const curOngkir = document.getElementById('current-ongkir');
+                    if (curOngkir) curOngkir.innerText = `Rp ${(parseInt(data.fee_ongkir) || 2000).toLocaleString('id-ID')}`;
+                    
+                    const curLayanan = document.getElementById('current-layanan');
+                    if (curLayanan) curLayanan.innerText = `Rp ${(parseInt(data.fee_layanan) || 1000).toLocaleString('id-ID')}`;
+                    
+                    const curMaxOngkir = document.getElementById('current-max-ongkir');
+                    if (curMaxOngkir) curMaxOngkir.innerText = `Rp ${(parseInt(data.max_ongkir) || 50000).toLocaleString('id-ID')}`;
+                    
+                    const curMaxMulti = document.getElementById('current-max-ongkir-multi');
+                    if (curMaxMulti) curMaxMulti.innerText = `Rp ${(parseInt(data.max_ongkir_multi) || 75000).toLocaleString('id-ID')}`;
+                    
+                    const curMaxDist = document.getElementById('current-max-distance');
+                    if (curMaxDist) curMaxDist.innerText = `${data.max_distance || 15} KM`;
 
+                    const curEmail = document.getElementById('current-email');
+                    if (curEmail) curEmail.innerText = data.admin_email || '-';
+
+                    // KUNCI: Kolom Input hanya ditimpa saat muat pertama kali, JANGAN timpa jika sedang mengetik
+                    if(!isBackground) {
+                        document.getElementById('setOngkir').value = data.fee_ongkir || 2000;
+                        document.getElementById('setMaxOngkir').value = data.max_ongkir || 50000;
+                        document.getElementById('setMaxOngkirMulti').value = data.max_ongkir_multi || 75000;
+                        document.getElementById('setLayanan').value = data.fee_layanan || 1000;
+                        document.getElementById('setMaxDistance').value = data.max_distance || 15;
+                        document.getElementById('setAdminEmail').value = data.admin_email || '';
+                        document.getElementById('setAdminPin').value = data.admin_pin || '';
+                        document.getElementById('confirmAdminPin').value = data.admin_pin || '';
+                    }
+
+                    localFeeLayanan = parseInt(data.fee_layanan);
+                    localFeeOngkir = parseInt(data.fee_ongkir);
+                    localMaxOngkir = parseInt(data.max_ongkir);
+                    localMaxOngkirMulti = parseInt(data.max_ongkir_multi);
+                    APP_CATEGORIES = data.categories_json ? JSON.parse(data.categories_json) : DEFAULT_CATEGORIES;
+                }
                 updateDashboardStats();
-                updateBuyerAnalytics(); // Fungsi analitik pembeli
+                updateBuyerAnalytics();
                 renderSellersTable();
                 renderDriversTable();
-                renderBuyersTable(); 
-
-                const now = new Date();
-                document.getElementById('last-sync-time').innerText = `Update terakhir: ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-
-            } catch (error) {
-                if(!isBackground) showCustomAlert("Gagal menarik data dari server.", "Error");
-            } finally {
-                if(spin) spin.classList.remove('fa-spin');
-                if(!isBackground) {
-                    document.getElementById('loading-overlay').classList.add('hidden');
-                    document.getElementById('loading-overlay').classList.remove('flex');
-                }
+                renderBuyersTable();
+                renderCategoriesTable();
+                document.getElementById('last-sync-time').innerText = `Sync: ${new Date().toLocaleTimeString('id-ID')}`;
+            } catch(e) {} finally {
+                document.getElementById('loading-overlay').classList.add('hidden');
             }
         }
+
+        // --- MANAJEMEN KATEGORI ---
+        function renderCategoriesTable() {
+            const tbody = document.getElementById('categories-tbody');
+            tbody.innerHTML = '';
+            
+            if(APP_CATEGORIES.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center py-6 text-gray-400 font-bold">Belum ada kategori makanan</td></tr>';
+                return;
+            }
+
+            APP_CATEGORIES.forEach((cat, index) => {
+                const isActive = cat.status === 'Aktif';
+                const badgeClass = isActive ? 'bg-green-100 text-green-700 border-green-200' : 'bg-red-100 text-red-600 border-red-200';
+                
+                let toggleBtn = `<button onclick="toggleCategoryStatus(${index})" class="btn-3d px-3 py-1.5 rounded-lg border shadow-sm font-bold text-xs ${isActive ? 'bg-red-50 text-red-600 hover:bg-red-100 border-red-200' : 'bg-green-50 text-green-600 hover:bg-green-100 border-green-200'}">${isActive ? 'Nonaktifkan' : 'Aktifkan'}</button>`;
+                let deleteBtn = `<button onclick="deleteCategory(${index})" class="btn-3d px-3 py-1.5 rounded-lg border shadow-sm font-bold text-xs bg-gray-100 text-gray-500 hover:bg-gray-200 border-gray-300"><i class="fas fa-trash"></i></button>`;
+
+                const tr = `
+                <tr class="hover:bg-gray-50 transition border-b border-gray-100">
+                    <td class="p-4 font-black text-gray-800">${cat.name}</td>
+                    <td class="p-4 text-xs font-mono text-gray-500">${cat.id}</td>
+                    <td class="p-4 text-center">
+                        <span class="px-2 py-1 rounded-full text-[10px] font-black uppercase border shadow-inner ${badgeClass}">${cat.status}</span>
+                    </td>
+                    <td class="p-4 flex items-center justify-end gap-2">
+                        ${toggleBtn}
+                        ${deleteBtn}
+                    </td>
+                </tr>`;
+                tbody.insertAdjacentHTML('beforeend', tr);
+            });
+        }
+
+        async function addNewCategory() {
+            const input = document.getElementById('newCatName');
+            const name = input.value.trim();
+            if(!name) {
+                showCustomAlert("Nama kategori tidak boleh kosong.", "Perhatian");
+                return;
+            }
+            
+            const id = name.toLowerCase().replace(/[^a-z0-9]/g, '_'); // Generate safe sheet ID
+            
+            if(APP_CATEGORIES.find(c => c.id === id)) {
+                showCustomAlert("Kategori dengan nama atau ID ini sudah ada.", "Perhatian");
+                return;
+            }
+
+            const btn = document.querySelector('button[onclick="addNewCategory()"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Membuat Database...';
+            btn.disabled = true;
+
+            try {
+                // Tembak backend untuk bikin Spreadsheet Tab baru!
+                const res = await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'createCategorySheet', sheetName: id })
+                });
+                
+                const result = await res.json();
+                
+                if (result.status === 'success') {
+                    APP_CATEGORIES.push({id: id, name: name, status: 'Aktif'});
+                    input.value = '';
+                    renderCategoriesTable();
+                    saveCategoriesToDB(); // Auto save ke settings
+                    
+                    showCustomAlert(`Kategori '${name}' berhasil ditambahkan dan Database otomatis dibuat!`, "Berhasil");
+                } else {
+                    showCustomAlert("Gagal membuat database: " + result.message, "Gagal");
+                }
+            } catch(e) {
+                showCustomAlert("Koneksi ke server terputus saat membuat database.", "Gagal");
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        function toggleCategoryStatus(index) {
+            if(APP_CATEGORIES[index]) {
+                APP_CATEGORIES[index].status = APP_CATEGORIES[index].status === 'Aktif' ? 'Nonaktif' : 'Aktif';
+                renderCategoriesTable();
+                saveCategoriesToDB(); // Auto save
+            }
+        }
+
+        function deleteCategory(index) {
+            if(APP_CATEGORIES[index]) {
+                APP_CATEGORIES.splice(index, 1);
+                renderCategoriesTable();
+                saveCategoriesToDB(); // Auto save
+            }
+        }
+
+        async function saveCategoriesToDB() {
+            const settingsObj = {
+                fee_ongkir: document.getElementById('setOngkir').value,
+                max_ongkir: document.getElementById('setMaxOngkir').value,
+                max_ongkir_multi: document.getElementById('setMaxOngkirMulti').value,
+                fee_layanan: document.getElementById('setLayanan').value,
+                max_distance: document.getElementById('setMaxDistance').value,
+                admin_email: document.getElementById('setAdminEmail').value,
+                admin_pin: document.getElementById('setAdminPin').value,
+                categories_json: JSON.stringify(APP_CATEGORIES) // Push Categories array to JSON
+            };
+
+            try {
+                // Proses di belakang layar
+                fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'saveAdminSettings', type: 'admin_settings', settings: settingsObj })
+                });
+            } catch(e) {}
+        }
+
 
         // --- SISTEM KALKULASI & GRAFIK DASHBOARD ADMIN ---
         function updateDashboardStats() {
@@ -978,11 +1109,11 @@
                 const isSuspend = s.status === 'Suspend' || s.status === 'Nonaktif';
                 const isPending = s.status === 'Menunggu Validasi';
                 
-                let badgeClass = 'bg-green-100 text-green-700 border-green-200'; // Untuk Aktif
+                let badgeClass = 'bg-green-100 text-green-700 border-green-200'; 
                 if (isSuspend) badgeClass = 'bg-red-100 text-red-600 border-red-200';
                 else if (isPending) badgeClass = 'bg-yellow-100 text-yellow-700 border-yellow-200';
 
-                let btnColor = 'bg-red-50 text-red-600 hover:bg-red-100 border-red-200'; // Default Suspend
+                let btnColor = 'bg-red-50 text-red-600 hover:bg-red-100 border-red-200'; 
                 let btnText = 'Suspend';
                 let btnIcon = 'fa-ban';
 
@@ -1024,7 +1155,7 @@
             tbody.innerHTML = '';
             
             if(ALL_DRIVERS.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="text-center py-6">Belum ada data kurir</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center py-6 text-gray-400 font-bold">Belum ada data kurir</td></tr>';
                 return;
             }
 
@@ -1032,11 +1163,11 @@
                 const isSuspend = d.status === 'Suspend' || d.status === 'Nonaktif';
                 const isPending = d.status === 'Menunggu Validasi';
                 
-                let badgeClass = 'bg-green-100 text-green-700 border-green-200'; // Untuk Aktif
+                let badgeClass = 'bg-green-100 text-green-700 border-green-200'; 
                 if (isSuspend) badgeClass = 'bg-red-100 text-red-600 border-red-200';
                 else if (isPending) badgeClass = 'bg-yellow-100 text-yellow-700 border-yellow-200';
 
-                let btnColor = 'bg-red-50 text-red-600 hover:bg-red-100 border-red-200'; // Default Suspend
+                let btnColor = 'bg-red-50 text-red-600 hover:bg-red-100 border-red-200'; 
                 let btnText = 'Suspend';
                 let btnIcon = 'fa-ban';
 
@@ -1126,19 +1257,14 @@
 
         async function toggleSuspend(userId, sheetType, currentStatus) {
             let newStatus = 'Suspend';
-            let actionText = 'Membekukan (Suspend)';
             
             if (currentStatus === 'Suspend' || currentStatus === 'Nonaktif') {
                 newStatus = 'Aktif';
-                actionText = 'Mengaktifkan';
             } else if (currentStatus === 'Menunggu Validasi') {
                 newStatus = 'Aktif';
-                actionText = 'Menyetujui (Approve)';
             }
             
-            if(!(await showCustomConfirm(`Yakin ingin ${actionText} akun ini?`, "Konfirmasi"))) return;
-            
-            // OPTIMISTIC UI: Langsung ubah warna tombol di layar tanpa loading panjang
+            // OPTIMISTIC UI: Langsung ubah warna tombol di layar tanpa loading
             if(sheetType === 'users_sellers') {
                 const idx = ALL_SELLERS.findIndex(s => s.seller_id === userId);
                 if(idx > -1) ALL_SELLERS[idx].status = newStatus;
@@ -1154,8 +1280,8 @@
             }
 
             try {
-                // Background execution
-                const response = await fetch(GAS_WEB_APP_URL, {
+                // Proses di belakang layar
+                fetch(GAS_WEB_APP_URL, {
                     method: 'POST',
                     body: JSON.stringify({ 
                         action: 'updateAccountStatus', 
@@ -1165,17 +1291,7 @@
                         newStatus: newStatus 
                     })
                 });
-                
-                const res = await response.json();
-                
-                if(res.status !== 'success') {
-                    showCustomAlert("Gagal melakukan aksi: " + res.message, "Error");
-                    refreshAllData(true); // Revert jika gagal
-                }
-            } catch(e) {
-                showCustomAlert("Gagal menghubungi server database.", "Error");
-                refreshAllData(true); // Revert jika gagal
-            }
+            } catch(e) {}
         }
 
         function filterTable(tbodyId, query) {
@@ -1189,7 +1305,6 @@
 
         async function saveSettings(e) {
             e.preventDefault();
-            
             const pin1 = document.getElementById('setAdminPin').value;
             const pin2 = document.getElementById('confirmAdminPin').value;
             const errorMsg = document.getElementById('pin-error-msg');
@@ -1201,41 +1316,26 @@
                 errorMsg.classList.add('hidden');
             }
 
-            const btn = document.getElementById('btnSaveSettings');
+            const btn = document.querySelector('button[type="submit"]');
+            const orig = btn.innerHTML;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
             btn.disabled = true;
             
-            const settingsObj = {
-                fee_ongkir: document.getElementById('setOngkir').value,
-                max_ongkir: document.getElementById('setMaxOngkir').value,
-                max_ongkir_multi: document.getElementById('setMaxOngkirMulti').value,
-                fee_layanan: document.getElementById('setLayanan').value,
-                max_distance: document.getElementById('setMaxDistance').value,
-                admin_email: document.getElementById('setAdminEmail').value,
-                admin_pin: pin1
-            };
+            const obj = { fee_ongkir: document.getElementById('setOngkir').value, max_ongkir: document.getElementById('setMaxOngkir').value, max_ongkir_multi: document.getElementById('setMaxOngkirMulti').value, fee_layanan: document.getElementById('setLayanan').value, max_distance: document.getElementById('setMaxDistance').value, admin_email: document.getElementById('setAdminEmail').value, admin_pin: pin1, categories_json: JSON.stringify(APP_CATEGORIES) };
 
             try {
-                const response = await fetch(GAS_WEB_APP_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: 'saveAdminSettings', type: 'admin_settings', settings: settingsObj })
-                });
-                const res = await response.json();
-                
+                const res = await fetch(GAS_WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'saveAdminSettings', type: 'admin_settings', settings: obj }) }).then(r => r.json());
                 if(res.status === 'success') {
-                    showCustomAlert("Profil Admin & Pengaturan Tarif berhasil disimpan secara permanen!", "Berhasil");
-                    localFeeLayanan = parseInt(settingsObj.fee_layanan) || 1000;
-                    localFeeOngkir = parseInt(settingsObj.fee_ongkir) || 2000;
-                    localMaxOngkir = parseInt(settingsObj.max_ongkir) || 50000;
-                    localMaxOngkirMulti = parseInt(settingsObj.max_ongkir_multi) || 75000;
-                    updateDashboardStats(); 
+                    showCustomAlert("Profil Admin & Pengaturan Tarif berhasil disimpan secara permanen!");
+                    // Trigger pembaruan UI label angka tanpa mereset form input
+                    refreshAllData(true);
                 } else {
-                    showCustomAlert("Gagal menyimpan: " + res.message, "Gagal");
+                    showCustomAlert("Gagal menyimpan: " + res.message);
                 }
             } catch(error) {
-                showCustomAlert("Koneksi internet terputus atau server gagal merespons.", "Gagal");
+                showCustomAlert("Koneksi gagal.");
             } finally {
-                btn.innerHTML = '<i class="fas fa-save"></i> SIMPAN PENGATURAN';
+                btn.innerHTML = orig;
                 btn.disabled = false;
             }
         }
