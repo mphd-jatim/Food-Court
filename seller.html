@@ -286,27 +286,6 @@
                     </div>
                 </div>
 
-                <!-- Finansial (DISEMBUNYIKAN) -->
-                <div class="hidden bg-gray-50 p-5 rounded-2xl border-2 border-gray-200 shadow-sm">
-                    <h2 class="font-bold text-brandPrimary mb-1 text-lg"><i class="fas fa-money-check-alt mr-2"></i>Informasi Rekening Bank</h2>
-                    <p class="text-[10px] text-gray-500 mb-4">Digunakan untuk penarikan saldo penghasilan toko Anda.</p>
-                    <div class="mb-3">
-                        <label class="block text-xs font-bold text-gray-700 mb-1">Nama Bank *</label>
-                        <select id="regBankName" class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg outline-none focus:border-brandPrimary bg-white text-sm text-gray-800">
-                            <option value="">Pilih Bank</option>
-                            <option value="BCA">BCA</option>
-                            <option value="Mandiri">Bank Mandiri</option>
-                            <option value="BRI">BRI</option>
-                            <option value="BNI">BNI</option>
-                            <option value="BSI">BSI (Bank Syariah Indonesia)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-700 mb-1">Nomor Rekening *</label>
-                        <input type="number" id="regBankAccount" placeholder="Pastikan sesuai dengan buku tabungan" class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg outline-none focus:border-brandPrimary bg-white text-sm text-gray-800">
-                    </div>
-                </div>
-
                 <!-- Dokumen Verifikasi -->
                 <div class="bg-gray-50 p-5 rounded-2xl border-2 border-gray-200 shadow-sm">
                     <h2 class="font-bold text-brandPrimary mb-4 text-lg"><i class="fas fa-id-card mr-2"></i>Dokumen Verifikasi</h2>
@@ -544,17 +523,10 @@
                                 <input type="text" id="prodName" required placeholder="Contoh: Nasi Goreng Spesial" class="w-full px-3 py-2.5 border-2 rounded-lg outline-none focus:border-brandPrimary bg-gray-50 text-gray-800 font-semibold">
                             </div>
                             <div>
-                                <label class="block text-sm font-bold text-gray-700 mb-1">Kategori (Database Tujuan) *</label>
+                                <label class="block text-sm font-bold text-gray-700 mb-1">Kategori Produk *</label>
+                                <!-- DROPDOWN DINAMIS DARI DATABASE KATEGORI -->
                                 <select id="prodCategory" required class="w-full px-3 py-2.5 border-2 rounded-lg outline-none focus:border-brandPrimary bg-gray-50 text-gray-800 font-semibold cursor-pointer">
-                                    <option value="makanan_berat">Makanan Berat</option>
-                                    <option value="minuman">Minuman</option>
-                                    <option value="jajanan">Jajanan</option>
-                                    <option value="dessert">Dessert</option>
-                                    <option value="flash_promo">Flash Promo</option>
-                                    <option value="gratis_ongkir">Gratis Ongkir</option>
-                                    <option value="vegan_sehat">Vegan / Sehat</option>
-                                    <option value="menu_pedas">Menu Pedas</option>
-                                    <option value="menu_lainnya">Menu Lainnya</option>
+                                    <option value="">Memuat Kategori...</option>
                                 </select>
                             </div>
                             <div>
@@ -816,7 +788,7 @@
 
         // --- PWA SETUP (MENGGUNAKAN ID UNIK SELLER) ---
         const pwaManifest = {
-            "id": "foodcourt-seller-app-v1", // ID UNIK PENJUAL (TIDAK BENTROK)
+            "id": "foodcourt-seller-app-v1", 
             "name": "FoodCourt Seller Centre",
             "short_name": "FCSeller",
             "start_url": window.location.pathname + "?mode=pwa",
@@ -850,7 +822,6 @@
             navigator.serviceWorker.register(swUrl).catch(err => console.log('PWA SW err:', err));
         }
 
-        // --- SISTEM NOTIFIKASI BACKGROUND PWA ---
         function requestNotificationPermission() {
             if ('Notification' in window) {
                 if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
@@ -872,13 +843,11 @@
             }
         }
 
-        // --- PWA INSTALLATION PROMPT (ANTI-UNINSTALL BUG) ---
         let deferredPrompt;
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
             
-            // Kunci Optimasi: Deteksi Uninstall dan hapus Cache Status Instalasi
             if(localStorage.getItem('fcseller_pwa_status') === 'installed') {
                 localStorage.removeItem('fcseller_pwa_status');
                 localStorage.removeItem('fcseller_pwa_time');
@@ -958,7 +927,6 @@
                 
                 openModalAnim();
 
-                // Notifikasi Auto-Tutup setelah 2 Detik (Tanpa perlu klik OK)
                 setTimeout(() => {
                     closeModalAnim();
                     resolve(true);
@@ -1002,7 +970,6 @@
             });
         }
 
-        // --- RUMUS JARAK DAN ONGKIR (Sama dengan Delivery) ---
         function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
             var R = 6371; 
             var dLat = deg2rad(lat2-lat1);  
@@ -1066,14 +1033,12 @@
             return isNaN(ongkir) ? localFeeOngkir : ongkir;
         }
 
-        // FUNGSI BARU: Mengambil ongkir dari DB (Agar Riwayat tidak berubah jika Admin ganti tarif)
         function getOrderOngkir(order) {
             if (order.driver_income !== undefined && order.driver_income !== null && order.driver_income !== "") {
                 return parseInt(order.driver_income);
             }
             return calculateOngkirMultiStore(order); 
         }
-
 
         // --- LEAFLET MAP REGISTRATION ---
         let regMap, regMarker;
@@ -1247,12 +1212,48 @@
         // GANTI DENGAN URL GOOGLE APPS SCRIPT WEB APP ANDA
         const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxepD3BGU993WBCuZjH2Wo4sDyUkwyp4SGE4_mZ6EbrzD_qCDGzkRIOnPqmcXVnKNM/exec";
 
-        // --- VARIABEL BIAYA & SISTEM ---
+        // --- VARIABEL BIAYA & SISTEM KATEGORI ---
         let ALL_SELLERS = []; 
         let localFeeOngkir = 2000; 
         let localFeeLayanan = 1000; 
         let localMaxOngkir = 50000; 
         let localMaxOngkirMulti = 75000; 
+        
+        let SELLER_CATEGORIES = []; // Menyimpan kategori dinamis
+        const DEFAULT_CATEGORIES = [
+            {id: 'makanan_berat', name: 'Makanan Berat', status: 'Aktif'},
+            {id: 'minuman', name: 'Minuman', status: 'Aktif'},
+            {id: 'jajanan', name: 'Jajanan', status: 'Aktif'},
+            {id: 'dessert', name: 'Dessert', status: 'Aktif'},
+            {id: 'flash_promo', name: 'Flash Promo', status: 'Aktif'},
+            {id: 'gratis_ongkir', name: 'Gratis Ongkir', status: 'Aktif'},
+            {id: 'vegan_sehat', name: 'Vegan / Sehat', status: 'Aktif'},
+            {id: 'menu_pedas', name: 'Menu Pedas', status: 'Aktif'},
+            {id: 'menu_lainnya', name: 'Menu Lainnya', status: 'Aktif'}
+        ];
+        
+        let isAddingProduct = false; // FLAG PENTING UNTUK JEDA SINKRON KATEGORI
+
+        async function fetchSystemSettingsBackground() {
+            try {
+                const resSettings = await fetch(GAS_WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getAdminSettings', type: 'admin_settings' }) }).then(r => r.json());
+                
+                if(resSettings.status === 'success' && resSettings.data) {
+                    localFeeOngkir = parseInt(resSettings.data.fee_ongkir) || 0;
+                    localFeeLayanan = parseInt(resSettings.data.fee_layanan) || 0;
+                    localMaxOngkir = parseInt(resSettings.data.max_ongkir) || 0;
+                    localMaxOngkirMulti = parseInt(resSettings.data.max_ongkir_multi) || 0;
+
+                    if(resSettings.data.categories_json) {
+                        try { SELLER_CATEGORIES = JSON.parse(resSettings.data.categories_json); }
+                        catch(e) { SELLER_CATEGORIES = DEFAULT_CATEGORIES; }
+                    } else {
+                        SELLER_CATEGORIES = DEFAULT_CATEGORIES;
+                    }
+                    renderCategoryDropdown();
+                }
+            } catch(e) {}
+        }
 
         async function fetchSystemSettings() {
             try {
@@ -1270,6 +1271,14 @@
                     localFeeLayanan = parseInt(resSettings.data.fee_layanan) || 0;
                     localMaxOngkir = parseInt(resSettings.data.max_ongkir) || 0;
                     localMaxOngkirMulti = parseInt(resSettings.data.max_ongkir_multi) || 0;
+
+                    if(resSettings.data.categories_json) {
+                        try { SELLER_CATEGORIES = JSON.parse(resSettings.data.categories_json); }
+                        catch(e) { SELLER_CATEGORIES = DEFAULT_CATEGORIES; }
+                    } else {
+                        SELLER_CATEGORIES = DEFAULT_CATEGORIES;
+                    }
+                    renderCategoryDropdown();
                 }
             } catch(e) {
                 console.error("Gagal menarik pengaturan sistem");
@@ -1397,7 +1406,6 @@
                 const res = await response.json();
                 
                 if(res.status === 'success') {
-                    // BLOK: Pengecekan Akun Menunggu Validasi
                     if (res.user.status === 'Menunggu Validasi') {
                         await showCustomAlert("Akun Toko Anda sedang dalam tahap validasi (Maksimal 1x24 Jam). Mohon tunggu persetujuan Admin sebelum dapat masuk ke sistem.", "Perhatian");
                         btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Masuk';
@@ -1462,7 +1470,6 @@
                     const res = await response.json();
                     
                     if (res.status === 'success') {
-                        // BLOK: Pengecekan Akun Menunggu Validasi (Google Login)
                         if (res.user.status === 'Menunggu Validasi') {
                             await showCustomAlert("Akun Toko Anda sedang dalam tahap validasi (Maksimal 1x24 Jam). Mohon tunggu persetujuan Admin sebelum dapat masuk ke sistem.", "Perhatian");
                             return;
@@ -1568,7 +1575,6 @@
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan Data...';
                 const newId = "SEL-" + Math.floor(Math.random() * 100000);
                 
-                // BLOK: Status awal diubah menjadi "Menunggu Validasi"
                 const rowData = [
                     newId, storeName, storeAddress, ownerName, nik, email, phone, password, bankName || "-", bankAccount || "-", ktpUrl, lat, lng, "Menunggu Validasi"
                 ];
@@ -1633,7 +1639,6 @@
             if(syncIcon) syncIcon.classList.add('fa-spin', 'text-brandPrimary');
 
             try {
-                // CHECK ACCOUNT STATUS (SUSPEND PROTECTION)
                 const resStatus = await fetch(`${GAS_WEB_APP_URL}?action=getData&type=users_sellers`).then(r => r.json());
                 if (resStatus.status === 'success' && resStatus.data) {
                     const myAccount = resStatus.data.find(s => s.seller_id === SELLER_DATA.seller_id);
@@ -1647,7 +1652,12 @@
                 }
 
                 await loadSellerOrders(true);
-                await loadSellerProducts(true);
+                
+                // JEDA SINKRONISASI KATEGORI/PRODUK JIKA SEDANG NAMBAH PRODUK
+                if (!isAddingProduct) {
+                    await fetchSystemSettingsBackground();
+                    await loadSellerProducts(true);
+                }
 
                 const now = new Date();
                 const timeString = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -1679,8 +1689,6 @@
                 if (json.status === 'success' && json.data && json.data.length > 0) {
                     sellerOrders = json.data.filter(o => o.outlet === SELLER_OUTLET_NAME);
                     
-                    // --- PUSH NOTIFICATION LOGIC (Latar Belakang) ---
-                    // Menggunakan (o.status || '') agar tidak crash jika status di database kosong
                     const activeOrders = sellerOrders.filter(o => !(o.status || '').includes('Selesai') && !(o.status || '').includes('Batal'));
                     const currentHash = JSON.stringify(activeOrders.map(o => o.order_id + (o.status || '')));
                     const lastSeenHash = localStorage.getItem('foodcourt_seller_seen_orders_hash');
@@ -2110,21 +2118,53 @@
         }
 
         // --- SISTEM PRODUK ---
+        function toggleAddProductForm() {
+            const form = document.getElementById('form-add-product');
+            if(form.classList.contains('hidden')) {
+                form.classList.remove('hidden');
+                isAddingProduct = true; // KUNCI AUTO-SYNC SAAT MENGETIK
+            } else {
+                form.classList.add('hidden');
+                isAddingProduct = false; // BUKA KUNCI AUTO-SYNC
+                document.getElementById('productForm').reset();
+            }
+        }
+
+        // Render Kategori ke Dropdown (Hanya jika sedang tidak menambahkan produk)
+        function renderCategoryDropdown() {
+            const select = document.getElementById('prodCategory');
+            if(select && !isAddingProduct) {
+                const prevValue = select.value;
+                select.innerHTML = '<option value="">-- Pilih Kategori Produk --</option>';
+                SELLER_CATEGORIES.filter(c => c.status === 'Aktif').forEach(c => {
+                    select.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+                });
+                if(prevValue) select.value = prevValue;
+            }
+        }
+
         async function loadSellerProducts(isBackground = false) {
             const tbody = document.getElementById('product-table-body');
             if(!isBackground) tbody.innerHTML = '<tr><td colspan="5" class="text-center py-10 text-gray-500 font-bold"><i class="fas fa-spinner fa-spin text-2xl mb-2"></i><br>Memuat daftar produk...</td></tr>';
             
             try {
-                const categories = ['makanan_berat', 'minuman', 'jajanan', 'dessert', 'flash_promo', 'gratis_ongkir', 'vegan_sehat', 'menu_pedas', 'menu_lainnya'];
+                // Gunakan list kategori dari database yang dikonfigurasi admin
+                const activeCatIds = SELLER_CATEGORIES.filter(c => c.status === 'Aktif').map(c => c.id);
+                if(activeCatIds.length === 0 && !isBackground) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center py-10 text-gray-400 font-bold">Kategori belum disetting oleh Admin.</td></tr>';
+                    return;
+                }
+
                 let myProducts = [];
                 
-                const promises = categories.map(cat => fetch(`${GAS_WEB_APP_URL}?action=getData&type=${cat}`).then(r => r.json()));
+                // Gunakan error catching di tiap promise agar jika sheet baru belum terbuat di GAS, tidak menyebabkan macet total
+                const promises = activeCatIds.map(catId => fetch(`${GAS_WEB_APP_URL}?action=getData&type=${catId}`).then(r => r.json()).catch(() => ({status: 'error'})));
                 const results = await Promise.all(promises);
                 
                 results.forEach((json, index) => {
                     if(json.status === 'success' && json.data) {
                         const filtered = json.data.filter(p => p.location === SELLER_OUTLET_NAME);
-                        filtered.forEach(p => p.categoryName = categories[index]);
+                        filtered.forEach(p => p.categoryName = activeCatIds[index]);
                         myProducts = myProducts.concat(filtered);
                     }
                 });
@@ -2137,7 +2177,11 @@
                 let html = '';
                 myProducts.forEach(prod => {
                     const formattedPrice = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(prod.price);
-                    let displayCategory = prod.categoryName ? prod.categoryName.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) : '-';
+                    
+                    // Tarik nama display dari kategori untuk estetika UI
+                    const catObj = SELLER_CATEGORIES.find(c => c.id === prod.categoryName);
+                    const displayCategory = catObj ? catObj.name : prod.categoryName;
+                    
                     const safeName = encodeURIComponent(prod.name || '');
                     const prodStatus = prod.status || 'Aktif';
 
@@ -2215,7 +2259,7 @@
             const oldPrice = parseInt(btnElement.dataset.price) || 0;
             const category = btnElement.dataset.category;
 
-            let newPrice = await showCustomPrompt(`Nama Produk: ${name}\nKategori: ${category}\nHarga Saat Ini: Rp ${oldPrice}\n\nMasukkan Harga Baru (Hanya Angka tanpa titik):`, oldPrice, "Ubah Harga Produk");
+            let newPrice = await showCustomPrompt(`Nama Produk: ${name}\nKategori Database: ${category}\nHarga Saat Ini: Rp ${oldPrice}\n\nMasukkan Harga Baru (Hanya Angka tanpa titik):`, oldPrice, "Ubah Harga Produk");
             
             if (newPrice === null || newPrice.trim() === "") return; 
             
@@ -2329,6 +2373,11 @@
             const price = document.getElementById('prodPrice').value;
             const fileInput = document.getElementById('prodImgFile').files[0];
 
+            if (!category) {
+                showAlert('Pilih Kategori Produk terlebih dahulu.', 'error');
+                return;
+            }
+
             if (!fileInput) {
                 showAlert('Silakan pilih foto produk terlebih dahulu.', 'error');
                 return;
@@ -2362,15 +2411,10 @@
 
                 const imageUrl = uploadResult.url; 
                 const newId = "PRD-" + Math.floor(Math.random() * 10000000);
-                const promoStart = document.getElementById('prodPromoStart').value;
-                const promoEnd = document.getElementById('prodPromoEnd').value;
+                const promoStart = document.getElementById('prodPromoStart').value || '';
+                const promoEnd = document.getElementById('prodPromoEnd').value || '';
 
-                let rowData = [];
-                if (category === 'flash_promo') {
-                    rowData = [newId, name, price, "0 Terjual", SELLER_OUTLET_NAME, imageUrl, promoStart, promoEnd, "Aktif"];
-                } else {
-                    rowData = [newId, name, price, "0 Terjual", SELLER_OUTLET_NAME, imageUrl, "Aktif"];
-                }
+                let rowData = [newId, name, price, "0 Terjual", SELLER_OUTLET_NAME, imageUrl, promoStart, promoEnd, "Aktif"];
 
                 const payload = {
                     action: 'insertData',
@@ -2388,7 +2432,10 @@
                 if(result.status === 'success') {
                     showAlert('Berhasil! Produk telah ditambahkan ke etalase.', 'success');
                     document.getElementById('productForm').reset();
+                    
+                    isAddingProduct = false; // Buka kunci sinkronisasi
                     loadSellerProducts();
+                    
                     setTimeout(() => toggleAddProductForm(), 2000); 
                 } else {
                     showAlert('Gagal menyimpan: ' + result.message, 'error');
@@ -2439,15 +2486,6 @@
                 el.classList.remove('text-brandPrimary');
                 if(el.dataset.target === tabId) el.classList.add('text-brandPrimary');
             });
-        }
-
-        function toggleAddProductForm() {
-            const form = document.getElementById('form-add-product');
-            if(form.classList.contains('hidden')) {
-                form.classList.remove('hidden');
-            } else {
-                form.classList.add('hidden');
-            }
         }
 
         document.getElementById('prodCategory').addEventListener('change', function() {
