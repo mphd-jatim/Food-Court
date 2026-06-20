@@ -16,6 +16,11 @@
     <!-- Chart.js untuk Grafik Analitik -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+    <!-- Firebase SDK (Untuk Google Login & Firestore) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
     <!-- PWA THEME COLOR -->
     <meta name="theme-color" content="#ee4d2d">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -45,6 +50,12 @@
         /* Animasi Kustom 3D */
         .btn-3d { transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1); }
         .btn-3d:active { transform: translateY(3px); box-shadow: 0 0px 0 0 transparent !important; }
+
+        /* Animasi Chat */
+        .animate-slide-up { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         
         /* Map Customization */
         .leaflet-container { z-index: 0 !important; }
@@ -96,8 +107,7 @@
             </div>
             <div class="p-6 bg-gray-50 flex flex-col items-center text-center">
                 <p id="modalMessage" class="text-gray-700 text-sm font-semibold mb-2 leading-relaxed whitespace-pre-line w-full"></p>
-                <!-- Tombol OK disembunyikan agar notifikasi auto-close tanpa diklik -->
-                <div class="flex justify-center gap-3 w-full mt-2 hidden">
+                <div class="flex justify-center gap-3 w-full mt-2 hidden" id="modalBtnContainer">
                     <button id="modalBtnCancel" class="btn-3d flex-1 py-3 bg-white border-2 border-gray-200 text-gray-600 rounded-xl font-bold hover:bg-gray-100 shadow-[0_3px_0_0_#e5e7eb] transition">Batal</button>
                     <button id="modalBtnConfirm" class="btn-3d flex-1 py-3 bg-gradient-to-b from-[#f36b4e] to-brandPrimary text-white rounded-xl font-bold hover:from-[#f05c3d] hover:to-brandPrimaryHover shadow-[0_4px_0_0_#be3118] transition">OK</button>
                 </div>
@@ -115,6 +125,36 @@
             <div class="p-5 flex-1 overflow-y-auto flex flex-col bg-white" id="history-detail-content">
                 <!-- Konten dinamis riwayat akan dimuat di sini -->
             </div>
+        </div>
+    </div>
+
+    <!-- ================= OVERLAY IN-APP REALTIME CHAT FIREBASE ================= -->
+    <div id="chat-overlay" class="hidden fixed inset-0 z-[400] bg-black/60 backdrop-blur-sm flex-col justify-end md:justify-center items-center p-0 md:p-4">
+        <div class="bg-white md:rounded-2xl shadow-2xl w-full h-[85vh] md:h-[600px] max-w-md p-0 relative flex flex-col overflow-hidden rounded-t-3xl md:rounded-b-2xl animate-slide-up">
+            <!-- Header Chat -->
+            <div class="p-4 border-b flex justify-between items-center bg-gradient-to-r from-brandPrimary to-[#d73211] text-white shrink-0 shadow-sm z-10">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                        <i id="chat-icon" class="fas fa-headset text-xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="font-bold text-sm drop-shadow-sm" id="chat-title">Chat CS</h2>
+                        <p class="text-[10px] text-orange-100 flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span> Online</p>
+                    </div>
+                </div>
+                <button onclick="closeChat()" class="text-white/80 hover:text-white bg-white/10 w-8 h-8 rounded-full flex justify-center items-center transition"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <!-- Area Pesan -->
+            <div id="chat-messages" class="flex-1 overflow-y-auto p-4 bg-[#F0F2F5] flex flex-col gap-3 hide-scrollbar relative">
+                <div class="text-center py-4 text-gray-400 text-xs font-semibold"><i class="fas fa-spinner fa-spin mr-1"></i> Menghubungkan ke server chat...</div>
+            </div>
+            
+            <!-- Form Kirim Pesan -->
+            <form id="chat-form" onsubmit="sendChatMessage(event)" class="p-3 bg-white border-t border-gray-200 flex gap-2 shrink-0 items-center">
+                <input type="text" id="chat-input" required autocomplete="off" placeholder="Ketik pesan..." class="flex-1 px-4 py-2.5 border border-gray-200 rounded-full text-sm outline-none focus:border-brandPrimary bg-gray-50 text-gray-800 transition-colors">
+                <button type="submit" class="w-11 h-11 bg-brandPrimary text-white rounded-full flex items-center justify-center hover:bg-brandPrimaryHover transition shadow-[0_3px_0_0_#be3118] active:translate-y-[2px] active:shadow-none"><i class="fas fa-paper-plane drop-shadow-sm"></i></button>
+            </form>
         </div>
     </div>
 
@@ -267,243 +307,266 @@
     <!-- ================= MAIN APP VIEW ================= -->
     <div id="app-container" class="hidden flex-col h-full w-full relative pb-28">
 
-    <!-- HEADER DRIVER -->
-    <header class="bg-gradient-to-r from-white to-gray-50 shadow-md z-40 sticky top-0 border-b border-gray-200">
-        <div class="flex justify-between items-center px-4 py-3">
-            <div class="flex items-center gap-3">
-                <div class="relative">
-                    <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ccc'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>" alt="Profile" class="w-12 h-12 rounded-full object-cover border-2 border-white shadow-md bg-gray-100" id="userProfileImage">
-                    <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
-                </div>
-                <div>
-                    <div class="font-extrabold text-gray-800 tracking-tight" id="userProfileName">Mitra Kurir</div>
-                    <div class="text-[10px] text-gray-500 flex items-center gap-1 font-semibold bg-white px-2 py-0.5 rounded-full border border-gray-100 shadow-sm w-fit mt-0.5" id="userProfileStatus">
-                        <i class="fas fa-star text-yellow-400"></i> Aktif
+        <!-- HEADER DRIVER -->
+        <header class="bg-gradient-to-r from-white to-gray-50 shadow-md z-40 sticky top-0 border-b border-gray-200">
+            <div class="flex justify-between items-center px-4 py-3">
+                <div class="flex items-center gap-3">
+                    <div class="relative">
+                        <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ccc'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>" alt="Profile" class="w-12 h-12 rounded-full object-cover border-2 border-white shadow-md bg-gray-100" id="userProfileImage">
+                        <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
                     </div>
-                </div>
-            </div>
-            
-            <!-- Toggle Online/Offline -->
-            <div class="flex flex-col items-end">
-                <div class="relative inline-block w-12 align-middle select-none transition duration-200 ease-in mt-1">
-                    <input type="checkbox" name="toggle" id="onlineToggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer z-10 transition-transform duration-200 ease-in-out shadow-sm" checked/>
-                    <label for="onlineToggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-green-400 cursor-pointer transition-colors duration-200 ease-in-out shadow-inner"></label>
-                </div>
-                <span id="statusText" class="text-[10px] font-black text-green-600 mt-1.5 tracking-wider uppercase">ONLINE</span>
-            </div>
-        </div>
-
-        <!-- Earning Dashboard -->
-        <div class="bg-gradient-to-r from-brandPrimary to-[#ff7337] text-white p-4 flex justify-between items-center shadow-inner">
-            <div>
-                <div class="text-[10px] font-bold opacity-90 mb-0.5 uppercase tracking-wider">Pendapatan (Hari Ini)</div>
-                <div class="text-2xl font-black drop-shadow-md" id="header-income">Rp 0</div>
-            </div>
-            <div class="text-right border-l border-white/30 pl-4">
-                <div class="text-[10px] font-bold opacity-90 mb-0.5 uppercase tracking-wider">Total Antaran</div>
-                <div class="text-2xl font-black drop-shadow-md" id="header-count">0</div>
-            </div>
-        </div>
-    </header>
-
-    <!-- MAIN CONTENT AREA -->
-    <main class="flex-1 overflow-y-auto scroll-smooth">
-        
-        <!-- SECTION: TUGAS BARU (New Orders) -->
-        <section id="section-new" class="p-4 block">
-            <div class="flex justify-between items-center mb-4 bg-white p-3 rounded-xl shadow-sm border border-gray-100">
-                <h2 class="font-black text-gray-800 text-lg flex items-center gap-2"><i class="fas fa-bolt text-yellow-400"></i> Tugas Masuk</h2>
-                <!-- Sync Indicator -->
-                <div class="flex items-center gap-2 bg-orange-50 px-3 py-1.5 rounded-full border border-orange-100 shadow-inner font-bold text-brandPrimary text-[10px]">
-                    <i class="fas fa-sync-alt" id="sync-icon"></i>
-                    <span id="sync-time">Live Sync</span>
-                </div>
-            </div>
-
-            <!-- Kontainer Dinamis untuk Pesanan Asli -->
-            <div id="new-orders-container" class="flex flex-col gap-4 pb-10">
-                <div class="text-center py-16 text-gray-400 font-bold bg-white rounded-2xl border border-gray-100 shadow-sm">
-                    <i class="fas fa-spinner fa-spin text-4xl mb-3 text-brandPrimary"></i>
-                    <p>Mencari tugas baru...</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- SECTION: AKTIF (Active Delivery - Multi-Tasking) -->
-        <section id="section-active" class="hidden pb-6 bg-[#f9f9f9] min-h-full">
-            
-            <!-- Map Overview Interaktif (Multi-Pin) -->
-            <div class="w-full h-64 relative border-b-4 border-brandPrimary shadow-sm shrink-0 bg-gray-200">
-                <div id="live-map-leaflet" class="w-full h-full z-0"></div>
-            </div>
-
-            <!-- List Active Orders -->
-            <div id="active-orders-container" class="flex flex-col pb-10 mt-4 gap-4">
-                <!-- Data akan dirender disini -->
-            </div>
-        </section>
-
-        <!-- SECTION: RIWAYAT & STATISTIK (History & Dashboard) -->
-        <section id="section-history" class="hidden p-4">
-            <div class="flex flex-col md:flex-row justify-between md:items-center mb-4 gap-4">
-                <h2 class="font-black text-gray-800 text-lg flex items-center gap-2"><i class="fas fa-chart-bar text-blue-500"></i> Riwayat & Statistik</h2>
-                <div class="flex items-center gap-2">
-                    <select id="history-month-filter" onchange="onHistoryFilterChange()" class="bg-white border border-gray-200 text-gray-700 py-1.5 px-2 rounded-lg shadow-sm focus:outline-none focus:border-brandPrimary font-bold text-xs cursor-pointer">
-                        <option value="01">Januari</option>
-                        <option value="02">Februari</option>
-                        <option value="03">Maret</option>
-                        <option value="04">April</option>
-                        <option value="05">Mei</option>
-                        <option value="06">Juni</option>
-                        <option value="07">Juli</option>
-                        <option value="08">Agustus</option>
-                        <option value="09">September</option>
-                        <option value="10">Oktober</option>
-                        <option value="11">November</option>
-                        <option value="12">Desember</option>
-                    </select>
-                    <select id="history-year-filter" onchange="onHistoryFilterChange()" class="bg-white border border-gray-200 text-gray-700 py-1.5 px-2 rounded-lg shadow-sm focus:outline-none focus:border-brandPrimary font-bold text-xs cursor-pointer">
-                        <!-- Populated via JS -->
-                    </select>
-                </div>
-            </div>
-
-            <!-- Summary Cards Dashboard -->
-            <div class="grid grid-cols-2 gap-3 mb-4">
-                <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex flex-col justify-center items-center text-center">
-                    <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center mb-2 shadow-inner"><i class="fas fa-boxes"></i></div>
-                    <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Total Antaran</div>
-                    <div class="text-xl font-black text-gray-800" id="hist-summary-qty">0</div>
-                </div>
-                <div class="bg-gradient-to-br from-brandPrimary to-[#ff7337] p-4 rounded-xl shadow-[0_4px_10px_rgba(238,77,45,0.2)] flex flex-col justify-center items-center text-center text-white border border-orange-400">
-                    <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center mb-2 shadow-inner"><i class="fas fa-wallet"></i></div>
-                    <div class="text-[10px] font-bold text-white/90 uppercase tracking-wider mb-0.5">Pendapatan Bersih</div>
-                    <div class="text-lg font-black drop-shadow-sm tracking-tight" id="hist-summary-income">Rp 0</div>
-                </div>
-            </div>
-
-            <!-- Chart Analytic -->
-            <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm mb-5">
-                <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100 pb-2 mb-3">Grafik Performa Harian</h3>
-                <div class="relative h-48 w-full">
-                    <canvas id="historyChartCanvas"></canvas>
-                </div>
-            </div>
-
-            <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 pl-1">Daftar Antaran</h3>
-            <div id="history-container" class="flex flex-col gap-3 pb-10">
-                <!-- Riwayat dinamis akan muncul di sini -->
-            </div>
-        </section>
-
-        <!-- SECTION: PROFIL (Profile) -->
-        <section id="section-profile" class="hidden p-4">
-            <div class="flex justify-between items-center mb-4 bg-white p-3 rounded-xl shadow-sm border border-gray-100">
-                <h2 class="font-black text-gray-800 text-lg"><i class="fas fa-id-card text-brandPrimary mr-1"></i> Profil Mitra</h2>
-            </div>
-            
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-4">
-                <div class="flex items-center gap-5 mb-5 border-b border-gray-100 pb-5">
-                    <div class="relative inline-block shrink-0">
-                        <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ccc'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>" id="profDetailImage" class="w-20 h-20 rounded-full object-cover border-4 border-gray-50 shadow-md bg-gray-100">
-                        <input type="file" id="driverImgInput" accept="image/*" class="hidden" onchange="uploadProfileImage(event)">
-                        <label for="driverImgInput" id="btnEditPhoto" class="btn-3d absolute bottom-0 right-[-5px] bg-brandPrimary text-white w-8 h-8 rounded-full flex items-center justify-center cursor-pointer shadow-[0_2px_5px_rgba(0,0,0,0.2)] border-2 border-white hover:bg-brandPrimaryHover" title="Ubah Foto Profil">
-                            <i class="fas fa-camera text-xs"></i>
-                        </label>
-                    </div>
-                    <div class="w-full">
-                        <div id="profDetailName" class="font-black text-xl text-gray-800 tracking-tight leading-tight mb-1">Nama Kurir</div>
-                        <div class="text-[10px] font-bold text-brandPrimary bg-orange-50 px-2 py-0.5 rounded border border-orange-100 inline-block mb-1">Mitra Aktif</div>
-                        <div id="profDetailPhone" class="text-gray-500 text-xs font-semibold"><i class="fas fa-phone-alt text-[10px] mr-1"></i> 08xxxxxx</div>
+                    <div>
+                        <div class="font-extrabold text-gray-800 tracking-tight" id="userProfileName">Mitra Kurir</div>
+                        <div class="text-[10px] text-gray-500 flex items-center gap-1 font-semibold bg-white px-2 py-0.5 rounded-full border border-gray-100 shadow-sm w-fit mt-0.5" id="userProfileStatus">
+                            <i class="fas fa-star text-yellow-400"></i> Aktif
+                        </div>
                     </div>
                 </div>
                 
-                <div class="grid grid-cols-1 gap-3">
-                    <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 flex justify-between items-center">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-gray-400 shadow-sm"><i class="fas fa-fingerprint"></i></div>
-                            <div>
-                                <span class="text-gray-400 block text-[10px] font-bold uppercase tracking-wider">ID Mitra</span>
-                                <span id="profDetailId" class="font-extrabold text-gray-800 text-sm">-</span>
-                            </div>
-                        </div>
+                <!-- Toggle Online/Offline -->
+                <div class="flex flex-col items-end">
+                    <div class="relative inline-block w-12 align-middle select-none transition duration-200 ease-in mt-1">
+                        <input type="checkbox" name="toggle" id="onlineToggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer z-10 transition-transform duration-200 ease-in-out shadow-sm" checked/>
+                        <label for="onlineToggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-green-400 cursor-pointer transition-colors duration-200 ease-in-out shadow-inner"></label>
                     </div>
-                    <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 flex justify-between items-center">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-gray-400 shadow-sm"><i class="fas fa-envelope"></i></div>
-                            <div class="overflow-hidden">
-                                <span class="text-gray-400 block text-[10px] font-bold uppercase tracking-wider">Email Terdaftar</span>
-                                <span id="profDetailEmail" class="font-extrabold text-gray-800 text-sm truncate block">-</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex gap-3">
-                        <div class="bg-blue-50 p-3 rounded-xl border border-blue-100 flex-1">
-                            <span class="text-blue-400 block text-[10px] font-bold uppercase tracking-wider mb-1"><i class="fas fa-motorcycle mr-1"></i>Kendaraan</span>
-                            <span id="profDetailVehicle" class="font-extrabold text-blue-800 text-sm">-</span>
-                        </div>
-                        <div class="bg-yellow-50 p-3 rounded-xl border border-yellow-100 flex-1">
-                            <span class="text-yellow-500 block text-[10px] font-bold uppercase tracking-wider mb-1"><i class="fas fa-id-card mr-1"></i>Plat Nomor</span>
-                            <span id="profDetailPlate" class="font-extrabold text-yellow-800 text-sm uppercase tracking-widest">-</span>
-                        </div>
-                    </div>
+                    <span id="statusText" class="text-[10px] font-black text-green-600 mt-1.5 tracking-wider uppercase">ONLINE</span>
                 </div>
             </div>
 
-            <!-- Tombol Manual Install PWA -->
-            <button onclick="acceptInstallPrompt()" class="btn-3d w-full bg-white text-brandPrimary border-2 border-brandPrimary py-3 rounded-xl font-black text-sm hover:bg-orange-50 shadow-[0_3px_0_0_#ee4d2d] flex justify-center items-center gap-2 mb-3">
-                <i class="fas fa-download"></i> INSTAL APLIKASI (KE LAYAR UTAMA)
-            </button>
-
-            <button onclick="handleLogout()" class="btn-3d w-full bg-red-50 text-red-600 border-2 border-red-200 py-3 rounded-xl font-black text-sm hover:bg-red-100 shadow-[0_4px_0_0_#fca5a5] flex justify-center items-center gap-2 mb-10">
-                <i class="fas fa-sign-out-alt"></i> KELUAR AKUN
-            </button>
-        </section>
-
-    </main>
-
-    <!-- BOTTOM NAVIGATION (3D FLOATING NAV) -->
-    <nav class="fixed bottom-4 left-1/2 transform -translate-x-1/2 w-[calc(100%-2rem)] md:max-w-[calc(28rem-2rem)] bg-white/90 backdrop-blur-xl border border-white flex justify-around items-end text-[10px] text-gray-500 pb-2 pt-2 shadow-[0_10px_30px_rgba(0,0,0,0.15)] rounded-3xl z-50 h-[70px]">
-        <div class="absolute inset-0 bg-gradient-to-t from-transparent to-white/80 rounded-3xl pointer-events-none"></div>
-
-        <div onclick="switchTab('new')" class="flex flex-col items-center cursor-pointer w-1/4 relative z-10 group transition-all mobile-nav-item" data-target="new">
-            <div class="nav-icon-container w-12 h-12 flex items-center justify-center transform group-hover:-translate-y-6 group-hover:shadow-[0_8px_15px_rgba(238,77,45,0.2)] group-hover:border-[3px] border-white rounded-full transition-all duration-300 relative group-active:scale-90 bg-white">
-                <i class="nav-icon fas fa-motorcycle text-2xl drop-shadow-sm text-gray-400 transition-colors"></i>
+            <!-- Earning Dashboard -->
+            <div class="bg-gradient-to-r from-brandPrimary to-[#ff7337] text-white p-4 flex justify-between items-center shadow-inner">
+                <div>
+                    <div class="text-[10px] font-bold opacity-90 mb-0.5 uppercase tracking-wider">Pendapatan (Hari Ini)</div>
+                    <div class="text-2xl font-black drop-shadow-md" id="header-income">Rp 0</div>
+                </div>
+                <div class="text-right border-l border-white/30 pl-4">
+                    <div class="text-[10px] font-bold opacity-90 mb-0.5 uppercase tracking-wider">Total Antaran</div>
+                    <div class="text-2xl font-black drop-shadow-md" id="header-count">0</div>
+                </div>
             </div>
-            <span class="nav-text font-bold mt-1 group-hover:opacity-0 transition-opacity duration-300">Tugas Baru</span>
-        </div>
-        
-        <div onclick="switchTab('active')" class="flex flex-col items-center cursor-pointer w-1/4 relative z-10 group transition-all mobile-nav-item" data-target="active">
-            <div class="nav-icon-container w-12 h-12 flex items-center justify-center transform group-hover:-translate-y-6 group-hover:shadow-[0_8px_15px_rgba(238,77,45,0.2)] group-hover:border-[3px] border-white rounded-full transition-all duration-300 relative group-active:scale-90 bg-white">
-                <i class="nav-icon fas fa-map-marked-alt text-2xl drop-shadow-sm text-gray-400 transition-colors"></i>
-                <span id="activeBadge" class="hidden absolute -top-1 -right-1 bg-brandPrimary text-white text-[9px] font-black px-1.5 py-0.5 rounded-full shadow-[0_2px_5px_rgba(238,77,45,0.5)] border border-white">0</span>
-            </div>
-            <span class="nav-text font-bold mt-1 group-hover:opacity-0 transition-opacity duration-300">Aktif</span>
-        </div>
+        </header>
 
-        <div onclick="switchTab('history')" class="flex flex-col items-center cursor-pointer w-1/4 relative z-10 group transition-all mobile-nav-item" data-target="history">
-            <div class="nav-icon-container w-12 h-12 flex items-center justify-center transform group-hover:-translate-y-6 group-hover:shadow-[0_8px_15px_rgba(238,77,45,0.2)] group-hover:border-[3px] border-white rounded-full transition-all duration-300 relative group-active:scale-90 bg-white">
-                <i class="nav-icon fas fa-chart-line text-2xl drop-shadow-sm text-gray-400 transition-colors"></i>
-            </div>
-            <span class="nav-text font-bold mt-1 group-hover:opacity-0 transition-opacity duration-300">Riwayat</span>
-        </div>
+        <!-- MAIN CONTENT AREA -->
+        <main class="flex-1 overflow-y-auto scroll-smooth">
+            
+            <!-- SECTION: TUGAS BARU (New Orders) -->
+            <section id="section-new" class="p-4 block">
+                <div class="flex justify-between items-center mb-4 bg-white p-3 rounded-xl shadow-sm border border-gray-100">
+                    <h2 class="font-black text-gray-800 text-lg flex items-center gap-2"><i class="fas fa-bolt text-yellow-400"></i> Tugas Masuk</h2>
+                    <!-- Sync Indicator -->
+                    <div class="flex items-center gap-2 bg-orange-50 px-3 py-1.5 rounded-full border border-orange-100 shadow-inner font-bold text-brandPrimary text-[10px]">
+                        <i class="fas fa-sync-alt" id="sync-icon"></i>
+                        <span id="sync-time">Live Sync</span>
+                    </div>
+                </div>
 
-        <div onclick="switchTab('profile')" class="flex flex-col items-center cursor-pointer w-1/4 relative z-10 group transition-all mobile-nav-item" data-target="profile">
-            <div class="nav-icon-container w-12 h-12 flex items-center justify-center transform group-hover:-translate-y-6 group-hover:shadow-[0_8px_15px_rgba(238,77,45,0.2)] group-hover:border-[3px] border-white rounded-full transition-all duration-300 relative group-active:scale-90 bg-white">
-                <i class="nav-icon fas fa-user-circle text-2xl drop-shadow-sm text-gray-400 transition-colors"></i>
+                <!-- Kontainer Dinamis untuk Pesanan Asli -->
+                <div id="new-orders-container" class="flex flex-col gap-4 pb-10">
+                    <div class="text-center py-16 text-gray-400 font-bold bg-white rounded-2xl border border-gray-100 shadow-sm">
+                        <i class="fas fa-spinner fa-spin text-4xl mb-3 text-brandPrimary"></i>
+                        <p>Mencari tugas baru...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION: AKTIF (Active Delivery - Multi-Tasking) -->
+            <section id="section-active" class="hidden pb-6 bg-[#f9f9f9] min-h-full">
+                <!-- Map Overview Interaktif (Multi-Pin) -->
+                <div class="w-full h-64 relative border-b-4 border-brandPrimary shadow-sm shrink-0 bg-gray-200">
+                    <div id="live-map-leaflet" class="w-full h-full z-0"></div>
+                </div>
+
+                <!-- List Active Orders -->
+                <div id="active-orders-container" class="flex flex-col pb-10 mt-4 gap-4">
+                    <!-- Data akan dirender disini -->
+                </div>
+            </section>
+
+            <!-- SECTION: RIWAYAT & STATISTIK (History & Dashboard) -->
+            <section id="section-history" class="hidden p-4">
+                <div class="flex flex-col md:flex-row justify-between md:items-center mb-4 gap-4">
+                    <h2 class="font-black text-gray-800 text-lg flex items-center gap-2"><i class="fas fa-chart-bar text-blue-500"></i> Riwayat & Statistik</h2>
+                    <div class="flex items-center gap-2">
+                        <select id="history-month-filter" onchange="onHistoryFilterChange()" class="bg-white border border-gray-200 text-gray-700 py-1.5 px-2 rounded-lg shadow-sm focus:outline-none focus:border-brandPrimary font-bold text-xs cursor-pointer">
+                            <option value="01">Januari</option>
+                            <option value="02">Februari</option>
+                            <option value="03">Maret</option>
+                            <option value="04">April</option>
+                            <option value="05">Mei</option>
+                            <option value="06">Juni</option>
+                            <option value="07">Juli</option>
+                            <option value="08">Agustus</option>
+                            <option value="09">September</option>
+                            <option value="10">Oktober</option>
+                            <option value="11">November</option>
+                            <option value="12">Desember</option>
+                        </select>
+                        <select id="history-year-filter" onchange="onHistoryFilterChange()" class="bg-white border border-gray-200 text-gray-700 py-1.5 px-2 rounded-lg shadow-sm focus:outline-none focus:border-brandPrimary font-bold text-xs cursor-pointer">
+                            <!-- Populated via JS -->
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Summary Cards Dashboard -->
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex flex-col justify-center items-center text-center">
+                        <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center mb-2 shadow-inner"><i class="fas fa-boxes"></i></div>
+                        <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Total Antaran</div>
+                        <div class="text-xl font-black text-gray-800" id="hist-summary-qty">0</div>
+                    </div>
+                    <div class="bg-gradient-to-br from-brandPrimary to-[#ff7337] p-4 rounded-xl shadow-[0_4px_10px_rgba(238,77,45,0.2)] flex flex-col justify-center items-center text-center text-white border border-orange-400">
+                        <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center mb-2 shadow-inner"><i class="fas fa-wallet"></i></div>
+                        <div class="text-[10px] font-bold text-white/90 uppercase tracking-wider mb-0.5">Pendapatan Bersih</div>
+                        <div class="text-lg font-black drop-shadow-sm tracking-tight" id="hist-summary-income">Rp 0</div>
+                    </div>
+                </div>
+
+                <!-- Chart Analytic -->
+                <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm mb-5">
+                    <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100 pb-2 mb-3">Grafik Performa Harian</h3>
+                    <div class="relative h-48 w-full">
+                        <canvas id="historyChartCanvas"></canvas>
+                    </div>
+                </div>
+
+                <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 pl-1">Daftar Antaran</h3>
+                <div id="history-container" class="flex flex-col gap-3 pb-10">
+                    <!-- Riwayat dinamis akan muncul di sini -->
+                </div>
+            </section>
+
+            <!-- SECTION: PROFIL (Profile) -->
+            <section id="section-profile" class="hidden p-4">
+                <div class="flex justify-between items-center mb-4 bg-white p-3 rounded-xl shadow-sm border border-gray-100">
+                    <h2 class="font-black text-gray-800 text-lg"><i class="fas fa-id-card text-brandPrimary mr-1"></i> Profil Mitra</h2>
+                </div>
+                
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-4">
+                    <div class="flex items-center gap-5 mb-5 border-b border-gray-100 pb-5">
+                        <div class="relative inline-block shrink-0">
+                            <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ccc'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>" id="profDetailImage" class="w-20 h-20 rounded-full object-cover border-4 border-gray-50 shadow-md bg-gray-100">
+                            <input type="file" id="driverImgInput" accept="image/*" class="hidden" onchange="uploadProfileImage(event)">
+                            <label for="driverImgInput" id="btnEditPhoto" class="btn-3d absolute bottom-0 right-[-5px] bg-brandPrimary text-white w-8 h-8 rounded-full flex items-center justify-center cursor-pointer shadow-[0_2px_5px_rgba(0,0,0,0.2)] border-2 border-white hover:bg-brandPrimaryHover" title="Ubah Foto Profil">
+                                <i class="fas fa-camera text-xs"></i>
+                            </label>
+                        </div>
+                        <div class="w-full">
+                            <div id="profDetailName" class="font-black text-xl text-gray-800 tracking-tight leading-tight mb-1">Nama Kurir</div>
+                            <div class="text-[10px] font-bold text-brandPrimary bg-orange-50 px-2 py-0.5 rounded border border-orange-100 inline-block mb-1">Mitra Aktif</div>
+                            <div id="profDetailPhone" class="text-gray-500 text-xs font-semibold"><i class="fas fa-phone-alt text-[10px] mr-1"></i> 08xxxxxx</div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 gap-3">
+                        <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 flex justify-between items-center">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-gray-400 shadow-sm"><i class="fas fa-fingerprint"></i></div>
+                                <div>
+                                    <span class="text-gray-400 block text-[10px] font-bold uppercase tracking-wider">ID Mitra</span>
+                                    <span id="profDetailId" class="font-extrabold text-gray-800 text-sm">-</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 flex justify-between items-center">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-gray-400 shadow-sm"><i class="fas fa-envelope"></i></div>
+                                <div class="overflow-hidden">
+                                    <span class="text-gray-400 block text-[10px] font-bold uppercase tracking-wider">Email Terdaftar</span>
+                                    <span id="profDetailEmail" class="font-extrabold text-gray-800 text-sm truncate block">-</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex gap-3">
+                            <div class="bg-blue-50 p-3 rounded-xl border border-blue-100 flex-1">
+                                <span class="text-blue-400 block text-[10px] font-bold uppercase tracking-wider mb-1"><i class="fas fa-motorcycle mr-1"></i>Kendaraan</span>
+                                <span id="profDetailVehicle" class="font-extrabold text-blue-800 text-sm">-</span>
+                            </div>
+                            <div class="bg-yellow-50 p-3 rounded-xl border border-yellow-100 flex-1">
+                                <span class="text-yellow-500 block text-[10px] font-bold uppercase tracking-wider mb-1"><i class="fas fa-id-card mr-1"></i>Plat Nomor</span>
+                                <span id="profDetailPlate" class="font-extrabold text-yellow-800 text-sm uppercase tracking-widest">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tombol Chat CS -->
+                <button onclick="openChat('CS')" class="btn-3d w-full bg-blue-50 text-blue-600 border-2 border-blue-200 py-3.5 rounded-xl font-black text-sm hover:bg-blue-100 shadow-[0_4px_0_0_#93c5fd] flex justify-center items-center gap-2 mb-3">
+                    <i class="fas fa-headset"></i> CHAT CS (BANTUAN)
+                </button>
+
+                <!-- Tombol Manual Install PWA -->
+                <button onclick="acceptInstallPrompt()" class="btn-3d w-full bg-white text-brandPrimary border-2 border-brandPrimary py-3.5 rounded-xl font-black text-sm hover:bg-orange-50 shadow-[0_4px_0_0_#ee4d2d] flex justify-center items-center gap-2 mb-3">
+                    <i class="fas fa-download"></i> INSTAL APLIKASI (KE LAYAR UTAMA)
+                </button>
+
+                <button onclick="handleLogout()" class="btn-3d w-full bg-red-50 text-red-600 border-2 border-red-200 py-3.5 rounded-xl font-black text-sm hover:bg-red-100 shadow-[0_4px_0_0_#fca5a5] flex justify-center items-center gap-2 mb-10">
+                    <i class="fas fa-sign-out-alt"></i> KELUAR AKUN
+                </button>
+            </section>
+
+        </main>
+
+        <!-- BOTTOM NAVIGATION (3D FLOATING NAV) -->
+        <nav class="fixed bottom-4 left-1/2 transform -translate-x-1/2 w-[calc(100%-2rem)] md:max-w-[calc(28rem-2rem)] bg-white/90 backdrop-blur-xl border border-white flex justify-around items-end text-[10px] text-gray-500 pb-2 pt-2 shadow-[0_10px_30px_rgba(0,0,0,0.15)] rounded-3xl z-50 h-[70px]">
+            <div class="absolute inset-0 bg-gradient-to-t from-transparent to-white/80 rounded-3xl pointer-events-none"></div>
+
+            <div onclick="switchTab('new')" class="flex flex-col items-center cursor-pointer w-1/4 relative z-10 group transition-all mobile-nav-item" data-target="new">
+                <div class="nav-icon-container w-12 h-12 flex items-center justify-center transform group-hover:-translate-y-6 group-hover:shadow-[0_8px_15px_rgba(238,77,45,0.2)] group-hover:border-[3px] border-white rounded-full transition-all duration-300 relative group-active:scale-90 bg-white">
+                    <i class="nav-icon fas fa-motorcycle text-2xl drop-shadow-sm text-gray-400 transition-colors"></i>
+                </div>
+                <span class="nav-text font-bold mt-1 group-hover:opacity-0 transition-opacity duration-300">Tugas Baru</span>
             </div>
-            <span class="nav-text font-bold mt-1 group-hover:opacity-0 transition-opacity duration-300">Profil</span>
-        </div>
-    </nav>
+            
+            <div onclick="switchTab('active')" class="flex flex-col items-center cursor-pointer w-1/4 relative z-10 group transition-all mobile-nav-item" data-target="active">
+                <div class="nav-icon-container w-12 h-12 flex items-center justify-center transform group-hover:-translate-y-6 group-hover:shadow-[0_8px_15px_rgba(238,77,45,0.2)] group-hover:border-[3px] border-white rounded-full transition-all duration-300 relative group-active:scale-90 bg-white">
+                    <i class="nav-icon fas fa-map-marked-alt text-2xl drop-shadow-sm text-gray-400 transition-colors"></i>
+                    <span id="activeBadge" class="hidden absolute -top-1 -right-1 bg-brandPrimary text-white text-[9px] font-black px-1.5 py-0.5 rounded-full shadow-[0_2px_5px_rgba(238,77,45,0.5)] border border-white">0</span>
+                </div>
+                <span class="nav-text font-bold mt-1 group-hover:opacity-0 transition-opacity duration-300">Aktif</span>
+            </div>
+
+            <div onclick="switchTab('history')" class="flex flex-col items-center cursor-pointer w-1/4 relative z-10 group transition-all mobile-nav-item" data-target="history">
+                <div class="nav-icon-container w-12 h-12 flex items-center justify-center transform group-hover:-translate-y-6 group-hover:shadow-[0_8px_15px_rgba(238,77,45,0.2)] group-hover:border-[3px] border-white rounded-full transition-all duration-300 relative group-active:scale-90 bg-white">
+                    <i class="nav-icon fas fa-chart-line text-2xl drop-shadow-sm text-gray-400 transition-colors"></i>
+                </div>
+                <span class="nav-text font-bold mt-1 group-hover:opacity-0 transition-opacity duration-300">Riwayat</span>
+            </div>
+
+            <div onclick="switchTab('profile')" class="flex flex-col items-center cursor-pointer w-1/4 relative z-10 group transition-all mobile-nav-item" data-target="profile">
+                <div class="nav-icon-container w-12 h-12 flex items-center justify-center transform group-hover:-translate-y-6 group-hover:shadow-[0_8px_15px_rgba(238,77,45,0.2)] group-hover:border-[3px] border-white rounded-full transition-all duration-300 relative group-active:scale-90 bg-white">
+                    <i class="nav-icon fas fa-user-circle text-2xl drop-shadow-sm text-gray-400 transition-colors"></i>
+                </div>
+                <span class="nav-text font-bold mt-1 group-hover:opacity-0 transition-opacity duration-300">Profil</span>
+            </div>
+        </nav>
+    </div>
 
     <!-- JAVASCRIPT LOGIC -->
     <script>
+        // --- FIREBASE CONFIGURATION (GOOGLE LOGIN & FIRESTORE) ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyC7yKrsNvsKaA3wuU2ocpHtyUPbDh1zcm4",
+            authDomain: "blifoods.firebaseapp.com",
+            projectId: "blifoods",
+            storageBucket: "blifoods.firebasestorage.app",
+            messagingSenderId: "775702251424",
+            appId: "1:775702251424:web:434e81622f7685c07486c5",
+            measurementId: "G-93K32KJD5X"
+        };
+        
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const auth = firebase.auth();
+        const db = firebase.firestore(); // Inisialisasi Firestore
+        const googleProvider = new firebase.auth.GoogleAuthProvider();
+
         // --- PWA SETUP (DENGAN ID UNIK AGAR TIDAK BENTROK) ---
         const pwaManifest = {
-            "id": "foodcourt-driver-app-v1", // ID UNIK (Super Penting!)
+            "id": "foodcourt-driver-app-v1", 
             "name": "FoodCourt Driver",
             "short_name": "FCDriver",
-            "start_url": window.location.pathname + "?mode=pwa", // URL UNIK
+            "start_url": window.location.pathname + "?mode=pwa", 
             "display": "standalone",
             "background_color": "#f5f5f5",
             "theme_color": "#ee4d2d",
@@ -618,7 +681,6 @@
             }
         }
 
-
         // --- CUSTOM MODAL SYSTEM (AUTO-TOAST) ---
         function openModalAnim() {
             const m = document.getElementById('customModal');
@@ -697,10 +759,10 @@
             }
         }
 
-        // --- VARIABEL GLOBAL & 100% REAL DATA ---
+        // --- VARIABEL GLOBAL & REAL DATA ---
         let DRIVER_DATA = null; 
         let syncInterval;
-        let historyChartInstance = null; // Variabel chart
+        let historyChartInstance = null;
 
         let driverPos = { lat: null, lng: null }; 
         let activeDeliveryMap = null;
@@ -713,10 +775,9 @@
         let localMaxOngkirMulti = 0; 
         let IS_SYSTEM_READY = false;
 
-        // URL Web App
+        // URL Web App GAS
         const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxepD3BGU993WBCuZjH2Wo4sDyUkwyp4SGE4_mZ6EbrzD_qCDGzkRIOnPqmcXVnKNM/exec"; 
 
-        // RUMUS MENGHITUNG JARAK (HAVERSINE)
         function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
             var R = 6371; 
             var dLat = deg2rad(lat2-lat1);  
@@ -780,7 +841,6 @@
             return isNaN(ongkir) ? localFeeOngkir : ongkir;
         }
 
-        // FUNGSI BARU: Mengambil ongkir yang dikunci di database (Atau fallback ke hitung ulang jika data lama)
         function getOrderOngkir(order) {
             if (order.driver_income !== undefined && order.driver_income !== null && order.driver_income !== "") {
                 return parseInt(order.driver_income);
@@ -839,18 +899,15 @@
             syncInterval = setInterval(syncDataBackground, 10000); 
 
             if (navigator.geolocation) {
-                // 1. Tarik lokasi secepat mungkin saat aplikasi baru dibuka
                 navigator.geolocation.getCurrentPosition(
                     (pos) => {
                         if(!driverPos.lat) {
                             driverPos.lat = pos.coords.latitude;
                             driverPos.lng = pos.coords.longitude;
-                            refreshOrders(true); // Refresh layar agar tulisan "Menghitung..." langsung hilang
+                            refreshOrders(true);
                         }
                     },
                     (err) => {
-                        console.log("Quick GPS Error: ", err);
-                        // Fallback ke PPS Gresik jika GPS ditolak/gagal agar tidak stuck "Menghitung..."
                         if(!driverPos.lat) {
                             driverPos.lat = -7.147500;
                             driverPos.lng = 112.604400;
@@ -860,7 +917,6 @@
                     { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
                 );
 
-                // 2. Pantau pergerakan kurir secara real-time
                 navigator.geolocation.watchPosition(
                     (pos) => {
                         driverPos.lat = pos.coords.latitude;
@@ -886,7 +942,6 @@
             if(syncIcon) syncIcon.classList.add('fa-spin');
 
             try {
-                // CHECK ACCOUNT STATUS (SUSPEND PROTECTION)
                 const resStatus = await fetch(`${GAS_WEB_APP_URL}?action=getData&type=users_drivers`).then(r => r.json());
                 if (resStatus.status === 'success' && resStatus.data) {
                     const myAccount = resStatus.data.find(d => d.driver_id === DRIVER_DATA.driver_id);
@@ -966,7 +1021,6 @@
         document.addEventListener('DOMContentLoaded', () => {
             fetchSystemSettings(); 
 
-            // Setup Filter Tanggal/Tahun Default
             const now = new Date();
             const curMonth = (now.getMonth() + 1).toString().padStart(2, '0');
             const curYear = now.getFullYear();
@@ -982,7 +1036,6 @@
             const monthFilter = document.getElementById('history-month-filter');
             if(monthFilter) monthFilter.value = curMonth;
 
-            // Memuat Data Login
             const savedDriver = localStorage.getItem('foodcourt_driver_login');
             if (savedDriver) {
                 try {
@@ -1053,7 +1106,6 @@
                 const res = await response.json();
                 
                 if(res.status === 'success') {
-                    // BLOK: Pengecekan Akun Menunggu Validasi
                     if (res.user.status === 'Menunggu Validasi') {
                         await showCustomAlert("Akun Anda sedang dalam tahap validasi (Maksimal 1x24 Jam). Mohon tunggu persetujuan Admin sebelum dapat masuk ke sistem.", "Perhatian");
                         btn.innerHTML = 'LOG IN';
@@ -1174,7 +1226,6 @@
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin drop-shadow-md"></i> Menyimpan Data...';
                 const newId = "DRV-" + Math.floor(Math.random() * 100000);
                 
-                // BLOK: Status default diubah menjadi Menunggu Validasi
                 const rowData = [
                     newId, name, nik, phone, email, pass, vehicle, plate, urlKtp, urlFace, "Menunggu Validasi"
                 ];
@@ -1540,9 +1591,12 @@
                         <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Pengantaran</div>
                         <div class="font-extrabold text-sm text-gray-800 break-words"><i class="fas fa-user-circle text-blue-500 w-4"></i> Pemesan ID: ${order.user_id}</div>
                         <div class="text-[10px] font-semibold text-gray-500 ml-5 mt-1"><i class="fas fa-route text-blue-500 mr-1"></i> Jarak dr Toko: <span class="text-blue-500 font-bold">${distToBuyerStr}</span></div>
-                        <div class="flex gap-2 mt-2 ml-5">
-                            <button onclick="openGoogleMapsNav(${sLat}, ${sLng})" class="text-[10px] font-bold bg-orange-50 text-orange-600 px-2 py-1.5 rounded-lg border border-orange-100 hover:bg-orange-100 shadow-sm"><i class="fas fa-location-arrow mr-1"></i> Peta Toko</button>
-                            <button onclick="openGoogleMapsNav(${bLat}, ${bLng})" class="text-[10px] font-bold bg-blue-50 text-blue-600 px-2 py-1.5 rounded-lg border border-blue-100 hover:bg-blue-100 shadow-sm"><i class="fas fa-location-arrow mr-1"></i> Peta Pembeli</button>
+                        <div class="flex flex-wrap gap-2 mt-2 ml-5">
+                            <button onclick="openGoogleMapsNav(${sLat}, ${sLng})" class="text-[10px] font-bold bg-orange-50 text-orange-600 px-2 py-1.5 rounded-lg border border-orange-100 hover:bg-orange-100 shadow-sm flex-1 text-center"><i class="fas fa-location-arrow mr-1"></i> Peta Toko</button>
+                            <button onclick="openGoogleMapsNav(${bLat}, ${bLng})" class="text-[10px] font-bold bg-blue-50 text-blue-600 px-2 py-1.5 rounded-lg border border-blue-100 hover:bg-blue-100 shadow-sm flex-1 text-center"><i class="fas fa-location-arrow mr-1"></i> Peta Pembeli</button>
+                        </div>
+                        <div class="mt-2 ml-5">
+                             <button onclick="openChat('DEL', '${order.order_id}', 'Pembeli')" class="btn-3d w-full text-[11px] font-bold bg-brandPrimary/10 text-brandPrimary px-2 py-2 rounded-lg border border-brandPrimary/20 hover:bg-brandPrimary/20 shadow-sm flex items-center justify-center gap-1 transition"><i class="fas fa-comments text-sm"></i> Chat Pembeli</button>
                         </div>
                     </div>
 
@@ -2073,6 +2127,116 @@
         function hideHistoryDetail() {
             document.getElementById('history-detail-overlay').classList.add('hidden');
             document.getElementById('history-detail-overlay').classList.remove('flex');
+        }
+
+        // --- SISTEM CHAT FIREBASE REALTIME ---
+        let currentChatUnsubscribe = null;
+        let activeChatRef = null;
+
+        function openChat(type, refId = null, targetName = "CS") {
+            if (!DRIVER_DATA) {
+                showCustomAlert("Silakan Log In terlebih dahulu untuk menggunakan fitur chat.", "error");
+                return switchAuthView('login');
+            }
+            
+            document.getElementById('chat-overlay').classList.remove('hidden');
+            document.getElementById('chat-overlay').classList.add('flex');
+            
+            const titleEl = document.getElementById('chat-title');
+            const iconEl = document.getElementById('chat-icon');
+            
+            let chatId = "";
+            if (type === 'CS') {
+                titleEl.innerText = "Customer Service";
+                iconEl.className = "fas fa-headset text-xl";
+                chatId = "CS_DRV_" + DRIVER_DATA.driver_id;
+            } else if (type === 'DEL') {
+                titleEl.innerText = "Chat dengan " + targetName;
+                iconEl.className = "fas fa-user text-xl";
+                chatId = "DEL_" + refId;
+            }
+            
+            // Reference ke Firestore Collection 'chats'
+            activeChatRef = db.collection('chats').doc(chatId).collection('messages');
+            
+            const msgContainer = document.getElementById('chat-messages');
+            msgContainer.innerHTML = '<div class="text-center py-4 text-gray-400 text-xs font-semibold"><i class="fas fa-spinner fa-spin mr-1"></i> Menghubungkan ke server chat...</div>';
+            
+            if(currentChatUnsubscribe) currentChatUnsubscribe();
+            
+            // Setup Listener Realtime
+            currentChatUnsubscribe = activeChatRef.orderBy('timestamp', 'asc').onSnapshot(snapshot => {
+                msgContainer.innerHTML = '';
+                
+                if (snapshot.empty) {
+                    msgContainer.innerHTML = '<div class="text-center text-xs text-gray-400 mt-4 bg-white p-3 rounded-xl border border-gray-100 shadow-sm mx-4">Mulai percakapan sekarang. Pesan Anda aman.</div>';
+                    return;
+                }
+
+                let html = '';
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const isMe = data.senderId === DRIVER_DATA.driver_id;
+                    const time = data.timestamp ? new Date(data.timestamp.toDate()).toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'}) : '...';
+                    
+                    if (isMe) {
+                        html += `
+                        <div class="flex flex-col items-end w-full animate-fade-in">
+                            <span class="text-[9px] text-gray-400 mb-0.5 mx-1">Anda</span>
+                            <div class="max-w-[80%] p-3 rounded-2xl bg-brandPrimary text-white rounded-tr-sm shadow-sm border border-[#d73211]">
+                                <p class="text-sm leading-relaxed">${data.text}</p>
+                            </div>
+                            <span class="text-[9px] text-gray-400 mt-0.5 mx-1">${time}</span>
+                        </div>`;
+                    } else {
+                        html += `
+                        <div class="flex flex-col items-start w-full animate-fade-in">
+                            <span class="text-[9px] text-gray-400 mb-0.5 mx-1 font-bold text-brandPrimary">${data.senderName || 'Lawan Bicara'}</span>
+                            <div class="max-w-[80%] p-3 rounded-2xl bg-white text-gray-800 rounded-tl-sm shadow-sm border border-gray-200">
+                                <p class="text-sm leading-relaxed">${data.text}</p>
+                            </div>
+                            <span class="text-[9px] text-gray-400 mt-0.5 mx-1">${time}</span>
+                        </div>`;
+                    }
+                });
+                msgContainer.innerHTML = html;
+                setTimeout(() => { msgContainer.scrollTop = msgContainer.scrollHeight; }, 100);
+                
+            }, error => {
+                console.error("Chat Error:", error);
+                msgContainer.innerHTML = '<div class="text-center text-xs text-red-500 mt-4 bg-red-50 p-3 rounded-xl border border-red-100 mx-4">Gagal terhubung ke server. Pastikan Database Rules Firebase Anda diizinkan untuk membaca/menulis "chats" koleksi.</div>';
+            });
+        }
+
+        function closeChat() {
+            document.getElementById('chat-overlay').classList.add('hidden');
+            document.getElementById('chat-overlay').classList.remove('flex');
+            if(currentChatUnsubscribe) {
+                currentChatUnsubscribe();
+                currentChatUnsubscribe = null;
+            }
+            activeChatRef = null;
+        }
+
+        async function sendChatMessage(e) {
+            e.preventDefault();
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if(!text || !activeChatRef) return;
+            
+            input.value = '';
+            
+            try {
+                // Menulis ke Firestore
+                await activeChatRef.add({
+                    text: text,
+                    senderId: DRIVER_DATA.driver_id,
+                    senderName: "Kurir: " + DRIVER_DATA.full_name,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            } catch(error) {
+                showCustomAlert("Pesan gagal terkirim. Periksa koneksi atau Firebase Rules Anda.", "error");
+            }
         }
 
     </script>
