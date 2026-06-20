@@ -116,8 +116,8 @@
     </div>
 
     <!-- ================= RIWAYAT DETAIL OVERLAY ================= -->
-    <div id="history-detail-overlay" class="hidden fixed inset-0 z-[150] bg-black/50 backdrop-blur-sm overflow-y-auto flex-col justify-center items-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-0 relative mt-10 md:mt-0 flex flex-col max-h-[90vh] overflow-hidden">
+    <div id="history-detail-overlay" class="hidden fixed inset-0 z-[150] bg-black/50 backdrop-blur-sm overflow-y-auto flex-col justify-center items-center p-0 md:p-4">
+        <div class="bg-white rounded-none md:rounded-2xl shadow-2xl w-full h-full md:h-auto max-w-md p-0 relative mt-0 flex flex-col max-h-full md:max-h-[90vh] overflow-hidden">
             <div class="p-4 border-b flex justify-between items-center bg-gray-50 shrink-0">
                 <h2 class="text-lg font-bold text-gray-800"><i class="fas fa-history text-brandPrimary mr-2 drop-shadow-md"></i> Detail Riwayat</h2>
                 <button onclick="hideHistoryDetail()" class="text-gray-500 hover:text-red-500 bg-white w-8 h-8 rounded-full shadow flex justify-center items-center transition"><i class="fas fa-times"></i></button>
@@ -128,9 +128,35 @@
         </div>
     </div>
 
+    <!-- ================= SYSTEM NOTIFICATIONS OVERLAY ================= -->
+    <div id="sys-notif-overlay" class="hidden fixed inset-0 z-[160] bg-black/60 backdrop-blur-sm overflow-y-auto flex-col justify-center items-center p-0 md:p-4">
+        <div class="bg-white rounded-none md:rounded-2xl shadow-2xl w-full h-full md:h-auto max-w-md p-0 relative mt-0 flex flex-col max-h-full md:max-h-[80vh] overflow-hidden">
+            <div class="p-4 border-b flex justify-between items-center bg-brandPrimary text-white shrink-0">
+                <h2 class="text-lg font-bold drop-shadow-md"><i class="far fa-bell mr-2"></i> Notifikasi Masuk</h2>
+                <button onclick="hideSystemNotifications()" class="text-white hover:text-gray-200 bg-white/20 w-8 h-8 rounded-full flex justify-center items-center transition"><i class="fas fa-times"></i></button>
+            </div>
+            <div id="sys-notif-list" class="flex-1 overflow-y-auto bg-[#F0F2F5] hide-scrollbar">
+                <!-- Injected via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= CHAT LIST OVERLAY ================= -->
+    <div id="chat-list-overlay" class="hidden fixed inset-0 z-[170] bg-black/60 backdrop-blur-sm overflow-y-auto flex-col justify-center items-center p-0 md:p-4">
+        <div class="bg-white rounded-none md:rounded-2xl shadow-2xl w-full h-full md:h-auto max-w-md p-0 relative mt-0 flex flex-col max-h-full md:max-h-[90vh] overflow-hidden">
+            <div class="p-4 border-b flex justify-between items-center bg-gradient-to-r from-brandPrimary to-[#d73211] text-white shrink-0 sticky top-0 z-10">
+                <h2 class="text-lg font-bold drop-shadow-md"><i class="fas fa-comments mr-2"></i> Pesan Masuk</h2>
+                <button onclick="hideChatList()" class="text-white hover:text-gray-200 bg-white/20 w-8 h-8 rounded-full shadow border border-white/20 flex justify-center items-center transition"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="flex-1 overflow-y-auto bg-[#F0F2F5] flex flex-col hide-scrollbar p-3 gap-2" id="chat-list-container">
+                <div class="text-center py-4 text-gray-400 text-xs font-semibold"><i class="fas fa-spinner fa-spin mr-1"></i> Memuat daftar pesan...</div>
+            </div>
+        </div>
+    </div>
+
     <!-- ================= OVERLAY IN-APP REALTIME CHAT FIREBASE ================= -->
     <div id="chat-overlay" class="hidden fixed inset-0 z-[400] bg-black/60 backdrop-blur-sm flex-col justify-end md:justify-center items-center p-0 md:p-4">
-        <div class="bg-white md:rounded-2xl shadow-2xl w-full h-[85vh] md:h-[600px] max-w-md p-0 relative flex flex-col overflow-hidden rounded-t-3xl md:rounded-b-2xl animate-slide-up">
+        <div class="bg-white md:rounded-2xl shadow-2xl w-full h-full md:h-[600px] max-w-md p-0 relative flex flex-col overflow-hidden rounded-t-none md:rounded-b-2xl animate-slide-up">
             <!-- Header Chat -->
             <div class="p-4 border-b flex justify-between items-center bg-gradient-to-r from-brandPrimary to-[#d73211] text-white shrink-0 shadow-sm z-10">
                 <div class="flex items-center gap-3">
@@ -151,7 +177,7 @@
             </div>
             
             <!-- Form Kirim Pesan -->
-            <form id="chat-form" onsubmit="sendChatMessage(event)" class="p-3 bg-white border-t border-gray-200 flex gap-2 shrink-0 items-center">
+            <form id="chat-form" onsubmit="sendChatMessage(event)" class="p-3 pb-6 md:pb-3 bg-white border-t border-gray-200 flex gap-2 shrink-0 items-center">
                 <input type="text" id="chat-input" required autocomplete="off" placeholder="Ketik pesan..." class="flex-1 px-4 py-2.5 border border-gray-200 rounded-full text-sm outline-none focus:border-brandPrimary bg-gray-50 text-gray-800 transition-colors">
                 <button type="submit" class="w-11 h-11 bg-brandPrimary text-white rounded-full flex items-center justify-center hover:bg-brandPrimaryHover transition shadow-[0_3px_0_0_#be3118] active:translate-y-[2px] active:shadow-none"><i class="fas fa-paper-plane drop-shadow-sm"></i></button>
             </form>
@@ -323,13 +349,20 @@
                     </div>
                 </div>
                 
-                <!-- Toggle Online/Offline -->
-                <div class="flex flex-col items-end">
-                    <div class="relative inline-block w-12 align-middle select-none transition duration-200 ease-in mt-1">
-                        <input type="checkbox" name="toggle" id="onlineToggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer z-10 transition-transform duration-200 ease-in-out shadow-sm" checked/>
-                        <label for="onlineToggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-green-400 cursor-pointer transition-colors duration-200 ease-in-out shadow-inner"></label>
+                <div class="flex items-center gap-4">
+                    <button onclick="showSystemNotifications()" class="relative text-gray-500 hover:text-brandPrimary transition mt-1">
+                        <i class="far fa-bell text-xl drop-shadow-sm"></i>
+                        <span class="absolute -top-1 -right-1 bg-brandPrimary text-white text-[9px] font-bold w-3.5 h-3.5 flex items-center justify-center rounded-full border-2 border-white shadow-sm hidden sys-notif-badge">!</span>
+                    </button>
+
+                    <!-- Toggle Online/Offline -->
+                    <div class="flex flex-col items-end">
+                        <div class="relative inline-block w-12 align-middle select-none transition duration-200 ease-in mt-1">
+                            <input type="checkbox" name="toggle" id="onlineToggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer z-10 transition-transform duration-200 ease-in-out shadow-sm" checked/>
+                            <label for="onlineToggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-green-400 cursor-pointer transition-colors duration-200 ease-in-out shadow-inner"></label>
+                        </div>
+                        <span id="statusText" class="text-[10px] font-black text-green-600 mt-1.5 tracking-wider uppercase">ONLINE</span>
                     </div>
-                    <span id="statusText" class="text-[10px] font-black text-green-600 mt-1.5 tracking-wider uppercase">ONLINE</span>
                 </div>
             </div>
 
@@ -506,35 +539,44 @@
 
         </main>
 
-        <!-- BOTTOM NAVIGATION (3D FLOATING NAV) -->
+        <!-- BOTTOM NAVIGATION (3D FLOATING NAV - 5 ITEMS) -->
         <nav class="fixed bottom-4 left-1/2 transform -translate-x-1/2 w-[calc(100%-2rem)] md:max-w-[calc(28rem-2rem)] bg-white/90 backdrop-blur-xl border border-white flex justify-around items-end text-[10px] text-gray-500 pb-2 pt-2 shadow-[0_10px_30px_rgba(0,0,0,0.15)] rounded-3xl z-50 h-[70px]">
             <div class="absolute inset-0 bg-gradient-to-t from-transparent to-white/80 rounded-3xl pointer-events-none"></div>
 
-            <div onclick="switchTab('new')" class="flex flex-col items-center cursor-pointer w-1/4 relative z-10 group transition-all mobile-nav-item" data-target="new">
-                <div class="nav-icon-container w-12 h-12 flex items-center justify-center transform group-hover:-translate-y-6 group-hover:shadow-[0_8px_15px_rgba(238,77,45,0.2)] group-hover:border-[3px] border-white rounded-full transition-all duration-300 relative group-active:scale-90 bg-white">
-                    <i class="nav-icon fas fa-motorcycle text-2xl drop-shadow-sm text-gray-400 transition-colors"></i>
+            <div onclick="switchTab('new')" class="flex flex-col items-center cursor-pointer w-1/5 relative z-10 group transition-all mobile-nav-item" data-target="new">
+                <div class="nav-icon-container w-10 h-10 md:w-12 md:h-12 flex items-center justify-center transform group-hover:-translate-y-6 group-hover:shadow-[0_8px_15px_rgba(238,77,45,0.2)] group-hover:border-[3px] border-white rounded-full transition-all duration-300 relative group-active:scale-90 bg-white">
+                    <i class="nav-icon fas fa-motorcycle text-xl md:text-2xl drop-shadow-sm text-gray-400 transition-colors"></i>
                 </div>
                 <span class="nav-text font-bold mt-1 group-hover:opacity-0 transition-opacity duration-300">Tugas Baru</span>
             </div>
             
-            <div onclick="switchTab('active')" class="flex flex-col items-center cursor-pointer w-1/4 relative z-10 group transition-all mobile-nav-item" data-target="active">
-                <div class="nav-icon-container w-12 h-12 flex items-center justify-center transform group-hover:-translate-y-6 group-hover:shadow-[0_8px_15px_rgba(238,77,45,0.2)] group-hover:border-[3px] border-white rounded-full transition-all duration-300 relative group-active:scale-90 bg-white">
-                    <i class="nav-icon fas fa-map-marked-alt text-2xl drop-shadow-sm text-gray-400 transition-colors"></i>
+            <div onclick="switchTab('active')" class="flex flex-col items-center cursor-pointer w-1/5 relative z-10 group transition-all mobile-nav-item" data-target="active">
+                <div class="nav-icon-container w-10 h-10 md:w-12 md:h-12 flex items-center justify-center transform group-hover:-translate-y-6 group-hover:shadow-[0_8px_15px_rgba(238,77,45,0.2)] group-hover:border-[3px] border-white rounded-full transition-all duration-300 relative group-active:scale-90 bg-white">
+                    <i class="nav-icon fas fa-map-marked-alt text-xl md:text-2xl drop-shadow-sm text-gray-400 transition-colors"></i>
                     <span id="activeBadge" class="hidden absolute -top-1 -right-1 bg-brandPrimary text-white text-[9px] font-black px-1.5 py-0.5 rounded-full shadow-[0_2px_5px_rgba(238,77,45,0.5)] border border-white">0</span>
                 </div>
                 <span class="nav-text font-bold mt-1 group-hover:opacity-0 transition-opacity duration-300">Aktif</span>
             </div>
 
-            <div onclick="switchTab('history')" class="flex flex-col items-center cursor-pointer w-1/4 relative z-10 group transition-all mobile-nav-item" data-target="history">
-                <div class="nav-icon-container w-12 h-12 flex items-center justify-center transform group-hover:-translate-y-6 group-hover:shadow-[0_8px_15px_rgba(238,77,45,0.2)] group-hover:border-[3px] border-white rounded-full transition-all duration-300 relative group-active:scale-90 bg-white">
-                    <i class="nav-icon fas fa-chart-line text-2xl drop-shadow-sm text-gray-400 transition-colors"></i>
+            <!-- CHAT MENU -->
+            <div onclick="showChatList()" class="flex flex-col items-center cursor-pointer w-1/5 relative z-10 group transition-all">
+                <div class="nav-icon-container w-10 h-10 md:w-12 md:h-12 flex items-center justify-center transform group-hover:-translate-y-6 group-hover:shadow-[0_8px_15px_rgba(238,77,45,0.2)] group-hover:border-[3px] border-white rounded-full transition-all duration-300 relative group-active:scale-90 bg-white">
+                    <i class="nav-icon fas fa-comments text-xl md:text-2xl drop-shadow-sm text-gray-400 transition-colors"></i>
+                    <span class="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full shadow-[0_2px_5px_rgba(239,68,68,0.5)] border border-white hidden chat-badge">0</span>
+                </div>
+                <span class="nav-text font-bold mt-1 group-hover:opacity-0 transition-opacity duration-300">Chat</span>
+            </div>
+
+            <div onclick="switchTab('history')" class="flex flex-col items-center cursor-pointer w-1/5 relative z-10 group transition-all mobile-nav-item" data-target="history">
+                <div class="nav-icon-container w-10 h-10 md:w-12 md:h-12 flex items-center justify-center transform group-hover:-translate-y-6 group-hover:shadow-[0_8px_15px_rgba(238,77,45,0.2)] group-hover:border-[3px] border-white rounded-full transition-all duration-300 relative group-active:scale-90 bg-white">
+                    <i class="nav-icon fas fa-chart-line text-xl md:text-2xl drop-shadow-sm text-gray-400 transition-colors"></i>
                 </div>
                 <span class="nav-text font-bold mt-1 group-hover:opacity-0 transition-opacity duration-300">Riwayat</span>
             </div>
 
-            <div onclick="switchTab('profile')" class="flex flex-col items-center cursor-pointer w-1/4 relative z-10 group transition-all mobile-nav-item" data-target="profile">
-                <div class="nav-icon-container w-12 h-12 flex items-center justify-center transform group-hover:-translate-y-6 group-hover:shadow-[0_8px_15px_rgba(238,77,45,0.2)] group-hover:border-[3px] border-white rounded-full transition-all duration-300 relative group-active:scale-90 bg-white">
-                    <i class="nav-icon fas fa-user-circle text-2xl drop-shadow-sm text-gray-400 transition-colors"></i>
+            <div onclick="switchTab('profile')" class="flex flex-col items-center cursor-pointer w-1/5 relative z-10 group transition-all mobile-nav-item" data-target="profile">
+                <div class="nav-icon-container w-10 h-10 md:w-12 md:h-12 flex items-center justify-center transform group-hover:-translate-y-6 group-hover:shadow-[0_8px_15px_rgba(238,77,45,0.2)] group-hover:border-[3px] border-white rounded-full transition-all duration-300 relative group-active:scale-90 bg-white">
+                    <i class="nav-icon fas fa-user-circle text-xl md:text-2xl drop-shadow-sm text-gray-400 transition-colors"></i>
                 </div>
                 <span class="nav-text font-bold mt-1 group-hover:opacity-0 transition-opacity duration-300">Profil</span>
             </div>
@@ -610,14 +652,14 @@
             }
         }
 
-        function triggerSystemNotification(title, bodyText) {
+        function triggerSystemNotification(title, bodyText, tagId = 'fcdriver-notif') {
             if ('Notification' in window && Notification.permission === 'granted') {
                 navigator.serviceWorker.ready.then(function(registration) {
                     registration.showNotification(title, {
                         body: bodyText,
                         icon: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ee4d2d'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>",
                         vibrate: [200, 100, 200],
-                        tag: 'fcdriver-notif' 
+                        tag: tagId 
                     });
                 });
             }
@@ -958,8 +1000,24 @@
                 const res = await response.json();
                 
                 if (res.status === 'success' && res.data) {
+                    const oldCache = localStorage.getItem('foodcourt_driver_orders_cache');
                     localStorage.setItem('foodcourt_driver_orders_cache', JSON.stringify(res.data));
                     updateDriverStats(res.data);
+
+                    // Notifications Logic
+                    const myOrders = res.data.filter(o => o.status && o.status.includes(DRIVER_DATA.full_name));
+                    const newTasks = res.data.filter(o => o.status === 'Menunggu Kurir');
+                    
+                    const currentHash = JSON.stringify(myOrders.map(o => o.order_id + o.status)) + JSON.stringify(newTasks.map(o => o.order_id));
+                    const lastHash = localStorage.getItem('fcdriver_last_notif_hash');
+                    
+                    if (oldCache && lastHash && lastHash !== currentHash) {
+                        if (document.visibilityState === 'hidden') {
+                            triggerSystemNotification("Pembaruan FoodCourt 🛵", "Ada tugas baru atau pembaruan status pesanan Anda!");
+                        }
+                        document.querySelectorAll('.sys-notif-badge').forEach(el => el.classList.remove('hidden'));
+                    }
+                    localStorage.setItem('fcdriver_last_notif_hash', currentHash);
                     
                     processNewOrders(res.data, true);
                     processActiveOrders(res.data); 
@@ -967,6 +1025,12 @@
                     if (!document.getElementById('section-history').classList.contains('hidden')) {
                         processHistoryOrders(res.data, true);
                     }
+
+                    if (!document.getElementById('sys-notif-overlay').classList.contains('hidden')) {
+                        showSystemNotifications();
+                    }
+
+                    listenToAllUnreadChats();
                 }
             } catch(e) {
                 console.error("Sinkronisasi gagal: ", e);
@@ -1442,17 +1506,6 @@
             }
 
             const newIds = availableOrders.map(o => o.order_id).join(',');
-            
-            if (isBackground && container.dataset.lastIds !== undefined && newIds !== "" && container.dataset.lastIds !== newIds) {
-                const oldIdsArr = container.dataset.lastIds.split(',');
-                const newIdsArr = newIds.split(',');
-                const hasNewTask = newIdsArr.some(id => !oldIdsArr.includes(id));
-                
-                if (hasNewTask) {
-                    triggerSystemNotification("Tugas Baru Masuk! 🛵", "Ada pesanan baru di sekitar lokasi Anda. Buka aplikasi untuk menerima.");
-                }
-            }
-            
             if (isBackground && container.dataset.lastIds === newIds) return;
             container.dataset.lastIds = newIds;
 
@@ -1514,7 +1567,7 @@
             const container = document.getElementById('active-orders-container');
             const badge = document.getElementById('activeBadge');
             
-            const myActiveOrders = allOrders.filter(order => order && order.status && !order.status.includes('Selesai') && order.status.includes(DRIVER_DATA.full_name));
+            const myActiveOrders = allOrders.filter(order => order && order.status && !order.status.includes('Selesai') && !order.status.includes('Batal') && order.status.includes(DRIVER_DATA.full_name));
             
             if (myActiveOrders.length > 0) {
                 badge.innerText = myActiveOrders.length;
@@ -1596,7 +1649,7 @@
                             <button onclick="openGoogleMapsNav(${bLat}, ${bLng})" class="text-[10px] font-bold bg-blue-50 text-blue-600 px-2 py-1.5 rounded-lg border border-blue-100 hover:bg-blue-100 shadow-sm flex-1 text-center"><i class="fas fa-location-arrow mr-1"></i> Peta Pembeli</button>
                         </div>
                         <div class="mt-2 ml-5">
-                             <button onclick="openChat('DEL', '${order.order_id}', 'Pembeli')" class="btn-3d w-full text-[11px] font-bold bg-brandPrimary/10 text-brandPrimary px-2 py-2 rounded-lg border border-brandPrimary/20 hover:bg-brandPrimary/20 shadow-sm flex items-center justify-center gap-1 transition"><i class="fas fa-comments text-sm"></i> Chat Pembeli</button>
+                             <button onclick="openChat('DEL', '${order.order_id}', 'Pelanggan / Toko')" class="btn-3d w-full text-[11px] font-bold bg-brandPrimary/10 text-brandPrimary px-2 py-2 rounded-lg border border-brandPrimary/20 hover:bg-brandPrimary/20 shadow-sm flex items-center justify-center gap-1 transition"><i class="fas fa-comments text-sm"></i> Chat Pembeli</button>
                         </div>
                     </div>
 
@@ -1802,7 +1855,7 @@
             const ctx = document.getElementById('historyChartCanvas');
             if (!ctx) return;
 
-            const labels = Object.keys(dataByDate).sort(); // Sort by date ascending
+            const labels = Object.keys(dataByDate).sort(); 
             const incomeData = labels.map(date => dataByDate[date].totalIncome);
             const qtyData = labels.map(date => dataByDate[date].totalQty);
 
@@ -1854,7 +1907,7 @@
                             position: 'right',
                             beginAtZero: true,
                             grid: { drawOnChartArea: false },
-                            ticks: { precision: 0 } // Menghilangkan desimal untuk antaran
+                            ticks: { precision: 0 } 
                         },
                         x: { 
                             grid: { display: false }, 
@@ -2132,6 +2185,206 @@
         // --- SISTEM CHAT FIREBASE REALTIME ---
         let currentChatUnsubscribe = null;
         let activeChatRef = null;
+        let backgroundChatListeners = {};
+
+        function showSystemNotifications() {
+            if (!DRIVER_DATA) return switchAuthView('login');
+            
+            document.getElementById('sys-notif-overlay').classList.remove('hidden');
+            document.getElementById('sys-notif-overlay').classList.add('flex');
+            
+            document.querySelectorAll('.sys-notif-badge').forEach(el => el.classList.add('hidden'));
+            
+            const cachedData = localStorage.getItem('foodcourt_driver_orders_cache');
+            let allOrders = cachedData ? JSON.parse(cachedData) : [];
+            const myOrders = allOrders.filter(o => o.status && o.status.includes(DRIVER_DATA.full_name));
+            const newTasks = allOrders.filter(o => o.status === 'Menunggu Kurir');
+            
+            const currentHash = JSON.stringify(myOrders.map(o => o.order_id + o.status)) + JSON.stringify(newTasks.map(o => o.order_id));
+            localStorage.setItem('fcdriver_last_notif_hash', currentHash);
+
+            const container = document.getElementById('sys-notif-list');
+            let combined = [...myOrders, ...newTasks];
+            
+            if (combined.length === 0) {
+                container.innerHTML = '<div class="text-center py-10 text-gray-500"><i class="far fa-bell-slash text-4xl mb-3 opacity-50 drop-shadow"></i><p class="font-bold">Belum ada notifikasi.</p></div>';
+                return;
+            }
+
+            let html = '';
+            let recentOrders = combined.reverse().slice(0, 20); 
+            recentOrders.forEach(o => {
+                let icon = "fa-info-circle text-blue-500";
+                let bg = "bg-blue-50 border border-blue-100";
+                const st = String(o.status||'').toLowerCase();
+                
+                if(st.includes('selesai') || st.includes('terima')) { icon = "fa-check-circle text-green-500"; bg = "bg-green-50 border border-green-100"; }
+                else if(st.includes('batal') || st.includes('tolak')) { icon = "fa-times-circle text-red-500"; bg = "bg-red-50 border border-red-100"; }
+                else if(st.includes('kurir') || st.includes('kirim') || st.includes('tujuan') || st.includes('ambil')) { icon = "fa-motorcycle text-brandPrimary"; bg = "bg-orange-50 border border-orange-100"; }
+                else if(st.includes('tunggu') || st.includes('konfirmasi')) { icon = "fa-clock text-yellow-500"; bg = "bg-yellow-50 border border-yellow-100"; }
+                
+                html += `
+                <div class="flex gap-3 p-4 border-b border-gray-100 bg-white hover:bg-gray-50 transition cursor-pointer" onclick="hideSystemNotifications(); showHistoryDetail('${o.order_id}')">
+                    <div class="w-11 h-11 ${bg} rounded-full flex items-center justify-center shrink-0 shadow-inner">
+                        <i class="fas ${icon} text-lg"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex justify-between items-start mb-1">
+                            <div class="text-sm font-extrabold text-gray-800 leading-tight">Status: ${o.status}</div>
+                            <div class="text-[10px] font-semibold text-gray-400 shrink-0 ml-2">${o.timestamp ? o.timestamp.split(' ')[1] : ''}</div>
+                        </div>
+                        <div class="text-xs text-gray-600 line-clamp-2 leading-relaxed">Pesanan <span class="font-bold text-gray-800">${o.product_name}</span> saat ini berstatus: <span class="font-extrabold text-brandPrimary uppercase">${o.status}</span>.</div>
+                    </div>
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function hideSystemNotifications() {
+            document.getElementById('sys-notif-overlay').classList.add('hidden');
+            document.getElementById('sys-notif-overlay').classList.remove('flex');
+        }
+
+        function showChatList() {
+            if (!DRIVER_DATA) {
+                showCustomAlert("Silakan Log In terlebih dahulu untuk membuka kotak masuk pesan.", "error");
+                return switchAuthView('login');
+            }
+            document.getElementById('chat-list-overlay').classList.remove('hidden');
+            document.getElementById('chat-list-overlay').classList.add('flex');
+            renderChatList();
+        }
+
+        function hideChatList() {
+            document.getElementById('chat-list-overlay').classList.add('hidden');
+            document.getElementById('chat-list-overlay').classList.remove('flex');
+        }
+
+        function renderChatList() {
+            const container = document.getElementById('chat-list-container');
+            let html = '';
+            
+            const csChatId = "CS_DRV_" + DRIVER_DATA.driver_id;
+            const csUnread = window[`unread_${csChatId}`] || 0;
+            const csBadge = csUnread > 0 ? `<span class="bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-sm">${csUnread}</span>` : '';
+            
+            html += `
+            <div onclick="openChat('CS', null)" class="bg-white border border-gray-200 rounded-xl p-3 flex items-center gap-3 cursor-pointer hover:border-brandPrimary hover:shadow-md transition group shadow-sm">
+                <div class="w-12 h-12 bg-gradient-to-br from-brandPrimary to-[#d73211] text-white rounded-full flex items-center justify-center shrink-0 shadow-inner border border-orange-200">
+                    <i class="fas fa-headset text-xl"></i>
+                </div>
+                <div class="flex-1 overflow-hidden">
+                    <div class="flex justify-between items-center mb-0.5">
+                        <h3 class="font-extrabold text-sm text-gray-800 group-hover:text-brandPrimary transition-colors">Customer Service</h3>
+                        ${csBadge}
+                    </div>
+                    <p class="text-xs text-gray-500 truncate font-medium">Bantuan terkait aplikasi & akun</p>
+                </div>
+            </div>`;
+
+            const cachedData = localStorage.getItem('foodcourt_driver_orders_cache');
+            let allOrders = cachedData ? JSON.parse(cachedData) : [];
+            let activeOrders = allOrders.filter(o => o.status && o.status.includes(DRIVER_DATA.full_name) && !o.status.includes('Selesai') && !o.status.includes('Batal'));
+            
+            let buyerHtml = '';
+            activeOrders.forEach(o => {
+                const chatId = "DEL_" + o.order_id;
+                if (window[`has_msg_${chatId}`]) {
+                    const unread = window[`unread_${chatId}`] || 0;
+                    const badge = unread > 0 ? `<span class="bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-sm">${unread}</span>` : '';
+                    
+                    buyerHtml += `
+                    <div onclick="openChat('DEL', '${o.order_id}', 'Pelanggan')" class="bg-white border border-gray-200 rounded-xl p-3 flex items-center gap-3 cursor-pointer hover:border-blue-400 hover:shadow-md transition group shadow-sm">
+                        <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-400 text-white rounded-full flex items-center justify-center shrink-0 shadow-inner border border-blue-300">
+                            <i class="fas fa-user text-xl"></i>
+                        </div>
+                        <div class="flex-1 overflow-hidden">
+                            <div class="flex justify-between items-center mb-0.5">
+                                <h3 class="font-extrabold text-sm text-gray-800 group-hover:text-blue-500 transition-colors line-clamp-1">Pelanggan: Order #${o.order_id}</h3>
+                                ${badge}
+                            </div>
+                            <p class="text-[10px] font-bold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded w-fit mb-0.5">Toko: ${o.outlet}</p>
+                            <p class="text-xs text-gray-500 truncate font-medium">Lanjutkan obrolan</p>
+                        </div>
+                    </div>`;
+                }
+            });
+
+            if (buyerHtml !== '') {
+                html += `<div class="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-2 px-1">Pesan Aktif</div>` + buyerHtml;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function listenToAllUnreadChats() {
+            if (!DRIVER_DATA) return;
+            
+            let expectedChatIds = [`CS_DRV_${DRIVER_DATA.driver_id}`];
+            const cachedData = localStorage.getItem('foodcourt_driver_orders_cache');
+            let allOrders = cachedData ? JSON.parse(cachedData) : [];
+            let activeOrders = allOrders.filter(o => o.status && o.status.includes(DRIVER_DATA.full_name) && !o.status.includes('Selesai') && !o.status.includes('Batal'));
+            
+            activeOrders.forEach(o => expectedChatIds.push(`DEL_${o.order_id}`));
+
+            Object.keys(backgroundChatListeners).forEach(id => {
+                if(!expectedChatIds.includes(id)) {
+                    backgroundChatListeners[id](); 
+                    delete backgroundChatListeners[id];
+                    delete window[`unread_${id}`];
+                }
+            });
+
+            expectedChatIds.forEach(chatId => {
+                if (!backgroundChatListeners[chatId]) {
+                    backgroundChatListeners[chatId] = db.collection('chats').doc(chatId).collection('messages')
+                        .orderBy('timestamp', 'asc')
+                        .onSnapshot(snap => {
+                            let totalDocs = snap.size;
+                            let seenCount = parseInt(localStorage.getItem(`seen_count_${chatId}`) || '0');
+                            
+                            if (totalDocs > 0) window[`has_msg_${chatId}`] = true;
+
+                            snap.docChanges().forEach(change => {
+                                if(change.type === 'added') {
+                                    const data = change.doc.data();
+                                    if(data.senderId !== DRIVER_DATA.driver_id && document.visibilityState === 'hidden') {
+                                        triggerSystemNotification(`Pesan dari ${data.senderName || 'Pelanggan/CS'}`, data.text, `chat-${chatId}`);
+                                    }
+                                }
+                            });
+
+                            if (activeChatRef && activeChatRef.parent.id === chatId) {
+                                seenCount = totalDocs;
+                                localStorage.setItem(`seen_count_${chatId}`, seenCount);
+                            }
+                            
+                            let unread = totalDocs - seenCount;
+                            if (unread < 0) unread = 0; 
+                            
+                            window[`unread_${chatId}`] = unread;
+                            updateTotalChatBadge();
+                            
+                            if(!document.getElementById('chat-list-overlay').classList.contains('hidden')) {
+                                renderChatList();
+                            }
+                        });
+                }
+            });
+        }
+
+        function updateTotalChatBadge() {
+            let totalUnread = 0;
+            Object.keys(window).forEach(key => {
+                if(key.startsWith('unread_')) totalUnread += (window[key] || 0);
+            });
+
+            document.querySelectorAll('.chat-badge').forEach(el => {
+                el.innerText = totalUnread;
+                if(totalUnread > 0) el.classList.remove('hidden');
+                else el.classList.add('hidden');
+            });
+        }
 
         function openChat(type, refId = null, targetName = "CS") {
             if (!DRIVER_DATA) {
@@ -2168,6 +2421,14 @@
             currentChatUnsubscribe = activeChatRef.orderBy('timestamp', 'asc').onSnapshot(snapshot => {
                 msgContainer.innerHTML = '';
                 
+                if (snapshot.size > 0) window[`has_msg_${chatId}`] = true;
+                
+                // Set seen status for real-time when chat is open
+                localStorage.setItem(`seen_count_${chatId}`, snapshot.size);
+                window[`unread_${chatId}`] = 0;
+                updateTotalChatBadge();
+                if(!document.getElementById('chat-list-overlay').classList.contains('hidden')) renderChatList();
+
                 if (snapshot.empty) {
                     msgContainer.innerHTML = '<div class="text-center text-xs text-gray-400 mt-4 bg-white p-3 rounded-xl border border-gray-100 shadow-sm mx-4">Mulai percakapan sekarang. Pesan Anda aman.</div>';
                     return;
