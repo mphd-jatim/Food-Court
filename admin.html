@@ -66,9 +66,22 @@
         </div>
     </div>
 
+    <!-- ================= SYSTEM NOTIFICATIONS OVERLAY ================= -->
+    <div id="sys-notif-overlay" class="hidden fixed inset-0 z-[160] bg-black/60 backdrop-blur-sm overflow-y-auto flex-col justify-center items-center p-0 md:p-4">
+        <div class="bg-white rounded-none md:rounded-2xl shadow-2xl w-full h-full md:h-auto max-w-md p-0 relative mt-0 flex flex-col max-h-full md:max-h-[80vh] overflow-hidden">
+            <div class="p-4 border-b flex justify-between items-center bg-sidebarFrom text-white shrink-0">
+                <h2 class="text-lg font-bold drop-shadow-md"><i class="far fa-bell mr-2"></i> Notifikasi Sistem</h2>
+                <button onclick="hideSystemNotifications()" class="text-white hover:text-gray-200 bg-white/20 w-8 h-8 rounded-full flex justify-center items-center transition"><i class="fas fa-times"></i></button>
+            </div>
+            <div id="sys-notif-list" class="flex-1 overflow-y-auto bg-[#F0F2F5] hide-scrollbar">
+                <!-- Injected via JS -->
+            </div>
+        </div>
+    </div>
+
     <!-- ================= OVERLAY IN-APP REALTIME CHAT FIREBASE ================= -->
     <div id="chat-overlay" class="hidden fixed inset-0 z-[400] bg-black/60 backdrop-blur-sm flex-col justify-end md:justify-center items-center p-0 md:p-4">
-        <div class="bg-white md:rounded-2xl shadow-2xl w-full h-[85vh] md:h-[600px] max-w-md p-0 relative flex flex-col overflow-hidden rounded-t-3xl md:rounded-b-2xl animate-slide-up">
+        <div class="bg-white md:rounded-2xl shadow-2xl w-full h-full md:h-[600px] max-w-md p-0 relative flex flex-col overflow-hidden rounded-none md:rounded-b-2xl animate-slide-up">
             <!-- Header Chat -->
             <div class="p-4 border-b flex justify-between items-center bg-gradient-to-r from-brandPrimary to-[#D94E04] text-white shrink-0 shadow-sm z-10">
                 <div class="flex items-center gap-3">
@@ -89,7 +102,7 @@
             </div>
             
             <!-- Form Kirim Pesan -->
-            <form id="chat-form" onsubmit="sendChatMessage(event)" class="p-3 bg-white border-t border-gray-200 flex gap-2 shrink-0 items-center">
+            <form id="chat-form" onsubmit="sendChatMessage(event)" class="p-3 pb-6 md:pb-3 bg-white border-t border-gray-200 flex gap-2 shrink-0 items-center">
                 <input type="text" id="chat-input" required autocomplete="off" placeholder="Balas pesan CS..." class="flex-1 px-4 py-2.5 border border-gray-200 rounded-full text-sm outline-none focus:border-brandPrimary bg-gray-50 text-gray-800 transition-colors">
                 <button type="submit" class="w-11 h-11 bg-brandPrimary text-white rounded-full flex items-center justify-center hover:bg-brandPrimaryHover transition shadow-[0_3px_0_0_#A83D02] active:translate-y-[2px] active:shadow-none"><i class="fas fa-paper-plane drop-shadow-sm"></i></button>
             </form>
@@ -143,8 +156,8 @@
     <!-- ================= MAIN DASHBOARD ================= -->
     <div id="app-container" class="hidden h-full w-full flex-col md:flex-row">
         
-        <!-- SIDEBAR (Desktop) -->
-        <aside class="bg-gradient-to-b from-sidebarFrom to-sidebarTo text-gray-300 w-full md:w-64 flex flex-row md:flex-col fixed bottom-0 md:relative z-50 md:z-auto h-16 md:h-full justify-around md:justify-start shadow-[0_-5px_15px_rgba(0,0,0,0.3)] md:shadow-2xl transition-all">
+        <!-- SIDEBAR (Desktop) / BOTTOM NAV (Mobile) -->
+        <aside class="bg-gradient-to-b from-sidebarFrom to-sidebarTo text-gray-300 w-full md:w-64 flex flex-row md:flex-col fixed bottom-0 md:relative z-50 md:z-auto h-[70px] md:h-full justify-around md:justify-start shadow-[0_-5px_15px_rgba(0,0,0,0.3)] md:shadow-2xl transition-all">
             <div class="hidden md:flex flex-col items-center p-6 border-b border-white/10 bg-black/20">
                 <img src="https://res.cloudinary.com/dmlllfubf/image/upload/v1781243016/Gemini_Generated_Image_bidjrobidjrobidj_wszrvn.png" alt="Logo" class="w-16 h-16 rounded-full object-contain border-2 border-brandPrimary mb-3 shadow-lg bg-white p-1">
                 <div class="font-black text-white tracking-widest uppercase">Admin Foodcourt</div>
@@ -155,24 +168,35 @@
                 <a href="javascript:void(0)" onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-item flex flex-col md:flex-row items-center gap-1 md:gap-3 p-2 md:p-3 md:mx-3 rounded-xl text-gray-400 hover:bg-white/10 hover:text-white transition font-bold group flex-1 md:flex-none">
                     <i class="fas fa-chart-pie text-lg md:text-xl group-hover:scale-110 transition-transform"></i> <span class="text-[10px] md:text-sm">Ringkasan</span>
                 </a>
+                
+                <a href="javascript:void(0)" onclick="showSystemNotifications()" class="nav-item flex flex-col md:flex-row items-center gap-1 md:gap-3 p-2 md:p-3 md:mx-3 rounded-xl text-gray-400 hover:bg-white/10 hover:text-white transition font-bold group flex-1 md:flex-none relative">
+                    <i class="far fa-bell text-lg md:text-xl group-hover:scale-110 transition-transform"></i> <span class="text-[10px] md:text-sm">Notifikasi</span>
+                    <span id="nav-badge-notif" class="absolute top-1 right-2 md:static bg-red-500 border border-white text-white text-[9px] font-black px-1.5 py-0.5 rounded-full shadow-[0_2px_5px_rgba(239,68,68,0.5)] hidden sys-notif-badge">!</span>
+                </a>
+
                 <a href="javascript:void(0)" onclick="switchTab('chat')" id="nav-chat" class="nav-item flex flex-col md:flex-row items-center gap-1 md:gap-3 p-2 md:p-3 md:mx-3 rounded-xl text-gray-400 hover:bg-white/10 hover:text-white transition font-bold group flex-1 md:flex-none relative">
-                    <i class="fas fa-comments text-lg md:text-xl group-hover:scale-110 transition-transform"></i> <span class="text-[10px] md:text-sm">Pusat Pesan</span>
+                    <i class="fas fa-comments text-lg md:text-xl group-hover:scale-110 transition-transform"></i> <span class="text-[10px] md:text-sm">Inbox</span>
                     <span id="nav-badge-chat" class="absolute top-1 right-2 md:static bg-brandPrimary text-white text-[9px] font-black px-1.5 py-0.5 rounded-full shadow-[0_2px_5px_rgba(242,92,5,0.5)] hidden">0</span>
                 </a>
+                
                 <a href="javascript:void(0)" onclick="switchTab('categories')" id="nav-categories" class="nav-item flex flex-col md:flex-row items-center gap-1 md:gap-3 p-2 md:p-3 md:mx-3 rounded-xl text-gray-400 hover:bg-white/10 hover:text-white transition font-bold group flex-1 md:flex-none">
                     <i class="fas fa-tags text-lg md:text-xl group-hover:scale-110 transition-transform"></i> <span class="text-[10px] md:text-sm">Kategori</span>
                 </a>
+                
                 <a href="javascript:void(0)" onclick="switchTab('sellers')" id="nav-sellers" class="nav-item flex flex-col md:flex-row items-center gap-1 md:gap-3 p-2 md:p-3 md:mx-3 rounded-xl text-gray-400 hover:bg-white/10 hover:text-white transition font-bold group flex-1 md:flex-none">
-                    <i class="fas fa-store text-lg md:text-xl group-hover:scale-110 transition-transform"></i> <span class="text-[10px] md:text-sm">Mitra Toko</span>
+                    <i class="fas fa-store text-lg md:text-xl group-hover:scale-110 transition-transform"></i> <span class="text-[10px] md:text-sm">Toko</span>
                 </a>
+                
                 <a href="javascript:void(0)" onclick="switchTab('drivers')" id="nav-drivers" class="nav-item flex flex-col md:flex-row items-center gap-1 md:gap-3 p-2 md:p-3 md:mx-3 rounded-xl text-gray-400 hover:bg-white/10 hover:text-white transition font-bold group flex-1 md:flex-none">
-                    <i class="fas fa-motorcycle text-lg md:text-xl group-hover:scale-110 transition-transform"></i> <span class="text-[10px] md:text-sm">Mitra Kurir</span>
+                    <i class="fas fa-motorcycle text-lg md:text-xl group-hover:scale-110 transition-transform"></i> <span class="text-[10px] md:text-sm">Kurir</span>
                 </a>
+                
                 <a href="javascript:void(0)" onclick="switchTab('buyers')" id="nav-buyers" class="nav-item flex flex-col md:flex-row items-center gap-1 md:gap-3 p-2 md:p-3 md:mx-3 rounded-xl text-gray-400 hover:bg-white/10 hover:text-white transition font-bold group flex-1 md:flex-none">
-                    <i class="fas fa-users text-lg md:text-xl group-hover:scale-110 transition-transform"></i> <span class="text-[10px] md:text-sm">Pelanggan</span>
+                    <i class="fas fa-users text-lg md:text-xl group-hover:scale-110 transition-transform"></i> <span class="text-[10px] md:text-sm">Pembeli</span>
                 </a>
+                
                 <a href="javascript:void(0)" onclick="switchTab('settings')" id="nav-settings" class="nav-item flex flex-col md:flex-row items-center gap-1 md:gap-3 p-2 md:p-3 md:mx-3 rounded-xl text-gray-400 hover:bg-white/10 hover:text-white transition font-bold group flex-1 md:flex-none">
-                    <i class="fas fa-user-cog text-lg md:text-xl group-hover:scale-110 transition-transform"></i> <span class="text-[10px] md:text-sm">Profil & Tarif</span>
+                    <i class="fas fa-user-cog text-lg md:text-xl group-hover:scale-110 transition-transform"></i> <span class="text-[10px] md:text-sm">Pengaturan</span>
                 </a>
                 
                 <div class="hidden md:block mt-auto pb-4 px-3">
@@ -508,24 +532,41 @@
         let syncIntervalAdmin;
 
         let unreadChatCount = 0;
-        let globalChatUnsubscribe = null;
+        let backgroundChatListeners = {};
 
-        // --- FIREBASE FIRESTORE SETUP UNTUK CHAT ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyC7yKrsNvsKaA3wuU2ocpHtyUPbDh1zcm4",
-            authDomain: "blifoods.firebaseapp.com",
-            projectId: "blifoods",
-            storageBucket: "blifoods.firebasestorage.app",
-            messagingSenderId: "775702251424",
-            appId: "1:775702251424:web:434e81622f7685c07486c5",
-            measurementId: "G-93K32KJD5X"
-        };
-        
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
+        // --- PWA CHROME PUSH NOTIFICATIONS ---
+        const swContent = `
+            self.addEventListener('install', e => self.skipWaiting());
+            self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
+            self.addEventListener('fetch', e => {}); 
+        `;
+        const swBlob = new Blob([swContent], {type: 'application/javascript'});
+        const swUrl = URL.createObjectURL(swBlob);
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register(swUrl).catch(err => console.log('PWA SW err:', err));
         }
-        const auth = firebase.auth();
-        const db = firebase.firestore();
+
+        function requestNotificationPermission() {
+            if ('Notification' in window) {
+                if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+                    Notification.requestPermission();
+                }
+            }
+        }
+
+        function triggerSystemNotification(title, bodyText, tagId = 'fcadmin-notif') {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                navigator.serviceWorker.ready.then(function(registration) {
+                    registration.showNotification(title, {
+                        body: bodyText,
+                        icon: "https://res.cloudinary.com/dmlllfubf/image/upload/v1781243016/Gemini_Generated_Image_bidjrobidjrobidj_wszrvn.png",
+                        vibrate: [200, 100, 200],
+                        tag: tagId 
+                    });
+                });
+            }
+        }
 
         // --- CUSTOM MODAL SYSTEM (AUTO-TOAST SILENT) ---
         function openModalAnim() {
@@ -648,12 +689,13 @@
                 
                 // Initial Load
                 refreshAllData(false);
-                initGlobalChatListener();
                 
+                requestNotificationPermission();
+
                 // Background Sync setiap 10 detik
                 syncIntervalAdmin = setInterval(() => {
                     refreshAllData(true);
-                }, 120000);
+                }, 10000);
             }
         });
 
@@ -703,7 +745,7 @@
                     document.getElementById('app-container').classList.add('flex');
                     switchTab('dashboard');
                     refreshAllData(false);
-                    initGlobalChatListener();
+                    requestNotificationPermission();
                     
                     syncIntervalAdmin = setInterval(() => refreshAllData(true), 10000);
                 } else {
@@ -770,41 +812,75 @@
             }
 
             if(tabId === 'chat') {
-                unreadChatCount = 0;
-                updateChatBadge();
                 renderChatList();
             }
         }
 
-        function initGlobalChatListener() {
-            if(globalChatUnsubscribe) return;
-            const startTime = new Date();
+        // --- SISTEM CHAT (LISTEN TO ALL UNREAD CHATS) ---
+        function listenToAllUnreadChats() {
+            let expectedChatIds = [];
             
-            try {
-                globalChatUnsubscribe = db.collectionGroup('messages')
-                    .where('timestamp', '>', startTime)
-                    .onSnapshot(snapshot => {
-                        snapshot.docChanges().forEach(change => {
-                            if (change.type === 'added') {
-                                const data = change.doc.data();
-                                // Deteksi pesan baru dari pengguna (bukan dari ADMIN) saat tab chat tidak sedang dibuka
-                                if (data.senderId !== 'ADMIN' && document.getElementById('section-chat').classList.contains('hidden')) {
-                                    unreadChatCount++;
-                                    updateChatBadge();
+            ALL_BUYERS.forEach(b => expectedChatIds.push(`CS_${b.user_id}`));
+            ALL_SELLERS.forEach(s => expectedChatIds.push(`CS_SEL_${s.seller_id}`));
+            ALL_DRIVERS.forEach(d => expectedChatIds.push(`CS_DRV_${d.driver_id}`));
+
+            Object.keys(backgroundChatListeners).forEach(id => {
+                if(!expectedChatIds.includes(id)) {
+                    backgroundChatListeners[id](); 
+                    delete backgroundChatListeners[id];
+                    delete window[`unread_${id}`];
+                    delete window[`has_msg_${id}`];
+                }
+            });
+
+            expectedChatIds.forEach(chatId => {
+                if (!backgroundChatListeners[chatId]) {
+                    backgroundChatListeners[chatId] = db.collection('chats').doc(chatId).collection('messages')
+                        .orderBy('timestamp', 'asc')
+                        .onSnapshot(snap => {
+                            let totalDocs = snap.size;
+                            let seenCount = parseInt(localStorage.getItem(`seen_count_${chatId}`) || '0');
+                            
+                            if (totalDocs > 0) window[`has_msg_${chatId}`] = true;
+
+                            snap.docChanges().forEach(change => {
+                                if(change.type === 'added') {
+                                    const data = change.doc.data();
+                                    if(data.senderId !== 'ADMIN' && document.visibilityState === 'hidden') {
+                                        triggerSystemNotification(`Pesan dari ${data.senderName || 'Pengguna'}`, data.text, `chat-${chatId}`);
+                                    }
                                 }
+                            });
+
+                            if (activeChatRef && activeChatRef.parent.id === chatId) {
+                                seenCount = totalDocs;
+                                localStorage.setItem(`seen_count_${chatId}`, seenCount);
+                            }
+                            
+                            let unread = totalDocs - seenCount;
+                            if (unread < 0) unread = 0; 
+                            
+                            window[`unread_${chatId}`] = unread;
+                            updateChatBadge();
+                            
+                            if(!document.getElementById('section-chat').classList.contains('hidden')) {
+                                renderChatList();
                             }
                         });
-                    }, error => {
-                        console.warn("Fitur notifikasi global membutuhkan Index Firestore. Jika badge tidak muncul, silakan klik link di error console browser Anda untuk membuatnya secara otomatis.");
-                    });
-            } catch(e) { console.warn(e); }
+                }
+            });
         }
 
         function updateChatBadge() {
+            let totalUnread = 0;
+            Object.keys(window).forEach(key => {
+                if(key.startsWith('unread_')) totalUnread += (window[key] || 0);
+            });
+
             const badge = document.getElementById('nav-badge-chat');
-            if (badge) {
-                badge.innerText = unreadChatCount;
-                if (unreadChatCount > 0) {
+            if(badge) {
+                badge.innerText = totalUnread;
+                if(totalUnread > 0) {
                     badge.classList.remove('hidden');
                     badge.classList.add('animate-pulse');
                 } else {
@@ -852,32 +928,46 @@
                 iconClass = 'fa-motorcycle text-green-500';
             }
 
-            if (dataList.length === 0) {
-                container.innerHTML = `<div class="text-center py-10 text-gray-400 font-bold">Belum ada data kontak.</div>`;
-                return;
-            }
+            let hasAnyChat = false;
 
             dataList.forEach(item => {
                 let name = item.username || item.store_name || item.full_name || 'Anonim';
                 let id = item.user_id || item.seller_id || item.driver_id;
                 
-                const html = `
-                <div class="flex justify-between items-center p-4 border-b border-gray-100 hover:bg-gray-50 transition cursor-pointer chat-contact-row" onclick="openAdminChat('${typePrefix}', '${id}', '${name.replace(/'/g, "\\'")}')">
-                    <div class="flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-lg shadow-sm border border-gray-100">
-                            <i class="fas ${iconClass}"></i>
+                let chatId = "CS_" + typePrefix + "_" + id;
+                if (typePrefix === 'BUY') chatId = "CS_" + id; 
+
+                // HANYA TAMPILKAN JIKA ADA PESAN
+                if (window[`has_msg_${chatId}`]) {
+                    hasAnyChat = true;
+                    const unread = window[`unread_${chatId}`] || 0;
+                    const badge = unread > 0 ? `<span class="bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-sm">${unread}</span>` : '';
+
+                    const html = `
+                    <div class="flex justify-between items-center p-4 border-b border-gray-100 hover:bg-gray-50 transition cursor-pointer chat-contact-row" onclick="openAdminChat('${typePrefix}', '${id}', '${name.replace(/'/g, "\\'")}')">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-lg shadow-sm border border-gray-100">
+                                <i class="fas ${iconClass}"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold text-gray-800 text-sm contact-name">${name}</div>
+                                <div class="text-[10px] text-gray-500 font-mono mt-0.5">ID: ${id}</div>
+                            </div>
                         </div>
-                        <div>
-                            <div class="font-bold text-gray-800 text-sm contact-name">${name}</div>
-                            <div class="text-[10px] text-gray-500 font-mono mt-0.5">ID: ${id}</div>
+                        <div class="flex items-center gap-3">
+                            ${badge}
+                            <div class="text-gray-300">
+                                <i class="fas fa-chevron-right text-xs"></i>
+                            </div>
                         </div>
-                    </div>
-                    <div class="text-gray-300">
-                        <i class="fas fa-chevron-right text-xs"></i>
-                    </div>
-                </div>`;
-                container.insertAdjacentHTML('beforeend', html);
+                    </div>`;
+                    container.insertAdjacentHTML('beforeend', html);
+                }
             });
+
+            if (!hasAnyChat) {
+                container.innerHTML = `<div class="text-center py-10 text-gray-400 font-bold">Belum ada pesan masuk di kategori ini.</div>`;
+            }
         }
 
         function filterChatList(query) {
@@ -898,13 +988,8 @@
             document.getElementById('chat-subtitle').innerText = "ID: " + refId;
             
             let chatId = "CS_" + type + "_" + refId;
-            
             if (type === 'BUY') {
                 chatId = "CS_" + refId; 
-            } else if (type === 'SEL') {
-                chatId = "CS_SEL_" + refId; 
-            } else if (type === 'DRV') {
-                chatId = "CS_DRV_" + refId; 
             }
 
             activeChatRef = db.collection('chats').doc(chatId).collection('messages');
@@ -916,6 +1001,13 @@
             
             currentChatUnsubscribe = activeChatRef.orderBy('timestamp', 'asc').onSnapshot(snapshot => {
                 msgContainer.innerHTML = '';
+                
+                // Clear the unread badge
+                localStorage.setItem(`seen_count_${chatId}`, snapshot.size);
+                window[`unread_${chatId}`] = 0;
+                updateChatBadge();
+                if(!document.getElementById('section-chat').classList.contains('hidden')) renderChatList();
+
                 if (snapshot.empty) {
                     msgContainer.innerHTML = '<div class="text-center text-xs text-gray-400 mt-4 bg-white p-3 rounded-xl border border-gray-100 shadow-sm mx-4">Mulai percakapan dengan pengguna ini.</div>';
                     return;
@@ -984,9 +1076,101 @@
             }
         }
 
+        // --- SISTEM NOTIFIKASI BACKGROUND (SYSTEM NOTIFICATIONS) ---
+        function checkSystemNotificationsBackground() {
+            const pendingOrders = ALL_ORDERS.filter(o => o.status === 'Menunggu Konfirmasi');
+            const pendingSellers = ALL_SELLERS.filter(s => s.status === 'Menunggu Validasi');
+            const pendingDrivers = ALL_DRIVERS.filter(d => d.status === 'Menunggu Validasi');
+            
+            const currentHash = JSON.stringify(pendingOrders.map(o=>o.order_id)) + 
+                                JSON.stringify(pendingSellers.map(s=>s.seller_id)) + 
+                                JSON.stringify(pendingDrivers.map(d=>d.driver_id));
+                                
+            const lastHash = localStorage.getItem('fcadmin_last_notif_hash');
+            
+            if (lastHash && lastHash !== currentHash) {
+                if (document.visibilityState === 'hidden') {
+                    triggerSystemNotification("Notifikasi Admin", "Ada pesanan atau pendaftaran baru yang perlu ditinjau.");
+                }
+                document.querySelectorAll('.sys-notif-badge').forEach(el => el.classList.remove('hidden'));
+            }
+            localStorage.setItem('fcadmin_last_notif_hash', currentHash);
+            
+            if (!document.getElementById('sys-notif-overlay').classList.contains('hidden')) {
+                showSystemNotifications(); // Refresh if open
+            }
+        }
+
+        function showSystemNotifications() {
+            document.getElementById('sys-notif-overlay').classList.remove('hidden');
+            document.getElementById('sys-notif-overlay').classList.add('flex');
+            document.querySelectorAll('.sys-notif-badge').forEach(el => el.classList.add('hidden'));
+
+            const container = document.getElementById('sys-notif-list');
+            container.innerHTML = '';
+
+            const pendingOrders = ALL_ORDERS.filter(o => o.status === 'Menunggu Konfirmasi');
+            const pendingSellers = ALL_SELLERS.filter(s => s.status === 'Menunggu Validasi');
+            const pendingDrivers = ALL_DRIVERS.filter(d => d.status === 'Menunggu Validasi');
+
+            let html = '';
+
+            pendingOrders.forEach(o => {
+                html += `
+                <div class="flex gap-3 p-4 border-b border-gray-100 bg-white hover:bg-gray-50 transition cursor-pointer" onclick="hideSystemNotifications(); switchTab('dashboard')">
+                    <div class="w-11 h-11 bg-yellow-50 border border-yellow-100 rounded-full flex items-center justify-center shrink-0 shadow-inner">
+                        <i class="fas fa-shopping-bag text-yellow-500 text-lg"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex justify-between items-start mb-1">
+                            <div class="text-sm font-extrabold text-gray-800 leading-tight">Pesanan Baru: ${o.outlet}</div>
+                            <div class="text-[10px] font-semibold text-gray-400 shrink-0 ml-2">${o.timestamp ? o.timestamp.split(' ')[1] : ''}</div>
+                        </div>
+                        <div class="text-xs text-gray-600 line-clamp-2 leading-relaxed">Pesanan <span class="font-bold text-gray-800">${o.product_name}</span> dari <span class="font-bold">${o.user_id}</span>. Menunggu Konfirmasi Toko.</div>
+                    </div>
+                </div>`;
+            });
+
+            pendingSellers.forEach(s => {
+                html += `
+                <div class="flex gap-3 p-4 border-b border-gray-100 bg-white hover:bg-gray-50 transition cursor-pointer" onclick="hideSystemNotifications(); switchTab('sellers')">
+                    <div class="w-11 h-11 bg-orange-50 border border-orange-100 rounded-full flex items-center justify-center shrink-0 shadow-inner">
+                        <i class="fas fa-store text-orange-500 text-lg"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="text-sm font-extrabold text-gray-800 leading-tight mb-1">Toko Baru Mendaftar</div>
+                        <div class="text-xs text-gray-600 line-clamp-2 leading-relaxed"><span class="font-bold text-gray-800">${s.store_name}</span> menunggu validasi admin.</div>
+                    </div>
+                </div>`;
+            });
+
+            pendingDrivers.forEach(d => {
+                html += `
+                <div class="flex gap-3 p-4 border-b border-gray-100 bg-white hover:bg-gray-50 transition cursor-pointer" onclick="hideSystemNotifications(); switchTab('drivers')">
+                    <div class="w-11 h-11 bg-blue-50 border border-blue-100 rounded-full flex items-center justify-center shrink-0 shadow-inner">
+                        <i class="fas fa-motorcycle text-blue-500 text-lg"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="text-sm font-extrabold text-gray-800 leading-tight mb-1">Kurir Baru Mendaftar</div>
+                        <div class="text-xs text-gray-600 line-clamp-2 leading-relaxed"><span class="font-bold text-gray-800">${d.full_name}</span> menunggu validasi admin.</div>
+                    </div>
+                </div>`;
+            });
+
+            if (html === '') {
+                container.innerHTML = '<div class="text-center py-10 text-gray-500"><i class="far fa-bell-slash text-4xl mb-3 opacity-50 drop-shadow"></i><p class="font-bold">Tidak ada notifikasi baru yang perlu tindakan.</p></div>';
+            } else {
+                container.innerHTML = html;
+            }
+        }
+        
+        function hideSystemNotifications() {
+            document.getElementById('sys-notif-overlay').classList.add('hidden');
+            document.getElementById('sys-notif-overlay').classList.remove('flex');
+        }
 
         async function refreshAllData(isBackground = false) {
-            const syncIcon = document.getElementById('sync-icon');
+            const syncIcon = document.getElementById('sync-spin');
             if(syncIcon) syncIcon.classList.add('fa-spin');
             
             if(!isBackground) document.getElementById('loading-overlay').classList.remove('hidden');
@@ -1006,7 +1190,6 @@
                 if(set.status==='success' && set.data) {
                     const data = set.data;
                     
-                    // PEMBARUAN: Update teks informasi yang aktif saat ini (Selalu Update tiap Sync)
                     const curOngkir = document.getElementById('current-ongkir');
                     if (curOngkir) curOngkir.innerText = `Rp ${(parseInt(data.fee_ongkir) || 2000).toLocaleString('id-ID')}`;
                     
@@ -1025,7 +1208,6 @@
                     const curEmail = document.getElementById('current-email');
                     if (curEmail) curEmail.innerText = data.admin_email || '-';
 
-                    // KUNCI: Kolom Input hanya ditimpa saat muat pertama kali, JANGAN timpa jika sedang mengetik
                     if(!isBackground) {
                         document.getElementById('setOngkir').value = data.fee_ongkir || 2000;
                         document.getElementById('setMaxOngkir').value = data.max_ongkir || 50000;
@@ -1050,20 +1232,18 @@
                 renderBuyersTable();
                 renderCategoriesTable();
                 
-                // Tambahan: Refresh chat list jika tab Chat aktif
+                checkSystemNotificationsBackground();
+                listenToAllUnreadChats();
+
                 if (!document.getElementById('section-chat').classList.contains('hidden')) {
                     renderChatList();
                 }
 
-                updateGlobalBadge();
-
                 const timeStr = new Date().toLocaleTimeString('id-ID');
                 document.getElementById('last-sync-time').innerText = `Sync: ${timeStr}`;
-                const headerSyncTime = document.getElementById('sync-time');
-                if (headerSyncTime) headerSyncTime.innerText = `Terakhir: ${timeStr}`;
                 
             } catch(e) {} finally {
-                const syncIcon = document.getElementById('sync-icon');
+                const syncIcon = document.getElementById('sync-spin');
                 if(syncIcon) syncIcon.classList.remove('fa-spin');
                 document.getElementById('loading-overlay').classList.add('hidden');
             }
@@ -1123,7 +1303,6 @@
             btn.disabled = true;
 
             try {
-                // Tembak backend untuk bikin Spreadsheet Tab baru!
                 const res = await fetch(GAS_WEB_APP_URL, {
                     method: 'POST',
                     body: JSON.stringify({ action: 'createCategorySheet', sheetName: id })
@@ -1178,7 +1357,6 @@
             };
 
             try {
-                // Proses di belakang layar
                 fetch(GAS_WEB_APP_URL, {
                     method: 'POST',
                     body: JSON.stringify({ action: 'saveAdminSettings', type: 'admin_settings', settings: settingsObj })
