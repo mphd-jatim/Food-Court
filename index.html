@@ -135,9 +135,22 @@
         </div>
     </div>
 
+    <!-- Overlay Menu List Chat -->
+    <div id="chat-list-overlay" class="hidden fixed inset-0 z-[135] bg-textMocha/50 backdrop-blur-sm overflow-y-auto flex-col justify-center items-center p-0 md:p-4">
+        <div class="bg-white rounded-none md:rounded-2xl shadow-2xl w-full h-full md:h-auto max-w-md p-0 relative mt-0 flex flex-col md:max-h-[90vh] overflow-hidden">
+            <div class="p-4 border-b flex justify-between items-center bg-gradient-to-r from-brandPrimary to-[#D94E04] text-white shrink-0 sticky top-0 z-10">
+                <h2 class="text-lg font-bold drop-shadow-md"><i class="fas fa-comments mr-2"></i> Pesan Masuk</h2>
+                <button onclick="hideChatList()" class="text-white hover:text-gray-200 bg-white/20 w-8 h-8 rounded-full shadow border border-white/20 flex justify-center items-center transition"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="flex-1 overflow-y-auto bg-[#F0F2F5] flex flex-col hide-scrollbar p-3 gap-2" id="chat-list-container">
+                <div class="text-center py-4 text-gray-400 text-xs font-semibold"><i class="fas fa-spinner fa-spin mr-1"></i> Memuat daftar pesan...</div>
+            </div>
+        </div>
+    </div>
+
     <!-- Overlay In-App Realtime Chat Firebase -->
     <div id="chat-overlay" class="hidden fixed inset-0 z-[140] bg-textMocha/50 backdrop-blur-sm flex-col justify-end md:justify-center items-center p-0 md:p-4">
-        <div class="bg-white md:rounded-2xl shadow-2xl w-full h-[85vh] md:h-[600px] max-w-md p-0 relative flex flex-col overflow-hidden rounded-t-3xl md:rounded-b-2xl animate-slide-up">
+        <div class="bg-white rounded-none md:rounded-2xl shadow-2xl w-full h-full md:h-[600px] max-w-md p-0 relative flex flex-col overflow-hidden animate-slide-up">
             <!-- Header Chat -->
             <div class="p-4 border-b flex justify-between items-center bg-gradient-to-r from-brandPrimary to-[#D94E04] text-white shrink-0 shadow-sm z-10">
                 <div class="flex items-center gap-3">
@@ -223,9 +236,9 @@
     </div>
 
     <!-- Overlay Notifikasi Pesanan (TABS) -->
-    <div id="notif-overlay" class="hidden fixed inset-0 z-[115] bg-textMocha/50 backdrop-blur-sm overflow-y-auto flex-col justify-center items-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-0 relative mt-10 md:mt-0 flex flex-col max-h-[80vh] overflow-hidden">
-            <div class="p-4 border-b flex justify-between items-center bg-gradient-to-r from-brandPrimary to-[#D94E04] text-white">
+    <div id="notif-overlay" class="hidden fixed inset-0 z-[115] bg-textMocha/50 backdrop-blur-sm overflow-y-auto flex-col justify-center items-center p-0 md:p-4">
+        <div class="bg-white rounded-none md:rounded-2xl shadow-2xl w-full h-full md:h-auto max-w-md p-0 relative mt-0 flex flex-col max-h-full md:max-h-[80vh] overflow-hidden">
+            <div class="p-4 border-b flex justify-between items-center bg-gradient-to-r from-brandPrimary to-[#D94E04] text-white shrink-0">
                 <h2 class="text-lg font-bold drop-shadow-md"><i class="far fa-bell mr-2"></i> Pesanan Saya</h2>
                 <button onclick="hideNotifications()" class="text-white hover:text-gray-200 bg-white/20 w-8 h-8 rounded-full flex justify-center items-center transition"><i class="fas fa-times"></i></button>
             </div>
@@ -237,26 +250,41 @@
         </div>
     </div>
 
+    <!-- Overlay Notifikasi Sistem -->
+    <div id="sys-notif-overlay" class="hidden fixed inset-0 z-[115] bg-textMocha/50 backdrop-blur-sm overflow-y-auto flex-col justify-center items-center p-0 md:p-4">
+        <div class="bg-white rounded-none md:rounded-2xl shadow-2xl w-full h-full md:h-auto max-w-md p-0 relative mt-0 flex flex-col max-h-full md:max-h-[80vh] overflow-hidden">
+            <div class="p-4 border-b flex justify-between items-center bg-gradient-to-r from-brandPrimary to-[#D94E04] text-white shrink-0">
+                <h2 class="text-lg font-bold drop-shadow-md"><i class="far fa-bell mr-2"></i> Notifikasi Masuk</h2>
+                <button onclick="hideSystemNotifications()" class="text-white hover:text-gray-200 bg-white/20 w-8 h-8 rounded-full flex justify-center items-center transition"><i class="fas fa-times"></i></button>
+            </div>
+            <div id="sys-notif-list" class="flex-1 overflow-y-auto bg-[#F0F2F5]">
+                <!-- Injected via JS -->
+            </div>
+        </div>
+    </div>
+
     <!-- Overlay Tracking -->
-    <div id="track-overlay" class="hidden fixed inset-0 z-[125] bg-textMocha/50 backdrop-blur-sm overflow-y-auto flex-col justify-center items-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 relative mt-10 md:mt-0 border border-gray-100">
-            <div class="flex justify-between items-center mb-6 border-b border-gray-100 pb-3">
+    <div id="track-overlay" class="hidden fixed inset-0 z-[125] bg-textMocha/50 backdrop-blur-sm flex-col justify-center items-center p-0 md:p-4">
+        <div class="bg-white rounded-none md:rounded-2xl shadow-2xl w-full h-full md:h-auto max-w-md p-0 relative mt-0 flex flex-col max-h-full md:max-h-[90vh] border-0 md:border border-gray-100 overflow-hidden">
+            <div class="flex justify-between items-center p-4 border-b border-gray-100 bg-white shrink-0 sticky top-0 z-10">
                 <h2 class="text-lg font-bold text-textMocha"><i class="fas fa-map-marked-alt text-brandPrimary mr-2 drop-shadow-md"></i> Lacak Pesanan</h2>
                 <button onclick="hideTracking()" class="text-gray-500 hover:text-red-500 bg-bgMain w-8 h-8 rounded-full flex items-center justify-center transition border border-gray-200"><i class="fas fa-times"></i></button>
             </div>
             
-            <div class="mb-6 bg-gradient-to-br from-orange-50 to-white p-4 rounded-xl border border-orange-100 shadow-inner">
-                <div class="font-extrabold text-base text-textMocha" id="track-product">Nama Produk</div>
-                <div class="text-xs font-semibold text-gray-500 mt-1" id="track-outlet">Nama Outlet</div>
-            </div>
+            <div class="flex-1 overflow-y-auto p-4 md:p-6 bg-white hide-scrollbar">
+                <div class="mb-6 bg-gradient-to-br from-orange-50 to-white p-4 rounded-xl border border-orange-100 shadow-inner">
+                    <div class="font-extrabold text-base text-textMocha" id="track-product">Nama Produk</div>
+                    <div class="text-xs font-semibold text-gray-500 mt-1" id="track-outlet">Nama Outlet</div>
+                </div>
 
-            <div class="relative pl-5 border-l-2 border-gray-200 space-y-6 ml-3" id="track-timeline">
-            </div>
+                <div class="relative pl-5 border-l-2 border-gray-200 space-y-6 ml-3" id="track-timeline">
+                </div>
 
-            <div class="mt-8 border-t border-gray-100 pt-4">
-                <button onclick="openChat('DEL', activeTrackOrderId)" class="btn-3d w-full bg-brandPrimary text-white py-3 rounded-xl font-bold hover:bg-brandPrimaryHover transition shadow-[0_4px_0_0_#A83D02] flex items-center justify-center gap-2">
-                    <i class="fas fa-comments text-lg drop-shadow-sm"></i> Live Chat Driver
-                </button>
+                <div class="mt-8 border-t border-gray-100 pt-4">
+                    <button onclick="openChat('DEL', activeTrackOrderId)" class="btn-3d w-full bg-brandPrimary text-white py-3 rounded-xl font-bold hover:bg-brandPrimaryHover transition shadow-[0_4px_0_0_#A83D02] flex items-center justify-center gap-2">
+                        <i class="fas fa-comments text-lg drop-shadow-sm"></i> Live Chat Driver
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -331,9 +359,9 @@
     </div>
 
     <!-- Overlay Profil -->
-    <div id="profile-overlay" class="hidden fixed inset-0 z-[116] bg-textMocha/50 backdrop-blur-sm overflow-y-auto flex-col justify-center items-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-0 relative mt-10 md:mt-0 flex flex-col overflow-hidden">
-            <div class="p-4 border-b flex justify-between items-center bg-gradient-to-r from-brandPrimary to-[#D94E04] text-white">
+    <div id="profile-overlay" class="hidden fixed inset-0 z-[116] bg-textMocha/50 backdrop-blur-sm overflow-y-auto flex-col justify-center items-center p-0 md:p-4">
+        <div class="bg-white rounded-none md:rounded-2xl shadow-2xl w-full h-full md:h-auto max-w-sm p-0 relative mt-0 flex flex-col max-h-full md:max-h-[90vh] overflow-hidden">
+            <div class="p-4 border-b flex justify-between items-center bg-gradient-to-r from-brandPrimary to-[#D94E04] text-white shrink-0">
                 <h2 class="text-lg font-bold drop-shadow-md"><i class="fas fa-user-circle mr-2"></i> Akun Saya</h2>
                 <button onclick="hideProfile()" class="text-white hover:text-gray-200 bg-white/20 w-8 h-8 rounded-full flex justify-center items-center transition"><i class="fas fa-times"></i></button>
             </div>
@@ -532,10 +560,16 @@
                     <i class="fas fa-receipt"></i> Pesanan Saya
                     <span class="absolute -top-1.5 -right-3.5 bg-white text-brandPrimary text-[9px] font-black px-1.5 py-0.5 rounded-full order-badge hidden shadow-[0_2px_4px_rgba(0,0,0,0.2)]">0</span>
                 </a>
-                <a href="javascript:void(0)" onclick="showNotifications()" class="hover:text-orange-100 transition flex items-center gap-1.5"><i class="far fa-bell"></i> Notifikasi</a>
+                <a href="javascript:void(0)" onclick="showSystemNotifications()" class="hover:text-orange-100 transition relative flex items-center gap-1.5">
+                    <i class="far fa-bell"></i> Notifikasi
+                    <span class="absolute -top-1.5 -right-2 bg-red-500 text-white border border-red-200 text-[9px] font-black w-3.5 h-3.5 flex items-center justify-center rounded-full sys-notif-badge hidden shadow-[0_2px_4px_rgba(0,0,0,0.2)]">!</span>
+                </a>
                 
-                <!-- Chat CS via Firebase -->
-                <a href="javascript:void(0)" onclick="openChat('CS', null)" class="hover:text-orange-100 transition flex items-center gap-1.5"><i class="fas fa-headset"></i> Chat CS</a>
+                <!-- Chat Inbox -->
+                <a href="javascript:void(0)" onclick="showChatList()" class="hover:text-orange-100 transition relative flex items-center gap-1.5">
+                    <i class="fas fa-comments"></i> Pesan Masuk
+                    <span class="absolute -top-1.5 -right-3 bg-red-500 text-white border border-red-200 text-[9px] font-black px-1.5 py-0.5 rounded-full chat-badge hidden shadow-[0_2px_4px_rgba(0,0,0,0.2)]">0</span>
+                </a>
                 
                 <a href="#" class="hover:text-orange-100 transition flex items-center gap-1.5"><i class="fas fa-globe"></i> ID</a>
                 <div id="auth-links" class="flex items-center gap-4 border-l border-white/30 pl-4 ml-1">
@@ -578,9 +612,9 @@
                 <span class="absolute -top-1.5 -right-1.5 bg-white text-brandPrimary text-[10px] font-black px-2 py-0.5 rounded-full border border-brandPrimary cart-counter-badge hidden shadow-[0_2px_5px_rgba(0,0,0,0.2)]">0</span>
             </div>
             
-            <div class="md:hidden text-white w-10 h-10 flex items-center justify-center cursor-pointer relative btn-3d active:scale-90" onclick="showNotifications()">
+            <div class="md:hidden text-white w-10 h-10 flex items-center justify-center cursor-pointer relative btn-3d active:scale-90" onclick="showSystemNotifications()">
                 <i class="far fa-bell text-2xl drop-shadow-md"></i>
-                <span class="absolute top-0 right-0 bg-white text-brandPrimary text-[8px] font-black px-1.5 py-0.5 rounded-full order-badge hidden shadow-md">0</span>
+                <span class="absolute top-0 right-0 bg-white text-brandPrimary text-[10px] font-black w-4 h-4 flex items-center justify-center rounded-full sys-notif-badge hidden shadow-md">!</span>
             </div>
         </div>
     </header>
@@ -646,30 +680,39 @@
 
     </main>
 
-    <!-- Navigasi Bawah Mobile -->
+    <!-- Navigasi Bawah Mobile (4 Item) -->
     <nav class="md:hidden fixed bottom-4 left-4 right-4 bg-white/90 backdrop-blur-xl border border-white flex justify-around items-end text-[10px] text-gray-500 pb-2 pt-2 shadow-[0_10px_30px_rgba(0,0,0,0.15)] rounded-3xl z-50 h-[70px]">
         <div class="absolute inset-0 bg-gradient-to-t from-transparent to-white/80 rounded-3xl pointer-events-none"></div>
 
-        <div onclick="window.location.reload()" class="flex flex-col items-center text-brandPrimary cursor-pointer w-1/3 relative z-10 group">
-            <div class="w-14 h-14 absolute -top-[45px] bg-gradient-to-b from-[#FF7A2E] to-brandPrimary text-white rounded-full shadow-[0_8px_15px_rgba(242,92,5,0.4)] border-4 border-white flex items-center justify-center transform group-active:scale-95 transition-transform">
-                <i class="fas fa-home text-2xl drop-shadow-md"></i>
+        <div onclick="window.location.reload()" class="flex flex-col items-center text-brandPrimary cursor-pointer w-1/4 relative z-10 group">
+            <div class="w-12 h-12 md:w-14 md:h-14 absolute -top-[45px] bg-gradient-to-b from-[#FF7A2E] to-brandPrimary text-white rounded-full shadow-[0_8px_15px_rgba(242,92,5,0.4)] border-4 border-white flex items-center justify-center transform group-active:scale-95 transition-transform">
+                <i class="fas fa-home text-xl md:text-2xl drop-shadow-md"></i>
             </div>
             <span class="font-extrabold mt-6 text-brandPrimary">Beranda</span>
         </div>
         
-        <div class="flex flex-col items-center hover:text-brandPrimary cursor-pointer w-1/3 relative z-10 group transition-all" onclick="showNotifications()">
-            <div class="w-12 h-12 flex items-center justify-center transform group-hover:-translate-y-10 group-hover:bg-gradient-to-b from-orange-100 to-white group-hover:shadow-[0_8px_15px_rgba(242,92,5,0.3)] group-hover:border-[3px] border-white rounded-full transition-all duration-300 relative group-active:scale-90 bg-white">
-                <i class="fas fa-receipt text-2xl drop-shadow-sm group-hover:drop-shadow-md text-gray-400 group-hover:text-brandPrimary transition-colors"></i>
-                <span class="absolute -top-1 -right-1 bg-brandPrimary text-white text-[9px] font-black px-1.5 py-0.5 rounded-full order-badge hidden shadow-[0_2px_5px_rgba(242,92,5,0.5)] border border-white">0</span>
+        <div class="flex flex-col items-center hover:text-brandPrimary cursor-pointer w-1/4 relative z-10 group transition-all" onclick="showNotifications()">
+            <div class="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center transform group-hover:-translate-y-8 group-hover:bg-gradient-to-b from-orange-100 to-white group-hover:shadow-[0_8px_15px_rgba(242,92,5,0.3)] group-hover:border-[3px] border-white rounded-full transition-all duration-300 relative group-active:scale-90 bg-white">
+                <i class="fas fa-receipt text-xl md:text-2xl drop-shadow-sm group-hover:drop-shadow-md text-gray-400 group-hover:text-brandPrimary transition-colors"></i>
+                <span class="absolute -top-1 -right-1 bg-brandPrimary text-white text-[8px] md:text-[9px] font-black px-1.5 py-0.5 rounded-full order-badge hidden shadow-[0_2px_5px_rgba(242,92,5,0.5)] border border-white">0</span>
             </div>
-            <span class="font-bold mt-1 group-hover:opacity-0 transition-opacity duration-300">Pesanan</span>
+            <span class="font-bold mt-1 group-hover:opacity-0 transition-opacity duration-300 text-center">Pesanan</span>
         </div>
 
-        <div class="flex flex-col items-center hover:text-brandPrimary cursor-pointer w-1/3 relative z-10 group transition-all" onclick="handleMobileProfileClick()" id="mobile-profile-btn">
-            <div class="w-12 h-12 flex items-center justify-center transform group-hover:-translate-y-10 group-hover:bg-gradient-to-b from-orange-100 to-white group-hover:shadow-[0_8px_15px_rgba(242,92,5,0.3)] group-hover:border-[3px] border-white rounded-full transition-all duration-300 group-active:scale-90 bg-white">
-                <i id="mobile-profile-icon" class="far fa-user text-2xl drop-shadow-sm group-hover:drop-shadow-md text-gray-400 group-hover:text-brandPrimary transition-colors"></i>
+        <!-- Tombol Menu Chat Mobile -->
+        <div class="flex flex-col items-center hover:text-brandPrimary cursor-pointer w-1/4 relative z-10 group transition-all" onclick="showChatList()">
+            <div class="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center transform group-hover:-translate-y-8 group-hover:bg-gradient-to-b from-orange-100 to-white group-hover:shadow-[0_8px_15px_rgba(242,92,5,0.3)] group-hover:border-[3px] border-white rounded-full transition-all duration-300 relative group-active:scale-90 bg-white">
+                <i class="fas fa-comments text-xl md:text-2xl drop-shadow-sm group-hover:drop-shadow-md text-gray-400 group-hover:text-brandPrimary transition-colors"></i>
+                <span class="absolute -top-1 -right-1 bg-red-500 text-white text-[8px] md:text-[9px] font-black px-1.5 py-0.5 rounded-full chat-badge hidden shadow-[0_2px_5px_rgba(239,68,68,0.5)] border border-white">0</span>
             </div>
-            <span id="mobile-profile-text" class="font-bold mt-1 group-hover:opacity-0 transition-opacity duration-300">Log In</span>
+            <span class="font-bold mt-1 group-hover:opacity-0 transition-opacity duration-300 text-center">Chat</span>
+        </div>
+
+        <div class="flex flex-col items-center hover:text-brandPrimary cursor-pointer w-1/4 relative z-10 group transition-all" onclick="handleMobileProfileClick()" id="mobile-profile-btn">
+            <div class="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center transform group-hover:-translate-y-8 group-hover:bg-gradient-to-b from-orange-100 to-white group-hover:shadow-[0_8px_15px_rgba(242,92,5,0.3)] group-hover:border-[3px] border-white rounded-full transition-all duration-300 group-active:scale-90 bg-white">
+                <i id="mobile-profile-icon" class="far fa-user text-xl md:text-2xl drop-shadow-sm group-hover:drop-shadow-md text-gray-400 group-hover:text-brandPrimary transition-colors"></i>
+            </div>
+            <span id="mobile-profile-text" class="font-bold mt-1 group-hover:opacity-0 transition-opacity duration-300 text-center">Log In</span>
         </div>
     </nav>
 
@@ -695,10 +738,149 @@
         // --- SISTEM CHAT FIREBASE REALTIME ---
         let currentChatUnsubscribe = null;
         let activeChatRef = null;
+        let backgroundChatListeners = {};
+
+        function showChatList() {
+            if (!loggedInUser) {
+                showCustomAlert("Silakan Log In terlebih dahulu untuk membuka kotak masuk pesan.", "error");
+                return showAuth('login');
+            }
+            document.getElementById('chat-list-overlay').classList.remove('hidden');
+            document.getElementById('chat-list-overlay').classList.add('flex');
+            renderChatList();
+        }
+
+        function hideChatList() {
+            document.getElementById('chat-list-overlay').classList.add('hidden');
+            document.getElementById('chat-list-overlay').classList.remove('flex');
+        }
+
+        function renderChatList() {
+            const container = document.getElementById('chat-list-container');
+            let html = '';
+            
+            const csChatId = "CS_" + loggedInUser.user_id;
+            const csUnread = window[`unread_${csChatId}`] || 0;
+            const csBadge = csUnread > 0 ? `<span class="bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-sm">${csUnread}</span>` : '';
+            
+            html += `
+            <div onclick="openChat('CS', null)" class="bg-white border border-gray-200 rounded-xl p-3 flex items-center gap-3 cursor-pointer hover:border-brandPrimary hover:shadow-md transition group shadow-sm">
+                <div class="w-12 h-12 bg-gradient-to-br from-brandPrimary to-[#D94E04] text-white rounded-full flex items-center justify-center shrink-0 shadow-inner border border-orange-200">
+                    <i class="fas fa-headset text-xl"></i>
+                </div>
+                <div class="flex-1 overflow-hidden">
+                    <div class="flex justify-between items-center mb-0.5">
+                        <h3 class="font-extrabold text-sm text-textMocha group-hover:text-brandPrimary transition-colors">Customer Service</h3>
+                        ${csBadge}
+                    </div>
+                    <p class="text-xs text-gray-500 truncate font-medium">Bantuan terkait aplikasi & akun</p>
+                </div>
+            </div>`;
+
+            let activeOrders = cachedMyOrders.filter(o => !['selesai', 'batal', 'tolak', 'terima'].includes(String(o.status).toLowerCase()));
+            
+            let driverHtml = '';
+            activeOrders.forEach(o => {
+                const chatId = "DEL_" + o.order_id;
+                // Hanya tampilkan chat kurir JIKA sudah ada pesannya
+                if (window[`has_msg_${chatId}`]) {
+                    const unread = window[`unread_${chatId}`] || 0;
+                    const badge = unread > 0 ? `<span class="bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-sm">${unread}</span>` : '';
+                    
+                    driverHtml += `
+                    <div onclick="openChat('DEL', '${o.order_id}')" class="bg-white border border-gray-200 rounded-xl p-3 flex items-center gap-3 cursor-pointer hover:border-blue-400 hover:shadow-md transition group shadow-sm">
+                        <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-400 text-white rounded-full flex items-center justify-center shrink-0 shadow-inner border border-blue-300">
+                            <i class="fas fa-motorcycle text-xl"></i>
+                        </div>
+                        <div class="flex-1 overflow-hidden">
+                            <div class="flex justify-between items-center mb-0.5">
+                                <h3 class="font-extrabold text-sm text-textMocha group-hover:text-blue-500 transition-colors line-clamp-1">Kurir: ${o.outlet || 'Pesanan'}</h3>
+                                ${badge}
+                            </div>
+                            <p class="text-[10px] font-bold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded w-fit mb-0.5">Order: ${o.order_id}</p>
+                            <p class="text-xs text-gray-500 truncate font-medium">Lanjutkan obrolan dengan kurir</p>
+                        </div>
+                    </div>`;
+                }
+            });
+
+            if (driverHtml !== '') {
+                html += `<div class="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-2 px-1">Pesan Kurir</div>` + driverHtml;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function listenToAllUnreadChats() {
+            if (!loggedInUser) return;
+            
+            let expectedChatIds = [`CS_${loggedInUser.user_id}`];
+            let activeOrders = cachedMyOrders.filter(o => !['selesai', 'batal', 'tolak', 'terima'].includes(String(o.status).toLowerCase()));
+            activeOrders.forEach(o => expectedChatIds.push(`DEL_${o.order_id}`));
+
+            Object.keys(backgroundChatListeners).forEach(id => {
+                if(!expectedChatIds.includes(id)) {
+                    backgroundChatListeners[id](); 
+                    delete backgroundChatListeners[id];
+                    delete window[`unread_${id}`];
+                }
+            });
+
+            expectedChatIds.forEach(chatId => {
+                if (!backgroundChatListeners[chatId]) {
+                    backgroundChatListeners[chatId] = db.collection('chats').doc(chatId).collection('messages')
+                        .orderBy('timestamp', 'asc')
+                        .onSnapshot(snap => {
+                            let totalDocs = snap.size;
+                            let seenCount = parseInt(localStorage.getItem(`seen_count_${chatId}`) || '0');
+                            
+                            // Menandai bahwa ruang obrolan ini tidak kosong
+                            if (totalDocs > 0) window[`has_msg_${chatId}`] = true;
+
+                            snap.docChanges().forEach(change => {
+                                if(change.type === 'added') {
+                                    const data = change.doc.data();
+                                    if(data.senderId !== loggedInUser.user_id && document.visibilityState === 'hidden') {
+                                        triggerSystemNotification(`Pesan dari ${data.senderName || 'Kurir'}`, data.text, `chat-${chatId}`);
+                                    }
+                                }
+                            });
+
+                            if (activeChatRef && activeChatRef.parent.id === chatId) {
+                                seenCount = totalDocs;
+                                localStorage.setItem(`seen_count_${chatId}`, seenCount);
+                            }
+                            
+                            let unread = totalDocs - seenCount;
+                            if (unread < 0) unread = 0; 
+                            
+                            window[`unread_${chatId}`] = unread;
+                            updateTotalChatBadge();
+                            
+                            if(!document.getElementById('chat-list-overlay').classList.contains('hidden')) {
+                                renderChatList();
+                            }
+                        });
+                }
+            });
+        }
+
+        function updateTotalChatBadge() {
+            let totalUnread = 0;
+            Object.keys(window).forEach(key => {
+                if(key.startsWith('unread_')) totalUnread += (window[key] || 0);
+            });
+
+            document.querySelectorAll('.chat-badge').forEach(el => {
+                el.innerText = totalUnread;
+                if(totalUnread > 0) el.classList.remove('hidden');
+                else el.classList.add('hidden');
+            });
+        }
 
         function openChat(type, refId) {
             if (!loggedInUser) {
-                showCustomAlert("Silakan Log In terlebih dahulu untuk menggunakan fitur chat.", "error");
+                showCustomAlert("Silakan Log In terlebih dahulu.", "error");
                 return showAuth('login');
             }
             
@@ -714,23 +896,28 @@
                 iconEl.className = "fas fa-headset text-xl";
                 chatId = "CS_" + loggedInUser.user_id;
             } else if (type === 'DEL') {
-                titleEl.innerText = "Driver Pesanan " + refId;
+                titleEl.innerText = "Kurir (Pesanan " + refId + ")";
                 iconEl.className = "fas fa-motorcycle text-xl";
                 chatId = "DEL_" + refId;
             }
             
             activeChatRef = db.collection('chats').doc(chatId).collection('messages');
-            
             const msgContainer = document.getElementById('chat-messages');
-            msgContainer.innerHTML = '<div class="text-center py-4 text-gray-400 text-xs font-semibold"><i class="fas fa-spinner fa-spin mr-1"></i> Menghubungkan ke server chat...</div>';
+            msgContainer.innerHTML = '<div class="text-center py-4 text-gray-400 text-xs font-semibold"><i class="fas fa-spinner fa-spin mr-1"></i> Menghubungkan...</div>';
             
             if(currentChatUnsubscribe) currentChatUnsubscribe();
             
             currentChatUnsubscribe = activeChatRef.orderBy('timestamp', 'asc').onSnapshot(snapshot => {
                 msgContainer.innerHTML = '';
                 
+                localStorage.setItem(`seen_count_${chatId}`, snapshot.size);
+                window[`unread_${chatId}`] = 0;
+                updateTotalChatBadge();
+                if(!document.getElementById('chat-list-overlay').classList.contains('hidden')) renderChatList();
+
                 if (snapshot.empty) {
-                    msgContainer.innerHTML = '<div class="text-center text-xs text-gray-400 mt-4 bg-white p-3 rounded-xl border border-gray-100 shadow-sm mx-4">Sapa Admin/Driver kami sekarang! Percakapan Anda aman.</div>';
+                    let emptyMsg = type === 'CS' ? "Sapa Customer Service kami! Percakapan Anda aman." : "Kirim pesan ke Kurir. Pesan ini hanya untuk kurir pengantar.";
+                    msgContainer.innerHTML = `<div class="text-center text-xs text-gray-400 mt-4 bg-white p-3 rounded-xl border border-gray-100 shadow-sm mx-4">${emptyMsg}</div>`;
                     return;
                 }
 
@@ -750,9 +937,10 @@
                             <span class="text-[9px] text-gray-400 mt-0.5 mx-1">${time}</span>
                         </div>`;
                     } else {
+                        let fallbackName = type === 'CS' ? 'Customer Service' : 'Kurir';
                         html += `
                         <div class="flex flex-col items-start w-full animate-fade-in">
-                            <span class="text-[9px] text-gray-400 mb-0.5 mx-1 font-bold text-brandPrimary">${data.senderName || 'Admin/Driver'}</span>
+                            <span class="text-[9px] text-gray-400 mb-0.5 mx-1 font-bold text-brandPrimary">${data.senderName || fallbackName}</span>
                             <div class="max-w-[80%] p-3 rounded-2xl bg-white text-textMocha rounded-tl-sm shadow-sm border border-gray-200">
                                 <p class="text-sm leading-relaxed">${data.text}</p>
                             </div>
@@ -762,9 +950,6 @@
                 });
                 msgContainer.innerHTML = html;
                 setTimeout(() => { msgContainer.scrollTop = msgContainer.scrollHeight; }, 100);
-                
-            }, error => {
-                msgContainer.innerHTML = '<div class="text-center text-xs text-red-500 mt-4 bg-red-50 p-3 rounded-xl border border-red-100 mx-4">Gagal terhubung ke server. Pastikan Database Rules Firebase Anda diizinkan untuk membaca/menulis "chats" koleksi.</div>';
             });
         }
 
@@ -834,14 +1019,14 @@
             }
         }
 
-        function triggerSystemNotification(title, bodyText) {
+        function triggerSystemNotification(title, bodyText, tagId = 'fcbuyer-notif') {
             if ('Notification' in window && Notification.permission === 'granted') {
                 navigator.serviceWorker.ready.then(function(registration) {
                     registration.showNotification(title, {
                         body: bodyText,
                         icon: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23F25C05'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>",
                         vibrate: [200, 100, 200],
-                        tag: 'fcbuyer-notif'
+                        tag: tagId
                     });
                 });
             }
@@ -939,7 +1124,7 @@
         }
 
 
-        // URL Web App Google Apps Script Anda
+        // URL Web App Google Apps Script
         const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxepD3BGU993WBCuZjH2Wo4sDyUkwyp4SGE4_mZ6EbrzD_qCDGzkRIOnPqmcXVnKNM/exec"; 
 
         let loggedInUser = null; 
@@ -1892,10 +2077,18 @@
                         
                         const currentHash = JSON.stringify(activeOrders.map(o => o.order_id + o.status));
                         const lastSeenHash = localStorage.getItem('foodcourt_seen_orders_hash');
+                        const lastSeenNotifHash = localStorage.getItem('foodcourt_last_notif_hash');
                         
-                        if (lastSeenHash && lastSeenHash !== currentHash && document.visibilityState === 'hidden') {
-                            triggerSystemNotification("Update Pesanan! 🍔", "Status pesanan Anda telah diperbarui. Segera cek aplikasi FoodCourt.");
+                        // Push Notifikasi Background OS
+                        if (lastSeenNotifHash && lastSeenNotifHash !== currentHash && document.visibilityState === 'hidden') {
+                            triggerSystemNotification("Notifikasi Pesanan 🍔", "Status pesanan Anda telah diperbarui. Segera cek aplikasi.");
                         }
+                        
+                        // Memunculkan Badge Tanda Seru (!) pada Notifikasi Masuk
+                        if (lastSeenNotifHash !== currentHash) {
+                            document.querySelectorAll('.sys-notif-badge').forEach(el => el.classList.remove('hidden'));
+                        }
+                        
                         localStorage.setItem('foodcourt_seen_orders_hash', currentHash);
                         
                         document.querySelectorAll('.order-badge').forEach(el => {
@@ -1910,11 +2103,19 @@
                             document.querySelectorAll('.order-badge').forEach(el => el.classList.add('hidden'));
                             renderOrderList();
                         }
+                        
+                        // Live Update di dalam overlay System Notifikasi jika sedang dibuka
+                        if (!document.getElementById('sys-notif-overlay').classList.contains('hidden')) {
+                            showSystemNotifications();
+                        }
 
                         if (activeTrackOrderId) {
                             const trackedOrder = myOrders.find(o => o.order_id === activeTrackOrderId);
                             if (trackedOrder) showTracking(trackedOrder.order_id, trackedOrder.status, trackedOrder.product_name, trackedOrder.outlet, true);
                         }
+                        
+                        // Perbarui pendengar obrolan real-time
+                        listenToAllUnreadChats();
                     }
                 }
 
@@ -1968,6 +2169,61 @@
         }
 
         function hideNotifications() { document.getElementById('notif-overlay').classList.add('hidden'); document.getElementById('notif-overlay').classList.remove('flex'); }
+
+        function showSystemNotifications() {
+            if (!loggedInUser) return showAuth('login');
+            
+            document.getElementById('sys-notif-overlay').classList.remove('hidden');
+            document.getElementById('sys-notif-overlay').classList.add('flex');
+            
+            // Sembunyikan badge (tandai dibaca)
+            document.querySelectorAll('.sys-notif-badge').forEach(el => el.classList.add('hidden'));
+            
+            const activeOrders = cachedMyOrders.filter(o => {
+                const st = String(o.status || '').toLowerCase();
+                return !st.includes('selesai') && !st.includes('terima') && !st.includes('batal') && !st.includes('tolak');
+            });
+            const currentHash = JSON.stringify(activeOrders.map(o => o.order_id + o.status));
+            localStorage.setItem('foodcourt_last_notif_hash', currentHash);
+
+            const container = document.getElementById('sys-notif-list');
+            if (!cachedMyOrders || cachedMyOrders.length === 0) {
+                container.innerHTML = '<div class="text-center py-10 text-gray-500"><i class="far fa-bell-slash text-4xl mb-3 opacity-50 drop-shadow"></i><p class="font-bold">Belum ada notifikasi.</p></div>';
+                return;
+            }
+
+            let html = '';
+            let recentOrders = cachedMyOrders.slice(0, 20); // Ambil 20 perubahan terbaru
+            recentOrders.forEach(o => {
+                let icon = "fa-info-circle text-blue-500";
+                let bg = "bg-blue-50 border border-blue-100";
+                const st = String(o.status||'').toLowerCase();
+                if(st.includes('selesai') || st.includes('terima')) { icon = "fa-check-circle text-green-500"; bg = "bg-green-50 border border-green-100"; }
+                else if(st.includes('batal') || st.includes('tolak')) { icon = "fa-times-circle text-red-500"; bg = "bg-red-50 border border-red-100"; }
+                else if(st.includes('kurir') || st.includes('kirim') || st.includes('tujuan') || st.includes('ambil')) { icon = "fa-motorcycle text-brandPrimary"; bg = "bg-orange-50 border border-orange-100"; }
+                
+                html += `
+                <div class="flex gap-3 p-4 border-b border-gray-100 bg-white hover:bg-gray-50 transition cursor-pointer" onclick="hideSystemNotifications(); showTracking('${o.order_id}', '${o.status}', '${o.product_name.replace(/'/g,"\\'")}', '${o.outlet.replace(/'/g,"\\'")}')">
+                    <div class="w-11 h-11 ${bg} rounded-full flex items-center justify-center shrink-0 shadow-inner">
+                        <i class="fas ${icon} text-lg"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex justify-between items-start mb-1">
+                            <div class="text-sm font-extrabold text-textMocha leading-tight">Status Pesanan Diperbarui</div>
+                            <div class="text-[10px] font-semibold text-gray-400 shrink-0 ml-2">${o.timestamp ? o.timestamp.split(' ')[1] : ''}</div>
+                        </div>
+                        <div class="text-xs text-gray-600 line-clamp-2 leading-relaxed">Pesanan <span class="font-bold text-gray-800">${o.product_name}</span> dari <span class="font-bold text-gray-800">${o.outlet}</span> saat ini berstatus: <span class="font-extrabold text-brandPrimary uppercase">${o.status}</span>.</div>
+                        <div class="text-[10px] font-bold text-blue-500 mt-2 hover:underline flex items-center gap-1">Lacak Pesanan <i class="fas fa-chevron-right text-[8px]"></i></div>
+                    </div>
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function hideSystemNotifications() {
+            document.getElementById('sys-notif-overlay').classList.add('hidden');
+            document.getElementById('sys-notif-overlay').classList.remove('flex');
+        }
 
         function showTracking(orderId, status, productName, outlet, isBackground = false) {
             activeTrackOrderId = orderId; 
@@ -2308,7 +2564,6 @@
             });
         }
 
-        // Functions setup lainnya sama seperti versi sebelumnya
         function showProfile() {
             if (!loggedInUser) return;
             document.getElementById('profile-overlay').classList.remove('hidden'); document.getElementById('profile-overlay').classList.add('flex');
@@ -2350,12 +2605,12 @@
                 if(userLinks) { userLinks.classList.remove('hidden'); userLinks.classList.add('flex'); }
                 if(headerUsername) headerUsername.innerHTML = `<i class="fas fa-user-circle mr-1"></i> Profil`;
                 if(mobileProfileText) mobileProfileText.innerText = 'Profil';
-                if(mobileProfileIcon) mobileProfileIcon.className = 'fas fa-user-circle text-2xl drop-shadow-md text-gray-400 group-hover:text-brandPrimary transition-colors';
+                if(mobileProfileIcon) mobileProfileIcon.className = 'fas fa-user-circle text-xl md:text-2xl drop-shadow-md text-gray-400 group-hover:text-brandPrimary transition-colors';
             } else {
                 if(authLinks) { authLinks.classList.remove('hidden'); authLinks.classList.add('flex'); }
                 if(userLinks) { userLinks.classList.add('hidden'); userLinks.classList.remove('flex'); }
                 if(mobileProfileText) mobileProfileText.innerText = 'Log In';
-                if(mobileProfileIcon) mobileProfileIcon.className = 'far fa-user text-2xl drop-shadow-md text-gray-400 group-hover:text-brandPrimary transition-colors';
+                if(mobileProfileIcon) mobileProfileIcon.className = 'far fa-user text-xl md:text-2xl drop-shadow-md text-gray-400 group-hover:text-brandPrimary transition-colors';
             }
         }
 
@@ -2450,7 +2705,11 @@
             const savedUser = localStorage.getItem('foodcourt_buyer_login');
             if (savedUser) { try { loggedInUser = JSON.parse(savedUser); updatePresence('Online'); } catch(e) { localStorage.removeItem('foodcourt_buyer_login'); } }
             updateAuthUI(); updateCartCount(); startBackgroundSync();
-            if(loggedInUser) { syncOrdersSilently(); setTimeout(() => checkAndShowInstallPrompt(), 2000); requestNotificationPermission(); }
+            if(loggedInUser) { 
+                syncOrdersSilently(); 
+                setTimeout(() => checkAndShowInstallPrompt(), 2000); 
+                requestNotificationPermission(); 
+            }
         });
     </script>
 </body>
