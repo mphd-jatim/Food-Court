@@ -15,7 +15,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     
-    <meta name="theme-color" content="#F25C05">
+    <meta name="thee-color" content="#F25C05">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
@@ -383,8 +383,11 @@
                     <button onclick="toggleEditProfileBuyer()" class="btn-3d w-full bg-white text-textMocha border-2 border-gray-200 py-3 rounded-xl font-bold hover:bg-gray-50 transition flex items-center justify-center gap-2 shadow-[0_3px_0_0_#e5e7eb]">
                         <i class="fas fa-user-edit text-gray-400"></i> Edit Profil
                     </button>
-                    <button onclick="acceptInstallPrompt()" class="btn-3d w-full bg-white text-brandPrimary border-2 border-brandPrimary py-3 rounded-xl font-bold hover:bg-orange-50 transition flex items-center justify-center gap-2 shadow-[0_3px_0_0_#F25C05]">
+                    <button onclick="acceptInstallPrompt()" class="btn-3d w-full bg-white text-brandPrimary border-2 border-brandPrimary py-3 rounded-xl font-bold hover:bg-orange-50 transition flex items-center justify-center gap-2 shadow-[0_3px_0_0_#F25C05] md:hidden">
                         <i class="fas fa-download"></i> Instal ke Layar Utama
+                    </button>
+                    <button onclick="forceUpdateApp()" class="btn-3d w-full bg-blue-50 text-blue-600 border-2 border-blue-200 py-3 rounded-xl font-bold hover:bg-blue-100 transition flex items-center justify-center gap-2 shadow-[0_3px_0_0_#bfdbfe]">
+                        <i class="fas fa-sync-alt"></i> Perbarui Aplikasi
                     </button>
                     <button onclick="handleLogout(true)" class="btn-3d w-full bg-red-50 text-red-600 border-2 border-red-200 py-3 rounded-xl font-bold hover:bg-red-100 transition flex items-center justify-center gap-2 shadow-[0_3px_0_0_#fecaca]">
                         <i class="fas fa-sign-out-alt"></i> Log Out
@@ -1004,7 +1007,40 @@
         linkManifest.href = manifestURL;
         document.head.appendChild(linkManifest);
 
-        const swContent = `self.addEventListener('install', e => self.skipWaiting()); self.addEventListener('activate', e => e.waitUntil(self.clients.claim())); self.addEventListener('fetch', e => {});`;
+        const swContent = `
+            const CACHE_NAME = 'fc-buyer-cache-dynamic';
+            
+            self.addEventListener('install', e => {
+                self.skipWaiting();
+            }); 
+            
+            self.addEventListener('activate', e => {
+                e.waitUntil(self.clients.claim());
+            }); 
+            
+            self.addEventListener('fetch', e => {
+                if (e.request.method !== 'GET') return;
+
+                if (e.request.url.includes('firestore.googleapis.com') || 
+                    e.request.url.includes('script.google.com')) {
+                    return;
+                }
+
+                e.respondWith(
+                    fetch(e.request)
+                    .then(response => {
+                        const resClone = response.clone();
+                        caches.open(CACHE_NAME).then(cache => {
+                            cache.put(e.request, resClone);
+                        });
+                        return response;
+                    })
+                    .catch(() => {
+                        return caches.match(e.request);
+                    })
+                );
+            });
+        `;
         const swBlob = new Blob([swContent], {type: 'application/javascript'});
         const swUrl = URL.createObjectURL(swBlob);
 
