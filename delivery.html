@@ -528,6 +528,11 @@
                     <i class="fas fa-download"></i> INSTAL APLIKASI (KE LAYAR UTAMA)
                 </button>
 
+                <!-- Tombol Update PWA -->
+                <button onclick="forceUpdateApp()" class="btn-3d w-full bg-blue-50 text-blue-600 border-2 border-blue-200 py-3.5 rounded-xl font-black text-sm hover:bg-blue-100 shadow-[0_4px_0_0_#93c5fd] flex justify-center items-center gap-2 mb-3">
+                    <i class="fas fa-sync-alt"></i> PERBARUI APLIKASI
+                </button>
+
                 <button onclick="handleLogout()" class="btn-3d w-full bg-red-50 text-red-600 border-2 border-red-200 py-3.5 rounded-xl font-black text-sm hover:bg-red-100 shadow-[0_4px_0_0_#fca5a5] flex justify-center items-center gap-2 mb-10">
                     <i class="fas fa-sign-out-alt"></i> KELUAR AKUN
                 </button>
@@ -599,70 +604,193 @@
         const db = firebase.firestore(); // Inisialisasi Firestore
         const googleProvider = new firebase.auth.GoogleAuthProvider();
 
-        // --- PWA SETUP (DENGAN ID UNIK AGAR TIDAK BENTROK) ---
-        const pwaManifest = {
-            "id": "foodcourt-driver-app-v1", 
-            "name": "FoodCourt Driver",
-            "short_name": "FCDriver",
-            "start_url": window.location.pathname + "?mode=pwa", 
-            "display": "standalone",
-            "background_color": "#f5f5f5",
-            "theme_color": "#ee4d2d",
-            "icons": [
-                {
-                    "src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ee4d2d'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>",
-                    "sizes": "192x192",
-                    "type": "image/svg+xml"
-                }
-            ]
-        };
-        const manifestBlob = new Blob([JSON.stringify(pwaManifest)], {type: 'application/json'});
-        const manifestURL = URL.createObjectURL(manifestBlob);
-        const linkManifest = document.createElement('link');
-        linkManifest.rel = 'manifest';
-        linkManifest.href = manifestURL;
-        document.head.appendChild(linkManifest);
+        // --- PWA SETUP & AUTO UPDATE SYSTEM ---
+        const APP_VERSION = '1.0.1'; // Ganti versi ini (misal '1.0.2') setiap ada pembaruan kode
+        const CACHE_NAME = 'fc-driver-cache-v' + APP_VERSION;
+        const ASSETS_CACHE = 'fc-driver-assets-v1'; // Cache khusus resource statis
 
-        const swContent = `
-            const CACHE_NAME = 'fc-driver-cache-dynamic';
-            
-            self.addEventListener('install', e => {
-                self.skipWaiting();
-            }); 
-            
-            self.addEventListener('activate', e => {
-                e.waitUntil(self.clients.claim());
-            }); 
-            
-            self.addEventListener('fetch', e => {
-                if (e.request.method !== 'GET') return;
+        async function checkAutoUpdate() {
+            let currentVersion = localStorage.getItem('fcdriver_app_version');
+            if (!currentVersion) {
+                try { localStorage.setItem('fcdriver_app_version', APP_VERSION); } catch(e) {}
+                return false;
+            }
 
-                if (e.request.url.includes('firestore.googleapis.com') || 
-                    e.request.url.includes('script.google.com')) {
-                    return;
-                }
+            if (currentVersion !== APP_VERSION) {
+                console.log(`[PWA] Update terdeteksi: ${currentVersion} -> ${APP_VERSION}`);
+                
+                // Tampilkan overlay loading saat update berlangsung
+                const loader = document.createElement('div');
+                loader.innerHTML = '<div style="position:fixed;inset:0;background:rgba(245,245,245,0.95);backdrop-filter:blur(5px);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:sans-serif;"><i class="fas fa-sync-alt fa-spin" style="font-size:3.5rem;color:#ee4d2d;margin-bottom:1.5rem;filter:drop-shadow(0 4px 6px rgba(238,77,45,0.3));"></i><h2 style="color:#333;font-weight:900;font-size:1.5rem;margin-bottom:0.5rem;">Memperbarui App Kurir</h2><p style="color:#666;font-size:0.875rem;font-weight:600;">Menerapkan fitur dan performa terbaru...</p></div>';
+                document.body.appendChild(loader);
 
-                e.respondWith(
-                    fetch(e.request)
-                    .then(response => {
-                        const resClone = response.clone();
-                        caches.open(CACHE_NAME).then(cache => {
-                            cache.put(e.request, resClone);
-                        });
-                        return response;
-                    })
-                    .catch(() => {
-                        return caches.match(e.request);
-                    })
-                );
-            });
-        `;
-        const swBlob = new Blob([swContent], {type: 'application/javascript'});
-        const swUrl = URL.createObjectURL(swBlob);
+                try {
+                    if ('caches' in window) {
+                        const keys = await caches.keys();
+                        // Hapus cache versi lama
+                        await Promise.all(keys.map(key => caches.delete(key)));
+                    }
+                    if ('serviceWorker' in navigator) {
+                        try {
+                            const registrations = await navigator.serviceWorker.getRegistrations();
+                            for (let r of registrations) {
+                                await r.unregister();
+                            }
+                        } catch (swErr) { console.warn("SW Unregister dilewati (sandbox):", swErr); }
+                    }
+                } catch (e) { console.error("Gagal membersihkan cache:", e); }
 
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register(swUrl).catch(err => console.log('PWA SW err:', err));
+                try { localStorage.setItem('fcdriver_app_version', APP_VERSION); } catch(e) {}
+                
+                // Muat ulang paksa
+                setTimeout(() => { window.location.reload(); }, 1500);
+                return true; 
+            }
+            return false;
         }
+
+        async function forceUpdateApp() {
+            try {
+                const btn = document.querySelector('button[onclick="forceUpdateApp()"]');
+                if(btn) { btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memperbarui...'; btn.disabled = true; }
+                
+                if ('serviceWorker' in navigator) {
+                    try {
+                        const registrations = await navigator.serviceWorker.getRegistrations();
+                        for (let r of registrations) { await r.unregister(); }
+                    } catch (swErr) { console.warn("SW Unregister dilewati:", swErr); }
+                }
+                if ('caches' in window) {
+                    const keys = await caches.keys();
+                    for (let key of keys) { await caches.delete(key); }
+                }
+                
+                // Menghapus rekaman versi agar di-refresh selanjutnya akan diinstal ulang secara bersih
+                localStorage.removeItem('fcdriver_app_version');
+                await showCustomAlert("Aplikasi berhasil diperbarui ke versi terbaru. Halaman akan dimuat ulang.", "success");
+                window.location.reload();
+            } catch(e) {
+                await showCustomAlert("Gagal memperbarui aplikasi. Coba bersihkan cache browser Anda secara manual.", "error");
+            }
+        }
+
+        // Jalankan pengecekan Update sebelum Mendaftarkan PWA
+        checkAutoUpdate().then(isReloading => {
+            if (isReloading) return; // Jika sedang proses update, jangan register PWA dulu
+
+            const pwaManifest = {
+                "id": "foodcourt-driver-app-v" + APP_VERSION, 
+                "name": "FoodCourt Driver",
+                "short_name": "FCDriver",
+                "start_url": window.location.pathname + "?mode=pwa", 
+                "display": "standalone",
+                "background_color": "#f5f5f5",
+                "theme_color": "#ee4d2d",
+                "icons": [
+                    {
+                        "src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ee4d2d'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>",
+                        "sizes": "192x192",
+                        "type": "image/svg+xml",
+                        "purpose": "any maskable"
+                    }
+                ]
+            };
+            const manifestBlob = new Blob([JSON.stringify(pwaManifest)], {type: 'application/json'});
+            const manifestURL = URL.createObjectURL(manifestBlob);
+            const linkManifest = document.createElement('link');
+            linkManifest.rel = 'manifest';
+            linkManifest.href = manifestURL;
+            document.head.appendChild(linkManifest);
+
+            const swContent = `
+                const CACHE_NAME = '${CACHE_NAME}';
+                const ASSETS_CACHE = '${ASSETS_CACHE}';
+                
+                self.addEventListener('install', e => {
+                    self.skipWaiting();
+                }); 
+                
+                self.addEventListener('activate', e => {
+                    e.waitUntil(
+                        caches.keys().then(keys => {
+                            return Promise.all(
+                                keys.map(key => {
+                                    // Hanya simpan Cache Versi Saat Ini dan Cache Aset Statis
+                                    if (key !== CACHE_NAME && key !== ASSETS_CACHE) {
+                                        return caches.delete(key);
+                                    }
+                                })
+                            );
+                        }).then(() => self.clients.claim())
+                    );
+                }); 
+                
+                self.addEventListener('fetch', e => {
+                    if (e.request.method !== 'GET') return;
+                    
+                    const url = e.request.url;
+
+                    // Bypass total Firebase & GAS API dari cache agar real-time data tidak nyangkut
+                    if (url.includes('firestore.googleapis.com') || 
+                        url.includes('script.google.com') ||
+                        url.startsWith('chrome-extension')) {
+                        return;
+                    }
+
+                    // STRATEGI 1: Cache-First untuk Library Eksternal (Sangat Mempercepat Loading)
+                    if (url.includes('cdn.tailwindcss.com') || 
+                        url.includes('cdnjs.cloudflare.com') || 
+                        url.includes('cdn.jsdelivr.net') || 
+                        url.includes('unpkg.com') || 
+                        url.includes('res.cloudinary.com') || 
+                        url.includes('svgrepo.com')) {
+                        e.respondWith(
+                            caches.match(e.request).then(cachedRes => {
+                                if (cachedRes) return cachedRes;
+                                return fetch(e.request).then(networkRes => {
+                                    if (networkRes && networkRes.status === 200) {
+                                        const resClone = networkRes.clone();
+                                        caches.open(ASSETS_CACHE).then(cache => cache.put(e.request, resClone));
+                                    }
+                                    return networkRes;
+                                }).catch(() => caches.match(e.request));
+                            })
+                        );
+                        return;
+                    }
+
+                    // STRATEGI 2: Network-First untuk File Aplikasi (index.html)
+                    e.respondWith(
+                        fetch(e.request)
+                        .then(response => {
+                            if (response && response.status === 200) {
+                                const resClone = response.clone();
+                                caches.open(CACHE_NAME).then(cache => cache.put(e.request, resClone));
+                            }
+                            return response;
+                        })
+                        .catch(() => {
+                            return caches.match(e.request);
+                        })
+                    );
+                });
+            `;
+            
+            // Perbaikan Penting: Hanya register SW baru JIKA BELUM ADA yang terdaftar (Mencegah looping/bloat & InvalidStateError)
+            if ('serviceWorker' in navigator) {
+                try {
+                    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                        if (registrations.length === 0) {
+                            const swBlob = new Blob([swContent], {type: 'application/javascript'});
+                            const swUrl = URL.createObjectURL(swBlob);
+                            navigator.serviceWorker.register(swUrl).catch(err => console.log('PWA SW err:', err));
+                        }
+                    }).catch(e => console.warn('SW getRegistrations dicegah oleh browser/sandbox:', e));
+                } catch (e) {
+                    console.warn('Lingkungan ini membatasi akses ServiceWorker:', e);
+                }
+            }
+        });
 
         // --- SISTEM NOTIFIKASI BACKGROUND PWA ---
         function requestNotificationPermission() {
