@@ -624,9 +624,38 @@
         document.head.appendChild(linkManifest);
 
         const swContent = `
-            self.addEventListener('install', e => self.skipWaiting());
-            self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
-            self.addEventListener('fetch', e => {}); 
+            const CACHE_NAME = 'fc-driver-cache-dynamic';
+            
+            self.addEventListener('install', e => {
+                self.skipWaiting();
+            }); 
+            
+            self.addEventListener('activate', e => {
+                e.waitUntil(self.clients.claim());
+            }); 
+            
+            self.addEventListener('fetch', e => {
+                if (e.request.method !== 'GET') return;
+
+                if (e.request.url.includes('firestore.googleapis.com') || 
+                    e.request.url.includes('script.google.com')) {
+                    return;
+                }
+
+                e.respondWith(
+                    fetch(e.request)
+                    .then(response => {
+                        const resClone = response.clone();
+                        caches.open(CACHE_NAME).then(cache => {
+                            cache.put(e.request, resClone);
+                        });
+                        return response;
+                    })
+                    .catch(() => {
+                        return caches.match(e.request);
+                    })
+                );
+            });
         `;
         const swBlob = new Blob([swContent], {type: 'application/javascript'});
         const swUrl = URL.createObjectURL(swBlob);
